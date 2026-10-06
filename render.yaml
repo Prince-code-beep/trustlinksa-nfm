@@ -1,9 +1,10 @@
 services:
     - type: web
     name: trustlink-api
-    env: node
+    runtime: node
     plan: free
-    buildCommand: npm install -g pnpm && pnpm install && pnpm -r --filter @workspace/api-server run build
+    branch: main
+    buildCommand: npx pnpm@10.12.1 install --no-frozen-lockfile --config.trust-policy=false && npx pnpm@10.12.1 -r --filter @workspace/api-server run build
     startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     autoDeploy: true
@@ -14,3 +15,5 @@ services:
         value: 10000
             - key: DATABASE_URL
         sync: false
+            - key: NODE_VERSION
+        value: 20.19.0
