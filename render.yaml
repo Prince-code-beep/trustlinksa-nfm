@@ -5,6 +5,8 @@ services:
     plan: free
     buildCommand: npm install -g pnpm && pnpm install && pnpm -r --filter @workspace/api-server run build
     startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    autoDeploy: true
     envVars:
             - key: NODE_ENV
         value: production
@@ -12,5 +14,3 @@ services:
         value: 10000
             - key: DATABASE_URL
         sync: false
-    healthCheckPath: /api/healthz
-    autoDeploy: true
