@@ -15,5 +15,3 @@ services:
         value: 10000
             - key: DATABASE_URL
         sync: false
-            - key: NODE_VERSION
-        value: 20.19.0
