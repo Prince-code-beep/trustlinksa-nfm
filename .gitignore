@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+!artifacts/
+!artifacts/api-server/
+!artifacts/api-server/dist/
+!artifacts/api-server/dist/**
