@@ -27,7 +27,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-// Serve frontend in production (Render) - try multiple possible paths
 const possibleDistPaths = [
   path.resolve(process.cwd(), "dist"),
   path.resolve(__dirname, "../../../dist"),
@@ -46,7 +45,7 @@ for (const p of possibleDistPaths) {
 if (clientDist) {
   console.log(`Serving frontend from: ${clientDist}`);
   app.use(express.static(clientDist));
-  app.get("*", (req, res, next) => {
+  app.get("/{*any}", (req, res, next) => {
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(clientDist, "index.html"));
   });
