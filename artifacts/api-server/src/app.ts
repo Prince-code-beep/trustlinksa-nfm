@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", router);
 
 // Serve frontend in production (Render)
-const clientDist = path.resolve(process.cwd(), "../../dist");
+const clientDist = path.resolve(process.cwd(), "dist");
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
   app.get("*", (req, res, next) => {
