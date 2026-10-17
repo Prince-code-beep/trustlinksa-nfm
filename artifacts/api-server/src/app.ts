@@ -44,9 +44,18 @@ for (const p of possibleDistPaths) {
 
 if (clientDist) {
   console.log(`Serving frontend from: ${clientDist}`);
-  app.use(express.static(clientDist));
-  app.get("/{*any}", (req, res, next) => {
-    if (req.path.startsWith("/api")) return next();
+  console.log(`Files in dist:`, fs.readdirSync(clientDist).slice(0,20));
+  const assetsPath = path.join(clientDist, "assets");
+  if (fs.existsSync(assetsPath)) {
+    console.log(`Files in assets:`, fs.readdirSync(assetsPath).slice(0,10));
+  }
+  app.use(express.static(clientDist, { maxAge: "1y", immutable: true, index: false }));
+  // SPA fallback - only for non-file routes
+  app.get(/^(?!\/api).*/, (req, res) => {
+    // If request looks like a file with extension, don't send index.html (let 404 happen)
+    if (req.path.includes(".") && !req.path.endsWith(".html")) {
+      return res.status(404).end();
+    }
     res.sendFile(path.join(clientDist, "index.html"));
   });
 } else {
