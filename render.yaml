@@ -1,18 +1,16 @@
 services:
-  - type: web
-    name: trustlink-api
+    - type: web
+    name: trustlinksa-nfm
     runtime: node
     plan: free
     branch: main
-    buildCommand: pnpm install --no-frozen-lockfile && pnpm run build && pnpm -r --filter @workspace/api-server run build
+    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm run build && pnpm -r --filter @workspace/api-server run build
     startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
-      - key: NODE_ENV
+            - key: NODE_ENV
         value: production
-      - key: PORT
+            - key: PORT
         value: 10000
-      - key: NODE_VERSION
-        value: 20.19.0
-      - key: DATABASE_URL
-        sync: false
+            - key: NODE_VERSION
+        value: 22
