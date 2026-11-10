@@ -66,6 +66,16 @@ export default function App() {
 
   // Data
   const [profile, setProfile] = useState<Profile | null>(null);
+  const handleAvatarUpload = async (e: any) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const fileName = `${user.id}/${Date.now()}-${file.name}`
+  await supabase.storage.from('avatars').upload(fileName, file)
+  const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+  await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id)
+  alert('Profile picture saved!')
+  window.location.reload()
+}
   const [products, setProducts] = useState<Product[]>([]);
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
