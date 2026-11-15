@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from './lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co', (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '');
 
 type Profile = { id: string; name: string; role: string; phone?: string; bio?: string; location?: string; trust_score: number; rating: number; completed_orders: number; total_bought: number; total_sold: number; avatar_url?: string; education?: string; top_skill?: string; skill_score?: number; second_skill?: string; career_goal?: string; allow_recruiter?: boolean; };
 type Product = { id: string; seller_id: string; title: string; description?: string; price: number; category: string; image_url?: string; likes: number; views: number; sold_count: number; is_sold: boolean; created_at: string; profiles?: Profile; };
@@ -157,14 +158,9 @@ export default function App() {
   }
   // REAL DATA - Supabase tables: reels, orders, chats, voice-notes bucket - NO localStorage for orders/chats/reels
   async function loadRealData() {
-    try {
-      const { data: r } = await supabase.from('reels').select('*').order('created_at', { ascending: false }).limit(50);
-      if (r && r.length > 0) setReels(r.map((x: any) => ({ id: x.id, title: x.title, videoUrl: x.video_url, sellerName: x.seller_name, sellerId: x.seller_id, createdAt: x.created_at })));
-      const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
-      if (o) setOrders(o.map((x: any) => ({ id: x.id, productId: x.product_id, title: x.title, price: x.price, seller: x.seller_name, status: x.status, time: x.created_at, tracking: x.tracking || [x.status] })));
-      const { data: c } = await supabase.from('chats').select('*').order('created_at', { ascending: true }).limit(100);
-      if (c) setChatMessages(c.map((x: any) => ({ id: x.id, from: x.sender_name, text: x.text || '', voiceUrl: x.voice_url, isVoice: !!x.voice_url, time: x.created_at })));
-    } catch(e) { console.log('Real tables not yet created - run SQL in Supabase'); }
+    try { const { data: r } = await supabase.from('reels').select('*').order('created_at', { ascending: false }).limit(50); if (r && r.length > 0) setReels(r.map((x: any) => ({ id: x.id, title: x.title, videoUrl: x.video_url, sellerName: x.seller_name, sellerId: x.seller_id, createdAt: x.created_at }))); } catch(e) {}
+    try { const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(50); if (o) setOrders(o.map((x: any) => ({ id: x.id, productId: x.product_id, title: x.title, price: x.price, seller: x.seller_name, status: x.status, time: x.created_at, tracking: x.tracking || [x.status] }))); } catch(e) {}
+    try { const { data: c } = await supabase.from('chats').select('*').order('created_at', { ascending: true }).limit(100); if (c) setChatMessages(c.map((x: any) => ({ id: x.id, from: x.sender_name, text: x.text || '', voiceUrl: x.voice_url, isVoice: !!x.voice_url, time: x.created_at }))); } catch(e) {}
   }
   async function saveRealOrder(product: any) {
     try {
@@ -180,7 +176,7 @@ export default function App() {
       if (error) throw error;
     } catch(e) { alert('REAL Chats table not created yet. Run Supabase SQL first.'); }
   }
-  useEffect(() => { loadRealData(); const ch1 = supabase.channel('trustlink-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => loadRealData()).on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadRealData()).on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => loadRealData()).subscribe(); return () => { supabase.removeChannel(ch1); }; }, []);
+  useEffect(() => { try { loadRealData(); } catch(e) {} try { const ch1 = supabase.channel('trustlink-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => { try { loadRealData(); } catch(e) {} }).on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { try { loadRealData(); } catch(e) {} }).on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => { try { loadRealData(); } catch(e) {} }).subscribe(); return () => { try { supabase.removeChannel(ch1); } catch(e) {} }; } catch(e) { return () => {}; } }, []);
   // BEST ESCROW IN THE WORLD - Money locked until buyer says YES
   function getEscrowStats() {
     const holding = orders.filter((o: any) => o.status && !o.status.includes('Released') && !o.status.includes('Refunded') && !o.status.includes('Dispute')).reduce((s: number, o: any) => s + Number(o.price || 0), 0);
