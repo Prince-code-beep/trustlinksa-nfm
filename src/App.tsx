@@ -88,8 +88,8 @@ export default function App() {
   const [viewProfile, setViewProfile] = useState<Profile | null>(null);
   const [showSell, setShowSell] = useState(false);
   const [showAI, setShowAI] = useState(false);
-const [aiQuestion, setAiQuestion] = useState('');
-const [aiAnswer, setAiAnswer] = useState('');
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
   const [activeNav, setActiveNav] = useState('Home');
   const [toast, setToast] = useState<string | null>(null);
 
@@ -221,29 +221,32 @@ const [aiAnswer, setAiAnswer] = useState('');
       setSellLoading(false);
     }
   };
-const handleAskAI = () => {
-  if (!aiQuestion) return setAiAnswer('Ask me anything — e.g. "What should I sell in Soweto?"');
-  const q = aiQuestion.toLowerCase();
-  const myName = profile?.name || 'Friend';
-  const myTrust = profile?.trust_score || 50;
-  const liveCount = products.length;
-  const cheap = products.filter(p => p.price < 1000).length;
 
-  // PERSONAL LAYER - from your profile
-  let personal = `Hi ${myName} — I remember you. Your Trust Score is ${myTrust}%, you have ${profile?.total_sold || 0} sales, ${profile?.completed_orders || 0} orders. You are in ${profile?.location || 'Soweto, Gauteng'}.`;
 
-  // GENERAL LAYER - general knowledge
-  let general = `In Soweto, best sellers right now are sneakers, phones, air fryers, and food. Buyers trust sellers who show their face + company profile + fast 【entity-WhatsApp¦canonical_name=WhatsApp】 reply.`;
+  const handleAskAI = () => {
+    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything — e.g. "What should I sell in Soweto?"'); return; }
+    const q = aiQuestion.toLowerCase();
+    const myName = profile?.name || 'Friend';
+    const myTrust = profile?.trust_score || 50;
+    const liveCount = products.length;
+    const cheap = products.filter(p => p.price < 1000).length;
+    let personal = `Hi ${myName} — I remember you. Your Trust Score is ${myTrust}%, you have ${profile?.total_sold || 0} sales, ${profile?.completed_orders || 0} orders. You are in ${profile?.location || 'Soweto, Gauteng'}.`;
+    let general = `In Soweto, best sellers right now are sneakers, phones, air fryers, and food. Buyers trust sellers who show their face + company profile + fast WhatsApp reply.`;
+    let maps = `On TrustLink right now: ${liveCount} live products, ${cheap} under R1000. Best pickup spots: Maponya Mall, Jabulani Mall, Pimville Square.`;
+    if (q.includes('sell')) general = `To sell fast in Soweto: 1) Upload clear photo 2) Price R50 below Maponya Mall 3) Reply on WhatsApp in under 5 mins 4) Offer pickup at Pimville Square. Your Trust Score goes up +1 per sale.`;
+    if (q.includes('buy') || q.includes('trust')) general = `To buy safely: 1) Check seller Trust Score over 70% 2) Check face photo 3) Use Escrow — money held until you confirm delivery 4) Meet at Maponya Mall, not alone.`;
+    if (q.includes('price') || q.includes('how much')) general = `Price tip: Check 3 similar products on TrustLink, then price 10% lower if you want fast sale. Don't go too low — buyers distrust too-cheap.`;
+    if (q.includes('peach') || q.includes('pay')) general = `Peach Payments: Buyer pays with card / Capitec Pay / SnapScan. Money is held in Escrow. Seller delivers. You confirm delivery. Then seller gets paid. Safe for both sides.`;
+    setAiAnswer(`${personal}\n\n--- GENERAL ---\n${general}\n\n--- MAPS + MARKETPLACE ---\n${maps}\n\nWant me to find you a product? Tell me what you need.`);
+  };
 
-  // MAPS / MARKETPLACE LAYER - from live products
-  let maps = `On TrustLink right now: ${liveCount} live products, ${cheap} under R1000. Best pickup spots: Maponya Mall, Jabulani Mall, Pimville Square.`;
 
-  if (q.includes('sell')) general = `To sell fast in Soweto: 1) Upload clear photo 2) Price R50 below Maponya Mall 3) Reply on 【entity-WhatsApp¦canonical_name=WhatsApp】 in <5 mins 4) Offer pickup at Pimville Square. Your Trust Score will go up +1 per sale.`;
-  if (q.includes('buy') || q.includes('trust')) general = `To buy safely: 1) Check seller Trust Score >70% 2) Check face photo 3) Use Escrow — money held until you confirm delivery 4) Meet at Maponya Mall, not alone.`;
-  if (q.includes('price') || q.includes('how much')) general = `Price tip: Check 3 similar products on TrustLink, then price 10% lower if you want fast sale. Don't go too low — buyers distrust too-cheap.`;
+  const handlePeachPay = async (product: Product) => {
+    if (!session?.user) return notify('Sign in to pay');
+    notify('Peach Payments — Real checkout coming in STEP 3d. For now order saved as Escrow.');
+    return handleBuy(product);
+  };
 
-  setAiAnswer(`${personal}\n\n--- GENERAL ---\n${general}\n\n--- MAPS + MARKETPLACE ---\n${maps}\n\nWant me to find you a product? Tell me what you need.`);
-};
   const handleBuy = async (product: Product) => {
     if (!session?.user) return notify('Sign in to buy');
     if (product.seller_id === session.user.id) return notify('Cannot buy your own product');
@@ -352,6 +355,7 @@ const handleAskAI = () => {
               <span className="text-[14px] font-medium tracking-normal text-[#8A7A6E] mt-2 block">Real marketplace • {products.length} live products • {orders.length} orders</span>
             </h1>
             <button onClick={()=>setShowSell(true)} className="lg:mb-2 h-12 px-6 rounded-full bg-[#1E1E1E] text-white font-bold text-[14px] hover:scale-[1.02] transition">+ List Product</button>
+            <button onClick={()=>setShowAI(true)} className="lg:mb-2 h-12 px-6 rounded-full bg-[#7C3AED] text-white font-bold text-[14px] ml-2">🤖 Ask TrustLink AI</button>
           </div>
           <div className="mt-6 flex gap-2">
             <div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2 shadow-sm">
@@ -372,7 +376,6 @@ const handleAskAI = () => {
                 <div className="mt-4 font-bold">No products yet</div>
                 <div className="text-[13px] text-[#8A7A6E] mt-1">Be the first to list! Real buyers are waiting in Soweto.</div>
                 <button onClick={()=>setShowSell(true)} className="mt-4 h-10 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">List your first item</button>
-                <button onClick={()=>setShowSell(true)} className="lg:mb-2 h-12 px-6 rounded-full bg-[#7C3AED] text-white font-bold text- ml-2">🤖 Ask TrustLink AI</button>
               </div>
             ) : filtered.map(p=>(
               <button key={p.id} onClick={()=>setSelected(p)} className="text-left group bg-white rounded-[20px] border border-[#FFE4C2] overflow-hidden hover:shadow-lg hover:border-[#FF8A4C]/30 transition-all">
@@ -441,7 +444,6 @@ const handleAskAI = () => {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button onClick={()=>handleBuy(selected)} className="h-12 rounded-full bg-[#1E1E1E] text-white font-bold">Buy — Escrow R{selected.price}</button>
-                <button onClick={()=>notify('Peach Payments coming next — for now use Escrow + WhatsApp. Your money will be held until delivery.')} className="mt-2 w-full h-12 rounded-full bg-[#FF8A4C] text-white font-bold">💳 Pay Securely with Peach Payments</button>
                 <button onClick={()=>handleWhatsApp(selected)} className="h-12 rounded-full bg-[#25D366] text-white font-bold">💬 WhatsApp Seller</button>
               </div>
               <button onClick={()=>selected.profiles && setViewProfile(selected.profiles)} className="mt-3 w-full h-10 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">View Seller Trust Profile</button>
@@ -477,20 +479,21 @@ const handleAskAI = () => {
           </div>
         </div>
       )}
-     {showAI && (
-  <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
-    <div className="w-full max-w- bg-white rounded-t- lg:rounded- p-6 max-h- overflow-y-auto">
-      <div className="flex justify-between items-center">
-        <h3 className="font-[900] text-">🤖 TrustLink AI Agent</h3>
-        <button onClick={()=>setShowAI(false)} className="w-8 h-8 rounded-full bg-[#FFF8F0] border">✕</button>
-      </div>
-      <p className="text- text-[#8A7A6E] mt-1">Personal Memory + General Research + Maps in ONE answer. Unlike Google / Meta AI.</p>
-      <input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Ask me... What should I sell in Soweto?" className="mt-4 w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-" />
-      <button onClick={handleAskAI} className="mt-3 w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold">Ask TrustLink AI</button>
-      {aiAnswer && <div className="mt-4 p-4 rounded- bg-[#F5F3FF] border border-[#DDD6FE] text- leading-5 whitespace-pre-line">{aiAnswer}</div>}
-    </div>
-  </div>
-)}
+
+      {showAI && (
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
+          <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center">
+              <h3 className="font-[900] text-[20px]">🤖 TrustLink AI Agent</h3>
+              <button onClick={()=>setShowAI(false)} className="w-8 h-8 rounded-full bg-[#FFF8F0] border">✕</button>
+            </div>
+            <p className="text-[12px] text-[#8A7A6E] mt-1">Personal Memory + General Research + Maps in ONE answer. Unlike Google / Meta AI.</p>
+            <input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Ask me... What should I sell in Soweto?" className="mt-4 w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" />
+            <button onClick={handleAskAI} className="mt-3 w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold">Ask TrustLink AI</button>
+            {aiAnswer && <div className="mt-4 p-4 rounded-[16px] bg-[#F5F3FF] border border-[#DDD6FE] text-[13px] leading-5 whitespace-pre-line">{aiAnswer}</div>}
+          </div>
+        </div>
+      )}
       {showSell && (
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
           <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
