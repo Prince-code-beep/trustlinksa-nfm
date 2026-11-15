@@ -33,6 +33,9 @@ export default function App() {
   const [sellLoading, setSellLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('market');
   const [skin, setSkin] = useState(() => { try { return localStorage.getItem('trustlink_skin') || 'sunset'; } catch(e) { return 'sunset'; } });
+  const [rainTick, setRainTick] = useState(0);
+  // Rain animation - pure JS timer, NO <style> / keyframes so build never breaks
+  useEffect(() => { if (skin !== 'rain') return; const id = setInterval(() => setRainTick((v) => v + 1), 50); return () => clearInterval(id); }, [skin]);
   const [talentSearch, setTalentSearch] = useState('');
   const [talentMinScore, setTalentMinScore] = useState('');
   const [sellMyself, setSellMyself] = useState(true);
@@ -720,7 +723,32 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: skinStyle.bg }}>
+    <div className="min-h-screen pb-24 relative" style={{ background: skin === 'rain' ? '#0F2233' : skinStyle.bg }}>
+      {skin === 'rain' && (
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
+          {/* GLASS - frosted window pane */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,34,51,0.85) 0%, rgba(30,58,82,0.7) 40%, rgba(42,74,98,0.85) 100%)' }} />
+          {/* City lights blurred behind glass */}
+          <div style={{ position: 'absolute', top: '12%', left: '8%', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(253,224,71,0.35)', filter: 'blur(30px)' }} />
+          <div style={{ position: 'absolute', top: '20%', right: '12%', width: '90px', height: '90px', borderRadius: '50%', background: 'rgba(255,255,255,0.25)', filter: 'blur(25px)' }} />
+          <div style={{ position: 'absolute', top: '45%', left: '45%', width: '160px', height: '60px', borderRadius: '50%', background: 'rgba(56,189,248,0.25)', filter: 'blur(30px)' }} />
+          {/* Window frame - vertical + horizontal bars */}
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '6px', background: 'rgba(0,0,0,0.45)', transform: 'translateX(-50%)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '6px', background: 'rgba(0,0,0,0.45)' }} />
+          <div style={{ position: 'absolute', inset: '10px', border: '3px solid rgba(255,255,255,0.25)', borderRadius: '8px' }} />
+          {/* Fog on glass */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 30% 70%, rgba(255,255,255,0.12) 0%, transparent 50%), radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.08) 0%, transparent 40%)' }} />
+          {/* Rain streaks behind glass - moving with rainTick */}
+          {Array.from({ length: 70 }).map((_, i) => { const speed = 2.2 + (i % 5) * 0.7; const y = ((i * 37 + rainTick * speed) % 110) - 5; return (<div key={'rain' + i} style={{ position: 'absolute', left: (i * 1.45) + '%', top: y + '%', width: '1.5px', height: (50 + (i % 4) * 18) + 'px', background: 'linear-gradient(to bottom, transparent, rgba(186,230,253,0.85))', opacity: 0.7 }} />); })}
+          {/* DROPLETS ON GLASS - dripping down, with bead at bottom */}
+          {Array.from({ length: 24 }).map((_, i) => { const speed = 0.35 + (i % 4) * 0.15; const y = ((i * 53 + rainTick * speed) % 115) - 5; const x = 2 + i * 4.1 + Math.sin((rainTick + i * 20) * 0.02) * 0.5; const size = 4 + (i % 3) * 2; return (<div key={'drop' + i} style={{ position: 'absolute', left: x + '%', top: y + '%', width: size + 'px', height: (10 + (y % 20)) + 'px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(186,230,253,0.95))', borderRadius: '999px', boxShadow: '0 0 8px rgba(186,230,253,0.9)', opacity: 0.95 }}><div style={{ position: 'absolute', bottom: '-4px', left: '-2px', width: (size + 3) + 'px', height: (size + 3) + 'px', background: 'rgba(186,230,253,0.95)', borderRadius: '50%', boxShadow: '0 0 6px rgba(186,230,253,0.9)' }} /></div>); })}
+          {/* Small static droplets stuck on glass */}
+          {Array.from({ length: 40 }).map((_, i) => (<div key={'stuck' + i} style={{ position: 'absolute', left: ((i * 23 + 7) % 100) + '%', top: ((i * 31 + 13) % 100) + '%', width: (2 + (i % 3)) + 'px', height: (2 + (i % 3)) + 'px', background: 'rgba(186,230,253,0.85)', borderRadius: '50%', boxShadow: '0 0 4px rgba(186,230,253,0.8)' }} />))}
+          {/* Bottom label */}
+          <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,34,51,0.8)', color: '#E0F2FE', padding: '6px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>Glass Window - Rain Outside - Droplets Dripping Down</div>
+        </div>
+      )}
+      <div style={{ position: 'relative', zIndex: 10 }}>
        
 
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
@@ -1070,6 +1098,7 @@ export default function App() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
