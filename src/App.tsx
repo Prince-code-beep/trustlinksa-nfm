@@ -17,7 +17,7 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [myProducts, setMyProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_orders') || '[]'); } catch(e) { return []; } });
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Product | null>(null);
@@ -42,7 +42,6 @@ export default function App() {
   const [alertQuery, setAlertQuery] = useState('');
   const [alertMaxPrice, setAlertMaxPrice] = useState('');
   const [nearMeKm, setNearMeKm] = useState('10');
-  const [orders, setOrders] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_orders') || '[]'); } catch(e) { return []; } });
   const [voiceNote, setVoiceNote] = useState('');
   const [videoCallOpen, setVideoCallOpen] = useState(false);
   const [videoCallWith, setVideoCallWith] = useState('');
