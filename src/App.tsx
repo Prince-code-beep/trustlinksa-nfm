@@ -858,7 +858,11 @@ export default function App() {
   return (
     <div className="min-h-screen pb-24 relative" style={{ background: skin === 'rain' ? '#0F2233' : skin === 'sunset' ? '#1A0A00' : skinStyle.bg }}>
       {skin === 'sunset' && (
-        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#2A0A00 0%,#4A1200 25%,#7A1E00 45%,#FF6B00 65%,#FFB800 85%,#FFD700 100%)' }}>
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
+          {/* REAL PHOTO - Soweto Conflagration - upload soweto-fire-background.webp to GitHub public/ as soweto-fire.jpg */}
+          <img src="/soweto-fire.jpg" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={(e: any) => { e.target.style.display = 'none'; }} />
+          {/* Fallback gradient if image not yet uploaded */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#2A0A00 0%,#4A1200 25%,#7A1E00 45%,#FF6B00 65%,#FFB800 85%,#FFD700 100%)', zIndex: -1 }} />
           {/* Big fire glow - pulsing */}
           <div style={{ position: 'absolute', bottom: '-10%', left: '50%', width: '120%', height: '60%', transform: 'translateX(-50%)', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(255,215,0,0.9) 0%, rgba(255,107,0,0.8) 30%, rgba(255,0,0,0.6) 55%, transparent 75%)', filter: 'blur(20px)', opacity: 0.85 + Math.sin(rainTick * 0.08) * 0.15 }} />
           {/* Conflagration flames - 45 flames rising, flickering with rainTick */}
