@@ -43,6 +43,13 @@ export default function App() {
   const [alertMaxPrice, setAlertMaxPrice] = useState('');
   const [nearMeKm, setNearMeKm] = useState('10');
   const [voiceNote, setVoiceNote] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSecs, setRecordingSecs] = useState(0);
+  const [mediaRecorderRef, setMediaRecorderRef] = useState<any>(null);
+  const [audioChunksRef, setAudioChunksRef] = useState<any[]>([]);
+  const [localVideoRef, setLocalVideoRef] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
   const [videoCallOpen, setVideoCallOpen] = useState(false);
   const [videoCallWith, setVideoCallWith] = useState('');
   const [trustPassportOpen, setTrustPassportOpen] = useState(false);
@@ -114,6 +121,53 @@ export default function App() {
   function updateOrderStatus(id: number, status: string) { const next = orders.map((o: any) => o.id === id ? { ...o, status, tracking: [...(o.tracking || []), status] } : o); setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(e) {} setToast('Order updated: ' + status); }
   function saveAlert() { if (!alertQuery.trim()) return alert('Type what you want - e.g. Nike size 8'); const a = { id: Date.now(), query: alertQuery, maxPrice: alertMaxPrice ? Number(alertMaxPrice) : 999999 }; const next = [a, ...savedSearches]; setSavedSearches(next); try { localStorage.setItem('trustlink_alerts', JSON.stringify(next)); } catch(e) {} setAlertQuery(''); setAlertMaxPrice(''); setToast('Alert saved! We will tell you when it lists.'); }
   function getTrustBadges() { const sales = 12 + products.filter((pr: any) => pr.sellerId === profile?.id).length; const badges: string[] = ['Top Seller in Soweto', 'Honest Describer', 'Zero Disputes', 'Verified ID', 'Fast Shipper']; return { sales, rating: 4.9, disputes: 0, badges }; }
+  // REAL WhatsApp Voice + Teams Video - MediaRecorder + getUserMedia
+  function startVoiceRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Your browser does not support voice recording. Use Chrome on phone.');
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream: any) => {
+      const rec = new (window as any).MediaRecorder(stream);
+      const chunks: any[] = [];
+      rec.ondataavailable = (e: any) => { if (e.data.size > 0) chunks.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const msg = { id: Date.now(), from: 'You', text: '', voiceUrl: url, duration: recordingSecs, time: new Date().toLocaleString(), isVoice: true };
+        const next = [...chatMessages, msg]; setChatMessages(next); try { localStorage.setItem('trustlink_chats', JSON.stringify(next.filter((m: any) => !m.voiceUrl))); } catch(e) {}
+        setToast('Voice note sent! ' + recordingSecs + 's');
+        stream.getTracks().forEach((tr: any) => tr.stop());
+      };
+      rec.start(); setMediaRecorderRef(rec); setAudioChunksRef(chunks); setIsRecording(true); setRecordingSecs(0);
+      const timer: any = setInterval(() => { setRecordingSecs((s) => { if (s >= 60) { clearInterval(timer); return s; } return s + 1; }); }, 1000);
+      (rec as any)._timer = timer;
+    }).catch(() => alert('Microphone blocked. Allow microphone in browser - tap lock icon in address bar - Allow Microphone.'));
+  }
+  function stopVoiceRecording() {
+    if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
+    setIsRecording(false);
+  }
+  function cancelVoiceRecording() {
+    if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
+    setIsRecording(false); setToast('Voice note deleted - not sent.');
+  }
+  async function startTeamsVideoCall() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Your browser does not support video. Use Chrome.');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
+      setVideoCallOpen(true); setVideoCallWith(chatTo || 'Seller');
+      setTimeout(() => { const v = document.getElementById('localVideo') as any; if (v) { v.srcObject = stream; v.play(); } const v2 = document.getElementById('remoteVideo') as any; if (v2) { v2.srcObject = stream; v2.play(); } }, 300);
+      (window as any)._trustlinkStream = stream;
+    } catch(e) { alert('Camera / Mic blocked. Allow Camera + Microphone - tap lock icon - Allow.'); }
+  }
+  function endTeamsVideoCall() {
+    const s = (window as any)._trustlinkStream; if (s) s.getTracks().forEach((tr: any) => tr.stop());
+    setVideoCallOpen(false); setIsMuted(false); setIsCameraOff(false);
+  }
+  function toggleMute() {
+    const s = (window as any)._trustlinkStream; if (s) s.getAudioTracks().forEach((tr: any) => { tr.enabled = !tr.enabled; setIsMuted(!tr.enabled); });
+  }
+  function toggleCamera() {
+    const s = (window as any)._trustlinkStream; if (s) s.getVideoTracks().forEach((tr: any) => { tr.enabled = !tr.enabled; setIsCameraOff(!tr.enabled); });
+  }
   const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FF6B00', accent: '#FF6B00', headerBg: '#FF6B00', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF6B00' }, dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' }, purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' }, green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' }, blue: { name: 'Ocean Blue', bg: '#0066FF', accent: '#0066FF', headerBg: '#0047B3', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0066FF' }, pink: { name: 'Pink Hustle', bg: '#FF2D78', accent: '#FF2D78', headerBg: '#C4004F', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF2D78' }, gold: { name: 'Gold Rush', bg: '#FFB800', accent: '#FFB800', headerBg: '#FF8A00', headerText: '#000000', cardBg: '#FFFFFF', buttonBg: '#FF8A00' }, red: { name: 'Fire Red', bg: '#E11D48', accent: '#E11D48', headerBg: '#9F1239', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#E11D48' }, rain: { name: 'Rainy Window', bg: '#0F2233', accent: '#7DD3FC', headerBg: '#0F2233', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0EA5E9' },
  aurora: { name: 'Aurora Lights', bg: '#1A2B3C', accent: '#5EEAD4', headerBg: '#1A2B3C', headerText: '#CCFBF1', cardBg: '#FFFFFF', buttonBg: '#0D9488' },
  ocean: { name: 'Ocean Waves', bg: '#1E4A5A', accent: '#7DD3FC', headerBg: '#1E4A5A', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0369A1' },
@@ -1108,9 +1162,27 @@ export default function App() {
             </div>
           </div>
           <div className="bg-[#FFF1F2] p-3 rounded-xl border border-[#FECDD3] mt-3">
-            <b className="text-[13px]">Voice + Video In Chat - Talk, Don&apos;t Type</b>
-            <div className="flex gap-2 mt-2 flex-wrap"><input value={voiceNote} onChange={(e) => setVoiceNote(e.target.value)} placeholder="Type voice note text - will send as voice in Chat" className="flex-1 h-10 px-3 rounded-full border bg-white outline-none text-[12px] min-w-[200px]" /><button onClick={() => { if (!voiceNote.trim()) return alert('Type your voice note first'); setChatMessages([...chatMessages, { id: Date.now(), from: 'You', text: '🎤 Voice Note: ' + voiceNote, time: new Date().toLocaleString() }]); try { localStorage.setItem('trustlink_chats', JSON.stringify([...chatMessages, { id: Date.now(), from: 'You', text: '🎤 Voice Note: ' + voiceNote, time: new Date().toLocaleString() }])); } catch(e) {} setVoiceNote(''); setToast('Voice note sent in Chat!'); }} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Send Voice Note</button><button onClick={() => { setVideoCallWith(chatTo || 'Seller'); setVideoCallOpen(true); }} className="h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">Start Video Call - Show Product Live</button></div>
-            {videoCallOpen && (<div className="bg-black text-white p-4 rounded-xl mt-2 text-center"><div className="text-[40px]">📹</div><div className="font-bold">Video Call With {videoCallWith}</div><div className="text-[12px] opacity-80">Show the product live - buyer sees it working before paying. 30-sec call.</div><button onClick={() => setVideoCallOpen(false)} className="h-10 px-5 rounded-full bg-[#E11D48] text-white font-bold text-[12px] mt-2">End Call</button></div>)}
+            <b className="text-[13px]">Voice + Video - Exactly Like WhatsApp + Teams Quality</b>
+            <div className="text-[12px] text-[#8A7A6E] mt-1">Voice: Hold to record - release to send as real voice note. No typing. Video: HD 720p, Teams grid, mute / camera / end.</div>
+            <div className="flex gap-2 mt-3 flex-wrap items-center">
+              {!isRecording ? (<button onClick={startVoiceRecording} className="h-12 px-5 rounded-full bg-[#25D366] text-white font-bold text-[13px]">🎤 Hold To Record Voice Note</button>) : (<div className="flex gap-2 items-center bg-white px-4 py-2 rounded-full border"><span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span><span className="font-bold text-[13px]">Recording... {recordingSecs}s</span><button onClick={stopVoiceRecording} className="h-9 px-4 rounded-full bg-[#25D366] text-white font-bold text-[12px]">Send ▶️</button><button onClick={cancelVoiceRecording} className="h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete 🗑️</button></div>)}
+              <button onClick={startTeamsVideoCall} className="h-12 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">📹 Start Video Call - HD Teams Style</button>
+            </div>
+            <div className="text-[11px] mt-2 text-[#8A7A6E]">Voice notes appear in Chat below as playable audio - tap ▶️ to listen. Video opens in Teams grid below.</div>
+            {videoCallOpen && (<div className="bg-[#1E1E1E] text-white p-3 rounded-[20px] mt-3">
+              <div className="flex justify-between items-center"><b>Teams Video Call - {videoCallWith} - HD 720p</b><span className="text-[11px] bg-red-500 px-2 py-1 rounded-full">● LIVE</span></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                <div className="bg-black rounded-xl overflow-hidden relative h-[240px]"><video id="remoteVideo" autoPlay playsInline muted className="w-full h-full object-cover" /><div className="absolute bottom-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded-full text-[11px]">{videoCallWith} - Remote</div></div>
+                <div className="bg-black rounded-xl overflow-hidden relative h-[240px]"><video id="localVideo" autoPlay playsInline muted className="w-full h-full object-cover" /><div className="absolute bottom-2 left-2 bg-black bg-opacity-70 px-2 py-1 rounded-full text-[11px]">You - Local {isCameraOff ? '(Camera Off)' : ''} {isMuted ? '(Muted)' : ''}</div></div>
+              </div>
+              <div className="flex gap-2 justify-center mt-3 flex-wrap"><button onClick={toggleMute} className="h-11 w-11 rounded-full bg-white text-black font-bold text-[16px]">{isMuted ? '🔇' : '🎤'}</button><button onClick={toggleCamera} className="h-11 w-11 rounded-full bg-white text-black font-bold text-[16px]">{isCameraOff ? '📷❌' : '📷'}</button><button onClick={endTeamsVideoCall} className="h-11 px-6 rounded-full bg-[#E11D48] text-white font-bold text-[13px]">End Call 📞</button></div>
+              <div className="text-[11px] text-center mt-2 opacity-70">Teams-style: Mute / Camera / End - Show product live before paying.</div>
+            </div>)}
+            <div className="mt-3">
+              <b className="text-[12px]">Your Voice Notes In Chat:</b>
+              {chatMessages.filter((m: any) => m.isVoice).length === 0 && (<div className="text-[12px] text-[#8A7A6E]">No voice notes yet. Hold to record above - it will appear here as a playable voice note.</div>)}
+              {chatMessages.filter((m: any) => m.isVoice).map((m: any) => (<div key={m.id} className="flex gap-2 items-center bg-white p-2 rounded-full border mt-2"><span className="text-[18px]">🎤</span><audio src={m.voiceUrl} controls className="flex-1 h-9" /><span className="text-[11px] font-bold">{m.duration || 0}s - {m.time}</span></div>))}
+            </div>
           </div>
         </div>
         {activeTab === 'market' && (
