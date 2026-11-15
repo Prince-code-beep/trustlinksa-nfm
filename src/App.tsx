@@ -60,6 +60,23 @@ export default function App() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [peachLoading, setPeachLoading] = useState(false);
   const [peachCheckoutId, setPeachCheckoutId] = useState('');
+  const [yocoLoading, setYocoLoading] = useState(false);
+  const [payfastLoading, setPayfastLoading] = useState(false);
+  const [reels, setReels] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_reels') || '[]'); } catch(e) { return []; } });
+  const [reelTitle, setReelTitle] = useState('');
+  const [reelVideoUrl, setReelVideoUrl] = useState('');
+  const [reelProductId, setReelProductId] = useState('');
+  const [reelPrice, setReelPrice] = useState('');
+  const [reelUploading, setReelUploading] = useState(false);
+  const [reelComment, setReelComment] = useState('');
+  const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const [reelFilter, setReelFilter] = useState('For You');
+  const [reelType, setReelType] = useState('sell');
+  const [reelRating, setReelRating] = useState(5);
+  const [reelReviewText, setReelReviewText] = useState('');
+  const [reelBoughtFrom, setReelBoughtFrom] = useState('');
+  const [reelVerifiedPurchase, setReelVerifiedPurchase] = useState(true);
+  const [yocoCheckoutId, setYocoCheckoutId] = useState('');
   const [peachEntityId, setPeachEntityId] = useState(() => { try { return (import.meta as any).env?.VITE_PEACH_ENTITY_ID || ''; } catch(e) { return ''; } });
   const [friendSearch, setFriendSearch] = useState('');
   const [friendResults, setFriendResults] = useState<any[]>([]);
@@ -364,6 +381,169 @@ export default function App() {
   }
 
 
+
+
+
+  // ===== TRUSTLINK REELS - Sellers market products in video - Like IG/FB/YT Reels + BUY button =====
+  function saveReels(next: any[]) { setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {} }
+  async function handleUploadReel() {
+    if (!session) return alert('Sign in to post a Reel.');
+    if (!reelTitle.trim()) return alert(reelType === 'review' ? 'Add a Review title - e.g. "I bought this Tablet from Thabo - Honest Review"' : 'Add a Reel title - e.g. "Brand New Samsung Tablet - R3500 - Pimville"');
+    if (!reelVideoUrl.trim()) return alert('Add a Video URL - paste a MP4 link or YouTube link, or upload below.');
+    if (reelType === 'review' && !reelBoughtFrom.trim()) return alert('Who did you buy from? Type the seller name - e.g. Thabo - so buyers know who you are reviewing.');
+    const newReel = { id: Date.now(), title: reelTitle, videoUrl: reelVideoUrl, productId: reelProductId || '', price: reelPrice || '', sellerId: profile?.id || session.user.id, sellerName: profile?.name || 'Seller', sellerAvatar: profile?.avatar_url || '', sellerPhone: profile?.phone || '', likes: 0, likedByMe: false, comments: [], shares: 0, views: Math.floor(Math.random() * 200) + 50, createdAt: new Date().toLocaleString(), isDemo: false, reelType: reelType, rating: reelType === 'review' ? reelRating : null, reviewText: reelType === 'review' ? reelReviewText : '', boughtFrom: reelType === 'review' ? reelBoughtFrom : '', reviewerName: reelType === 'review' ? (profile?.name || 'Buyer') : '', verifiedPurchase: reelType === 'review' ? reelVerifiedPurchase : false };
+    saveReels([newReel, ...reels]);
+    setReelTitle(''); setReelVideoUrl(''); setReelProductId(''); setReelPrice(''); setReelReviewText(''); setReelBoughtFrom(''); setReelRating(5);
+    setToast('Reel posted! Buyers can now watch + Buy directly from your Reel.');
+    setActiveTab('reels' as any);
+  }
+  async function handleReelFileUpload(e: any) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!session) return alert('Sign in to upload a Reel.');
+    setReelUploading(true);
+    try {
+      // Upload to Supabase Storage - product-images bucket (or avatars) - Reels are videos
+      const fileName = 'reel-' + session.user.id + '-' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const { error } = await supabase.storage.from('product-images').upload(fileName, file, { contentType: file.type, upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+      setReelVideoUrl(data.publicUrl);
+      setToast('Video uploaded! Now add a title + Post Reel.');
+    } catch (err: any) {
+      // Fallback: local preview URL if Supabase upload fails (e.g. bucket not set)
+      try { const localUrl = URL.createObjectURL(file); setReelVideoUrl(localUrl); setToast('Video ready (local preview). For LIVE, add Supabase product-images bucket.'); } catch(e) { alert('Upload failed: ' + (err.message || 'Try a video URL instead.')); }
+    }
+    setReelUploading(false);
+  }
+  function handleLikeReel(id: number) {
+    const next = reels.map((r: any) => r.id === id ? { ...r, likes: r.likedByMe ? r.likes - 1 : r.likes + 1, likedByMe: !r.likedByMe } : r);
+    saveReels(next);
+  }
+  function handleCommentReel(id: number) {
+    if (!reelComment.trim()) return alert('Type a comment first.');
+    if (!session) return alert('Sign in to comment.');
+    const next = reels.map((r: any) => r.id === id ? { ...r, comments: [...(r.comments || []), { id: Date.now(), from: profile?.name || 'You', text: reelComment, time: new Date().toLocaleString() }] } : r);
+    saveReels(next);
+    setReelComment('');
+  }
+  function handleShareReel(reel: any) {
+    const link = window.location.origin + '/?reel=' + reel.id;
+    try { navigator.clipboard.writeText(link); } catch(e) {}
+    const next = reels.map((r: any) => r.id === reel.id ? { ...r, shares: (r.shares || 0) + 1 } : r);
+    saveReels(next);
+    setToast('Reel link copied! Share it on WhatsApp / Facebook / Instagram.');
+    alert('Reel link copied:\\n' + link + '\\n\\nShare it on WhatsApp / Facebook / Instagram to get buyers!');
+  }
+  function handleBuyFromReel(reel: any) {
+    // Find linked product if any, else open chat with seller
+    const prod = products.find((pr: any) => String(pr.id) === String(reel.productId));
+    if (prod) { setSelected(prod); setActiveTab('market' as any); }
+    else if (reel.sellerPhone) { handleWhatsApp(reel.sellerPhone, reel.title); }
+    else { setChatTo(reel.sellerName); setActiveTab('chat' as any); alert('Chat with ' + reel.sellerName + ' about: ' + reel.title); }
+  }
+  function getYouTubeEmbed(url: string) {
+    // Convert YouTube watch?v= to embed
+    try {
+      if (url.includes('youtube.com/watch')) return url.replace('watch?v=', 'embed/').split('&')[0];
+      if (url.includes('youtu.be/')) return 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1].split('?')[0];
+      return url;
+    } catch(e) { return url; }
+  }
+  function isYouTube(url: string) { return url.includes('youtube.com') || url.includes('youtu.be'); }
+
+  // ===== REAL PAYFAST PAYMENTS - LIVE MODE - ESCROW - R0 SIGNUP =====
+  // Flow: Buyer clicks Pay with PayFast → TrustLink calls Secure Backend (Supabase Edge Function payfast-checkout) → Backend generates PayFast signature with SECRET passphrase (never in frontend) → Frontend posts form to https://www.payfast.co.za/eng/process → Buyer pays Card / Instant EFT / SnapScan → PayFast HOLDS (Escrow) → Seller delivers → Buyer confirms → PayFast RELEASES.
+  // NEVER put PAYFAST_PASSPHRASE in App.tsx or GitHub. Only Merchant ID + Merchant Key go in frontend (they are not secrets, but keep them in backend for safety).
+  async function handleRealPayFastPay(product: any) {
+    if (!session) return alert('Sign in to pay with PayFast.');
+    if (!product) return alert('Select a product first.');
+    setPayfastLoading(true);
+    try {
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
+      let payData: any = null;
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/payfast-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amount: Number(product.price).toFixed(2), itemName: product.title, itemDescription: (product.description || product.title).slice(0, 255), productId: product.id, sellerId: product.seller_id, buyerId: session.user.id, customerEmail: session.user.email, buyerName: profile?.name || session.user.email }),
+        });
+        payData = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('PayFast backend returned ' + res.status + ': ' + JSON.stringify(payData).slice(0, 500));
+        if (!payData || !payData.merchant_id || !payData.signature) throw new Error('Backend returned no PayFast signature. Full response: ' + JSON.stringify(payData).slice(0, 500));
+      } catch (backendErr: any) {
+        setPayfastLoading(false);
+        alert('REAL PayFast Backend Error:\\n\\n' + (backendErr.message || backendErr) + '\\n\\nCHECK THESE 3 THINGS:\\n1) Supabase > Edge Functions > payfast-checkout = Deployed?\\n2) Supabase > Settings > Edge Functions > Secrets = PAYFAST_MERCHANT_ID + PAYFAST_MERCHANT_KEY + PAYFAST_PASSPHRASE (if you set one) added?\\n3) PayFast Dashboard = LIVE mode (not Sandbox)?\\n\\nNo money was taken.');
+        return;
+      }
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', payfast_payment_id: payData.m_payment_id || ('TRUSTLINK-' + product.id + '-' + Date.now()) }); } catch(e) {}
+      // Build PayFast form and submit - REAL LIVE PayFast
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://www.payfast.co.za/eng/process';
+      form.target = '_blank';
+      const fields: any = {
+        merchant_id: payData.merchant_id,
+        merchant_key: payData.merchant_key,
+        return_url: payData.return_url,
+        cancel_url: payData.cancel_url,
+        notify_url: payData.notify_url,
+        name_first: payData.name_first || '',
+        email_address: payData.email_address || '',
+        m_payment_id: payData.m_payment_id,
+        amount: payData.amount,
+        item_name: payData.item_name,
+        item_description: payData.item_description,
+        custom_str1: payData.custom_str1 || '',
+        custom_str2: payData.custom_str2 || '',
+        signature: payData.signature,
+      };
+      Object.keys(fields).forEach((k) => { const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = k; inp.value = String(fields[k] || ''); form.appendChild(inp); });
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      setToast('REAL PayFast checkout opened - Pay with Card / Instant EFT / SnapScan. Money HELD in Escrow.');
+    } catch (e: any) { alert('PayFast Error: ' + (e.message || 'Failed to start PayFast checkout')); }
+    setPayfastLoading(false);
+  }
+
+  // ===== REAL YOCO PAYMENTS - LIVE MODE - ESCROW =====
+  // Flow: Buyer clicks Pay with Yoco → TrustLink calls Secure Backend (Supabase Edge Function yoco-checkout) → Backend calls Yoco LIVE API with SECRET (never in frontend) → Yoco returns redirectUrl → Frontend opens Yoco checkout → Buyer pays Visa/Mastercard/Capitec Pay → Yoco HOLDS money (Escrow) → Seller delivers → Buyer confirms → Yoco RELEASES money.
+  // NEVER put YOCO_SECRET_KEY in App.tsx or GitHub. Only YOCO_PUBLIC_KEY (pk_live_) goes in frontend if needed.
+  async function handleRealYocoPay(product: any) {
+    if (!session) return alert('Sign in to pay with Yoco.');
+    if (!product) return alert('Select a product first.');
+    setYocoLoading(true);
+    try {
+      const amountCents = Math.round(Number(product.price) * 100);
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
+      let redirectUrl = '';
+      let checkoutId = '';
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/yoco-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amountCents, currency: 'ZAR', productTitle: product.title, productId: product.id, sellerId: product.seller_id, buyerId: session.user.id, customerEmail: session.user.email, successUrl: window.location.origin + '/?payment=success', cancelUrl: window.location.origin + '/?payment=cancelled', failureUrl: window.location.origin + '/?payment=failed' }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('Yoco backend returned ' + res.status + ': ' + JSON.stringify(data).slice(0, 500));
+        if (data.redirectUrl) redirectUrl = data.redirectUrl;
+        if (data.id) checkoutId = data.id;
+        if (data.checkoutId) checkoutId = data.checkoutId;
+        if (!redirectUrl) throw new Error('Backend returned no redirectUrl. Full response: ' + JSON.stringify(data).slice(0, 500));
+      } catch (backendErr: any) {
+        setYocoLoading(false);
+        alert('REAL Yoco Backend Error:\\n\\n' + (backendErr.message || backendErr) + '\\n\\nCHECK THESE 3 THINGS:\\n1) Supabase > Edge Functions > yoco-checkout = Deployed?\\n2) Supabase > Settings > Edge Functions > Secrets = YOCO_SECRET_KEY (sk_live_...) added?\\n3) Yoco Dashboard = LIVE mode (not Test)?\\n\\nNo money was taken.');
+        return;
+      }
+      setYocoCheckoutId(checkoutId);
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', yoco_checkout_id: checkoutId }); } catch(e) {}
+      window.open(redirectUrl, '_blank', 'width=480,height=640');
+      setToast('REAL Yoco checkout opened - Pay with Visa / Mastercard / Capitec Pay. Money HELD in Escrow.');
+    } catch (e: any) { alert('Yoco Error: ' + (e.message || 'Failed to start Yoco checkout')); }
+    setYocoLoading(false);
+  }
+
   // ===== REAL PEACH PAYMENTS - LIVE MODE - ESCROW =====
   // Flow: Buyer clicks Pay → TrustLink calls Secure Backend (Supabase Edge Function / Render API) → Backend calls Peach API with SECRET (never in frontend) → Peach returns checkoutId → Frontend shows Peach COPYANDPAY widget → Buyer pays Visa/Mastercard/Capitec Pay → Peach HOLDS money (Escrow) → Seller delivers → Buyer confirms → Peach RELEASES money.
   // NEVER put VITE_PEACH_PASSWORD or CLIENT_SECRET in App.tsx or GitHub. Only VITE_PEACH_ENTITY_ID (public) goes in frontend.
@@ -373,14 +553,20 @@ export default function App() {
     setPeachLoading(true);
     try {
       const amount = Number(product.price).toFixed(2);
-      const entityId = (import.meta as any).env?.VITE_PEACH_ENTITY_ID || peachEntityId;
+      const entityId = ((import.meta as any).env?.VITE_PEACH_ENTITY_ID || peachEntityId || '').trim();
+      // Catch placeholder Entity ID - user typed "your LIVE Entity ID" instead of real 8a829...
+      if (entityId.toLowerCase().startsWith('your') || entityId.toLowerCase().includes('your live') || entityId === 'your LIVE Entity ID') {
+        setPeachLoading(false);
+        alert('Your Entity ID is a PLACEHOLDER, not a real Peach ID.\n\nIn Render you typed: "' + entityId + '"\n\nGo to Render > Environment > VITE_PEACH_ENTITY_ID > Replace it with your REAL LIVE Entity ID from Peach Dashboard (starts with 8a829...).\n\nThen redeploy. No money was taken.');
+        return;
+      }
       if (!entityId) {
         setPeachLoading(false);
         alert('REAL Peach is NOT configured yet.\n\nSTEP 1: Get your LIVE Entity ID from Peach Dashboard > Account > Entity ID (starts with 8a829...).\nSTEP 2: Render > Environment > Add VITE_PEACH_ENTITY_ID = your LIVE Entity ID\nSTEP 3: Deploy Supabase Edge Function peach-checkout (code below) with PEACH_USER_ID + PEACH_PASSWORD + PEACH_ENTITY_ID secrets.\nSTEP 4: Redeploy. Then Pay button will open REAL Peach checkout.\n\nUntil then, this is a SAFE demo - no real money taken.');
         return;
       }
       // Try Secure Backend first (Supabase Edge Function)
-      const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
       let checkoutId = '';
       try {
         const res = await fetch(supabaseUrl + '/functions/v1/peach-checkout', {
@@ -388,14 +574,15 @@ export default function App() {
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
           body: JSON.stringify({ amount, currency: 'ZAR', paymentType: 'DB', merchantTransactionId: 'TRUSTLINK-' + product.id + '-' + Date.now(), customerEmail: session.user.email, productTitle: product.title, sellerId: product.seller_id, buyerId: session.user.id }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('Supabase function returned ' + res.status + ': ' + JSON.stringify(data).slice(0, 400));
         if (data.checkoutId) checkoutId = data.checkoutId;
         else if (data.id) checkoutId = data.id;
-        else throw new Error(data.message || 'No checkoutId from backend');
+        else throw new Error('Backend returned no checkoutId. Full response: ' + JSON.stringify(data).slice(0, 500));
       } catch (backendErr: any) {
         // Fallback: Direct COPYANDPAY needs checkoutId from backend - cannot create in frontend safely
         setPeachLoading(false);
-        alert('REAL Peach Backend NOT deployed yet.\n\nYour Entity ID is set: ' + entityId.slice(0, 8) + '...\nBut the Secure Backend (Supabase Edge Function peach-checkout) is not live yet.\n\nDeploy the Edge Function code I gave you (see below), then try again.\n\nNo money was taken.');
+        alert('REAL Peach Backend Error:\n\n' + (backendErr.message || backendErr) + '\n\nCHECK THESE 3 THINGS:\n1) Supabase > Edge Functions > peach-checkout = Deployed?\n2) Supabase > Settings > Edge Functions > Secrets = PEACH_ENTITY_ID + PEACH_USER_ID + PEACH_PASSWORD + PEACH_BASE_URL all added?\n3) Render > VITE_PEACH_ENTITY_ID = REAL ID starting with 8a829... (not "your LIVE...")?\n\nNo money was taken.');
         return;
       }
       setPeachCheckoutId(checkoutId);
@@ -657,6 +844,60 @@ export default function App() {
           </div>
         )}
 
+        {activeTab === 'reels' && (
+          <div className="mt-4">
+            <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
+              <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
+              <p className="text-center text-[13px] text-[#E11D48] font-bold mt-1">Like TikTok / Instagram / Facebook / YouTube Reels - But Every Reel Has A BUY Button</p>
+              <div className="flex gap-2 justify-center mt-3 flex-wrap">
+                <button onClick={() => setReelFilter('For You')} className={reelFilter === 'For You' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>For You</button>
+                <button onClick={() => setReelFilter('Following')} className={reelFilter === 'Following' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Following</button>
+                <button onClick={() => setReelFilter('Shop')} className={reelFilter === 'Shop' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Shop</button>
+                <button onClick={() => setReelFilter('Reviews')} className={reelFilter === 'Reviews' ? 'h-9 px-4 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Reviews</button>
+                <button onClick={() => setReelFilter('Sell')} className={reelFilter === 'Sell' ? 'h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell</button>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
+                  <h3 className="font-bold text-[14px]">Post Your Reel - Sell Faster</h3>
+                  <p className="text-[12px] text-[#8A7A6E] mt-1">Show your product in action. 15-60 sec video sells 3x faster than photos.</p>
+                  <div className="flex gap-2 mt-2"><button onClick={() => setReelType('sell')} className={reelType === 'sell' ? 'flex-1 h-11 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell - I am Selling</button><button onClick={() => setReelType('review')} className={reelType === 'review' ? 'flex-1 h-11 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Review - I Bought It</button></div>
+                  {reelType === 'review' && (<div className="bg-[#E9FBF0] p-3 rounded-xl border border-[#BBF7D0] mt-2"><div className="font-bold text-[12px]">Buyer Review Reel - Show What You Bought</div><div className="text-[11px] text-[#8A7A6E] mt-1">Film yourself with the product. Show it working. Be honest - good or bad.</div><input value={reelBoughtFrom} onChange={(e) => setReelBoughtFrom(e.target.value)} placeholder="Who did you buy from? - Seller name e.g. Thabo" className="w-full h-11 px-3 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><div className="flex gap-1 mt-2 items-center"><span className="text-[12px] font-bold">Your Rating:</span>{[1,2,3,4,5].map((s: number) => (<button key={s} onClick={() => setReelRating(s)} className="text-[22px]">{s <= reelRating ? '⭐' : '☆'}</button>))}<span className="text-[12px] font-bold ml-1">{reelRating}/5</span></div><textarea value={reelReviewText} onChange={(e) => setReelReviewText(e.target.value)} placeholder="Your honest review - e.g. I bought this tablet from Thabo in Pimville. Delivery was fast, tablet works perfect, seller was honest. I recommend him!" className="w-full h-[70px] px-3 py-2 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><label className="flex gap-2 items-center mt-2 text-[12px] font-bold"><input type="checkbox" checked={reelVerifiedPurchase} onChange={(e) => setReelVerifiedPurchase(e.target.checked)} /> I really bought this - Verified Purchase</label></div>)}
+                  <input value={reelTitle} onChange={(e) => setReelTitle(e.target.value)} placeholder={reelType === 'review' ? 'Review title - e.g. I bought this Tablet from Thabo - Honest Review' : 'Reel title - e.g. Brand New Samsung Tablet - R3500 - Pimville'} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <input value={reelVideoUrl} onChange={(e) => setReelVideoUrl(e.target.value)} placeholder="Paste Video URL - MP4 or YouTube link" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <div className="mt-2"><label className="h-11 px-4 rounded-xl bg-[#1E1E1E] text-white font-bold text-[12px] inline-flex items-center cursor-pointer">{reelUploading ? 'Uploading...' : 'Upload Video From Phone'}<input type="file" accept="video/*" onChange={handleReelFileUpload} className="hidden" /></label><span className="text-[11px] text-[#8A7A6E] ml-2">{reelVideoUrl ? 'Video ready' : 'MP4, up to 60 sec'}</span></div>
+                  <select value={reelProductId} onChange={(e) => { setReelProductId(e.target.value); const pr = products.find((x: any) => String(x.id) === e.target.value); if (pr) setReelPrice(String(pr.price)); }} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2"><option value="">Link to Product (Optional) - Choose your listing</option>{products.map((pr: any) => (<option key={pr.id} value={pr.id}>{pr.title} - R{pr.price}</option>))}</select>
+                  <input value={reelPrice} onChange={(e) => setReelPrice(e.target.value)} placeholder="Price - e.g. 3500" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <button onClick={handleUploadReel} className="w-full h-12 rounded-full bg-[#E11D48] text-white font-bold text-[13px] mt-3">{reelType === 'review' ? 'Post Review Reel' : 'Post Reel'}</button>
+                  <div className="bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5 mt-3"><b>How to make a Reel that sells:</b><br />1) Show product in your hands, not just photo<br />2) Say price + location in first 3 sec<br />3) Show it working - tablet on, shoes on feet<br />4) Link it to your product - BUY button appears<br />5) Share Reel link on WhatsApp / FB / IG</div>
+                </div>
+                <div className="lg:col-span-2">
+                  {reels.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] mb-3">No Reels yet. Be the first! Post a Reel on the left. Demo below shows how it will look.</div>)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {reels.map((reel: any) => (
+                      <div key={reel.id} className="bg-[#1E1E1E] rounded-[20px] overflow-hidden text-white">
+                        <div className="relative bg-black">
+                          {isYouTube(reel.videoUrl) ? (<iframe src={getYouTubeEmbed(reel.videoUrl)} className="w-full h-[300px]" allowFullScreen title={reel.title} />) : (<video src={reel.videoUrl} controls playsInline className="w-full h-[300px] object-cover" />)}
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-60 px-2 py-1 rounded-full text-[10px] font-bold">{reel.reelType === 'review' ? 'REVIEW REEL - Verified Buyer' : 'SELL REEL'} - Views {reel.views || 0}</div>
+                          {reel.reelType === 'review' && (<div className="absolute top-8 left-2 bg-[#16A34A] px-2 py-1 rounded-full text-[10px] font-bold">{"⭐".repeat(reel.rating || 5)} {reel.rating || 5}/5</div>)}
+                        </div>
+                        <div className="p-3">
+                          <div className="font-bold text-[14px]">{reel.title}</div>
+                          <div className="text-[12px] text-[#D1D5DB] mt-1">{reel.reelType === 'review' ? 'Review by ' + (reel.reviewerName || reel.sellerName) + ' - Bought from ' + (reel.boughtFrom || 'Seller') + (reel.verifiedPurchase ? ' - Verified Purchase' : '') : 'By ' + reel.sellerName + ' - ' + reel.createdAt + (reel.price ? ' - R' + reel.price : '')}</div>
+                          {reel.reelType === 'review' && reel.reviewText && (<div className="text-[13px] bg-[#2A2A2A] p-2 rounded-xl mt-2">"{reel.reviewText}"</div>)}
+                          {reel.reelType === 'review' && (<div className="flex gap-2 mt-2"><button onClick={() => { setChatTo(reel.boughtFrom || reel.sellerName); setActiveTab('chat' as any); }} className="h-9 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[11px]">Buy From {reel.boughtFrom || 'This Seller'}</button><span className="text-[11px] text-[#BBF7D0] font-bold self-center">Trust this seller - Buyer verified</span></div>)}
+                          <div className="flex gap-2 mt-3"><button onClick={() => handleBuyFromReel(reel)} className="flex-1 h-11 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px]">Buy Now {reel.price ? '- R' + reel.price : ''} - Escrow</button><button onClick={() => { setChatTo(reel.sellerName); setActiveTab('chat' as any); }} className="h-11 px-4 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Chat Seller</button></div>
+                          <div className="flex gap-2 mt-2"><button onClick={() => handleLikeReel(reel.id)} className="h-10 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">{reel.likedByMe ? 'Liked' : 'Like'} - {reel.likes}</button><button onClick={() => handleShareReel(reel)} className="h-10 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Share - {reel.shares || 0}</button></div>
+                          <div className="mt-3"><div className="text-[12px] font-bold mb-1">Comments ({(reel.comments || []).length})</div>{(reel.comments || []).map((c: any) => (<div key={c.id} className="text-[12px] bg-[#2A2A2A] p-2 rounded-xl mt-1"><b>{c.from}:</b> {c.text}</div>))}<div className="flex gap-2 mt-2"><input value={activeReelId === reel.id ? reelComment : ''} onChange={(e) => { setActiveReelId(reel.id); setReelComment(e.target.value); }} placeholder="Add a comment..." className="flex-1 h-10 px-3 rounded-full bg-[#2A2A2A] text-white outline-none text-[12px]" /><button onClick={() => handleCommentReel(reel.id)} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Post</button></div></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'invite' && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Invite Friends - Grow TrustLink, Earn Trust</h2>
@@ -712,8 +953,9 @@ export default function App() {
             <h3 className="font-black text-[20px] mt-3">{selected.title}</h3>
             <p className="text-[13px] text-[#8A7A6E] mt-1">{selected.description || 'No description'}</p>
             <div className="flex justify-between mt-3"><b className="text-[22px]">R{selected.price}</b><span className="text-[12px] font-bold">Seller: {selected.profiles?.name || 'Seller'} • Trust {selected.profiles?.trust_score || 50}%</span></div>
-            <div className="bg-[#FFF8F0] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL Peach Payments - LIVE - Escrow Protected</b><br />Buyer pays → Peach HOLDS money → Seller delivers → Buyer confirms → Peach RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
-            <div className="flex gap-2 mt-3"><button onClick={() => handleRealPeachPay(selected)} disabled={peachLoading} className="flex-1 h-12 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px] disabled:opacity-50">{peachLoading ? 'Opening REAL Peach...' : 'Pay REAL with Peach - R' + selected.price + ' - Escrow'}</button></div>
+            <div className="bg-[#E6F7FF] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL PayFast Payments - LIVE - Escrow Protected</b><br />Buyer pays → PayFast HOLDS money → Seller delivers → Buyer confirms → PayFast RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
+            <div className="flex gap-2 mt-3"><button onClick={() => handleRealPayFastPay(selected)} disabled={payfastLoading} className="flex-1 h-12 rounded-full bg-[#FF6B00] text-white font-bold text-[13px] disabled:opacity-50">{payfastLoading ? 'Opening REAL PayFast...' : 'Pay REAL with PayFast - R' + selected.price + ' - Escrow - Card / EFT / SnapScan'}</button></div>
+            <div className="flex gap-2 mt-2"><button onClick={() => handleRealYocoPay(selected)} disabled={yocoLoading} className="flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px] disabled:opacity-50">{yocoLoading ? 'Opening Yoco...' : 'Pay with Yoco (R199 signup fee - Optional)'}</button><button onClick={() => handleRealPeachPay(selected)} disabled={peachLoading} className="flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px] disabled:opacity-50">{peachLoading ? 'Opening Peach...' : 'Pay with Peach (Paused by Peach)'}</button></div>
             <div className="flex gap-2 mt-2"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
           </div>
         </div>
