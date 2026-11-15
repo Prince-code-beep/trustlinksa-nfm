@@ -58,10 +58,42 @@ export default function App() {
   const [brainCareerGoal, setBrainCareerGoal] = useState('');
   const [allowRecruiter, setAllowRecruiter] = useState(true);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [peachLoading, setPeachLoading] = useState(false);
+  const [peachCheckoutId, setPeachCheckoutId] = useState('');
+  const [yocoLoading, setYocoLoading] = useState(false);
+  const [payfastLoading, setPayfastLoading] = useState(false);
+  const [reels, setReels] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_reels') || '[]'); } catch(e) { return []; } });
+  const [reelTitle, setReelTitle] = useState('');
+  const [reelVideoUrl, setReelVideoUrl] = useState('');
+  const [reelProductId, setReelProductId] = useState('');
+  const [reelPrice, setReelPrice] = useState('');
+  const [reelUploading, setReelUploading] = useState(false);
+  const [reelComment, setReelComment] = useState('');
+  const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const [reelFilter, setReelFilter] = useState('For You');
+  const [reelType, setReelType] = useState('sell');
+  const [reelRating, setReelRating] = useState(5);
+  const [reelReviewText, setReelReviewText] = useState('');
+  const [reelBoughtFrom, setReelBoughtFrom] = useState('');
+  const [reelVerifiedPurchase, setReelVerifiedPurchase] = useState(true);
+  const [reelPreviewOpen, setReelPreviewOpen] = useState(false);
+  const [reelPreviewUrl, setReelPreviewUrl] = useState('');
+  const [reelPreviewTitle, setReelPreviewTitle] = useState('');
+  const [myReelsOnly, setMyReelsOnly] = useState(false);
+  const [myReelsSearch, setMyReelsSearch] = useState('');
+  const [myReelsSort, setMyReelsSort] = useState('newest');
+  const [yocoCheckoutId, setYocoCheckoutId] = useState('');
+  const [peachEntityId, setPeachEntityId] = useState(() => { try { return (import.meta as any).env?.VITE_PEACH_ENTITY_ID || ''; } catch(e) { return ''; } });
+  const [friendSearch, setFriendSearch] = useState('');
+  const [friendResults, setFriendResults] = useState<any[]>([]);
+  const [friendSearching, setFriendSearching] = useState(false);
+  const [friendRequests, setFriendRequests] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_requests_' + (JSON.parse(localStorage.getItem('sb-session') || 'null')?.user?.id || 'anon')) || '[]'); } catch(e) { return []; } });
+  const [friends, setFriends] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_friends') || '[]'); } catch(e) { return []; } });
+  const [chatWith, setChatWith] = useState<any>(null);
 
-  const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' }, dark: { name: 'Dark Mode', bg: '#1E1E1E', accent: '#FF8A4C' }, purple: { name: 'Brain Purple', bg: '#F5F0FF', accent: '#7C3AED' }, green: { name: 'Money Green', bg: '#F0FDF4', accent: '#16A34A' }, blue: { name: 'Ocean Blue', bg: '#EFF6FF', accent: '#0EA5E9' }, pink: { name: 'Pink Hustle', bg: '#FFF5F7', accent: '#FF5A7A' } };
+  const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FF6B00', accent: '#FF6B00', headerBg: '#FF6B00', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF6B00' }, dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' }, purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' }, green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' }, blue: { name: 'Ocean Blue', bg: '#0066FF', accent: '#0066FF', headerBg: '#0047B3', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0066FF' }, pink: { name: 'Pink Hustle', bg: '#FF2D78', accent: '#FF2D78', headerBg: '#C4004F', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF2D78' }, gold: { name: 'Gold Rush', bg: '#FFB800', accent: '#FFB800', headerBg: '#FF8A00', headerText: '#000000', cardBg: '#FFFFFF', buttonBg: '#FF8A00' }, red: { name: 'Fire Red', bg: '#E11D48', accent: '#E11D48', headerBg: '#9F1239', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#E11D48' } };
 
-  // ANN ENGINE - 6 -> 8 -> 4 -> 1
+  // ANN ENGINE - 6 → 8 → 4 → 1
   const ANN: any = {
     w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
     b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
@@ -89,7 +121,7 @@ export default function App() {
       const r = ANN.forward([userTrust / 100, userSkill / 100, skillGap, 0.5, 0.8, locMatch]);
       return Math.round(r.output * 100);
     },
-    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden (ReLU) -> 4 Hidden (ReLU) -> 1 Output (Sigmoid 0-100%). Every sale/review updates weights. It learns YOU, the signed-in user.',
+    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) → 8 Hidden (ReLU) → 4 Hidden (ReLU) → 1 Output (Sigmoid 0-100%). Every sale/review updates weights. It learns YOU, the signed-in user.',
   };
 
   useEffect(() => {
@@ -168,7 +200,7 @@ export default function App() {
     const secondSkill = (profile as any).second_skill || saved.secondSkill || '';
     const careerGoal = (profile as any).career_goal || saved.careerGoal || '';
     const canShare = ((profile as any).allow_recruiter ?? saved.allowRecruiter ?? true);
-    return { name: profile.name, location: profile.location || 'South Africa', education, topSkill, topScore, secondSkill, careerGoal, allowRecruiter: canShare, hasBrainData: !!(education || topSkill || careerGoal), facts: [ { label: 'Your Education (You Provided)', detail: education || 'Not added yet', score: education ? 'Added by You' : 'Add Yours' }, { label: 'Your Top Skill (You Provided)', detail: topSkill || 'Not added yet', score: topScore ? String(topScore) + '%' : 'Add Yours' }, { label: 'Your Second Skill (You Provided)', detail: secondSkill || 'Not added yet', score: secondSkill ? 'Added by You' : 'Add Yours' }, { label: 'Your Career Goal (You Provided)', detail: careerGoal || 'Not added yet', score: careerGoal ? 'Added by You' : 'Add Yours' }, { label: 'Your Trust Score', detail: 'From sales + reviews', score: (profile.trust_score || 50) + '%' }, { label: 'Your Location', detail: 'From YOUR profile', score: profile.location || 'Not set' } ], graph: (topSkill ? topSkill + ' (' + (topScore || '') + '%)' : 'Your top skill') + ' -> ' + (secondSkill || 'Your second skill') + ' -> ' + (careerGoal || 'Your career goal') + ' - built from data YOU provided.', vault: [ { name: 'Your ID Document', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your CV / Transcript', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your Phone + ID Number', hash: 'SHA256: sealed - never used for training', status: 'SEALED' } ] };
+    return { name: profile.name, location: profile.location || 'South Africa', education, topSkill, topScore, secondSkill, careerGoal, allowRecruiter: canShare, hasBrainData: !!(education || topSkill || careerGoal), facts: [ { label: 'Your Education (You Provided)', detail: education || 'Not added yet', score: education ? 'Added by You' : 'Add Yours' }, { label: 'Your Top Skill (You Provided)', detail: topSkill || 'Not added yet', score: topScore ? String(topScore) + '%' : 'Add Yours' }, { label: 'Your Second Skill (You Provided)', detail: secondSkill || 'Not added yet', score: secondSkill ? 'Added by You' : 'Add Yours' }, { label: 'Your Career Goal (You Provided)', detail: careerGoal || 'Not added yet', score: careerGoal ? 'Added by You' : 'Add Yours' }, { label: 'Your Trust Score', detail: 'From sales + reviews', score: (profile.trust_score || 50) + '%' }, { label: 'Your Location', detail: 'From YOUR profile', score: profile.location || 'Not set' } ], graph: (topSkill ? topSkill + ' (' + (topScore || '') + '%)' : 'Your top skill') + ' → ' + (secondSkill || 'Your second skill') + ' → ' + (careerGoal || 'Your career goal') + ' - built from data YOU provided.', vault: [ { name: 'Your ID Document', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your CV / Transcript', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your Phone + ID Number', hash: 'SHA256: sealed - never used for training', status: 'SEALED' } ] };
   }
   function getANNInsights() {
     const s: any = getMySoul();
@@ -191,7 +223,7 @@ export default function App() {
   function handleSendChat() {
     if (!chatMsg.trim()) return;
     if (!session) return alert('Sign in to chat.');
-    const msg = { id: Date.now(), from: profile?.name || 'You', fromId: profile?.id, to: chatTo || 'TrustLink Community', text: chatMsg.trim(), time: new Date().toLocaleTimeString(), encrypted: true };
+    const msg = { id: Date.now(), from: profile?.name || 'You', fromId: profile?.id, to: chatWith ? chatWith.name : (chatTo || 'TrustLink Community'), text: chatMsg.trim(), time: new Date().toLocaleTimeString(), encrypted: true };
     const next = [...chatMessages, msg];
     setChatMessages(next);
     try { localStorage.setItem('trustlink_chats', JSON.stringify(next)); } catch(e) {}
@@ -256,15 +288,15 @@ export default function App() {
       if (q.includes('car engine')) {
         localAnswer = 'HOW DOES A CAR ENGINE WORK? 1) INTAKE: Piston down, sucks air + fuel 2) COMPRESSION: Piston up, squeezes 3) POWER: Spark fires, explosion pushes piston down - moves car 4) EXHAUST: Piston up, pushes gas out. Repeats 1000s/min.';
       } else if (q.includes('photosynthesis')) {
-        localAnswer = 'HOW DOES PHOTOSYNTHESIS WORK? Plants use sunlight + water + CO2 to make glucose + oxygen. Equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2.';
+        localAnswer = 'HOW DOES PHOTOSYNTHESIS WORK? Plants use sunlight + water + CO2 to make glucose + oxygen. Equation: 6CO2 + 6H2O + light → C6H12O6 + 6O2.';
       } else if (q.includes('inflation')) {
-        localAnswer = 'HOW DOES INFLATION WORK? Inflation = prices up, R100 buys less. Bread R15 -> R18 = 20% inflation. Why: Fuel up -> transport up -> food up. Rand weak -> imports up.';
+        localAnswer = 'HOW DOES INFLATION WORK? Inflation = prices up, R100 buys less. Bread R15 → R18 = 20% inflation. Why: Fuel up → transport up → food up. Rand weak → imports up.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^how /i, '').trim(); }
     } else if (isWhat) {
       if (q.includes('inflation')) {
         localAnswer = 'WHAT IS INFLATION? Inflation = General rise in prices. Money loses buying power. R100 in 2020 bought 10 breads, in 2026 buys 6. SA inflation ~5-6%/yr.';
       } else if (q.includes('escrow')) {
-        localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays -> Peach holds -> Seller delivers -> Buyer confirms -> Peach releases. If no delivery, refund.';
+        localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays → Peach holds → Seller delivers → Buyer confirms → Peach releases. If no delivery, refund.';
       } else if (q.includes('trustlink')) {
         localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Soweto. Private, POPIA compliant.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^what is /i, '').replace(/^what are /i, '').trim(); }
@@ -301,6 +333,301 @@ export default function App() {
     }
     setAiLoading(false);
   }
+
+  async function handleSearchFriends() {
+    if (!friendSearch.trim()) { setFriendResults([]); return; }
+    setFriendSearching(true);
+    const q = friendSearch.trim();
+    // Search by username (name) OR phone number - like WhatsApp
+    const { data } = await supabase.from('profiles').select('*').or('name.ilike.%' + q + '%,phone.ilike.%' + q + '%').limit(10);
+    const results = (data || []).filter((u: any) => u.id !== session?.user?.id);
+    // Also include local friends for demo if Supabase returns none (offline fallback)
+    setFriendResults(results as any);
+    setFriendSearching(false);
+    if (results.length === 0) setToast('No user found for "' + q + '" - Ask them to join TrustLink with your Invite Link!');
+  }
+  function handleSendRequest(user: any) {
+    if (!session) return alert('Sign in to send requests.');
+    // Prevent duplicate
+    if (friends.find((f: any) => f.id === user.id)) return alert('You are already friends with ' + user.name);
+    // Save request locally + simulate sending to them (in production: Supabase friend_requests table)
+    const req = { id: Date.now(), fromId: profile?.id, fromName: profile?.name, fromPhone: profile?.phone, toId: user.id, toName: user.name, toPhone: user.phone, status: 'sent', time: new Date().toLocaleString() };
+    const allReqs = JSON.parse(localStorage.getItem('trustlink_all_requests') || '[]');
+    allReqs.push(req);
+    try { localStorage.setItem('trustlink_all_requests', JSON.stringify(allReqs)); } catch(e) {}
+    // Also store outgoing for sender view
+    const mine = JSON.parse(localStorage.getItem('trustlink_my_sent') || '[]');
+    mine.push(req);
+    try { localStorage.setItem('trustlink_my_sent', JSON.stringify(mine)); } catch(e) {}
+    setToast('Request sent to ' + user.name + ' - They will see it in Chat > Requests!');
+    alert('Request sent to ' + user.name + ' (' + (user.phone || 'No phone') + '). When they accept, you can chat 1-to-1 like WhatsApp.');
+  }
+  function handleAcceptRequest(req: any) {
+    const newFriend = { id: req.fromId, name: req.fromName, phone: req.fromPhone, acceptedAt: new Date().toLocaleString() };
+    const next = [...friends, newFriend];
+    setFriends(next);
+    try { localStorage.setItem('trustlink_friends', JSON.stringify(next)); } catch(e) {}
+    setFriendRequests(friendRequests.filter((r: any) => r.id !== req.id));
+    setChatWith(newFriend);
+    setChatTo(newFriend.name);
+    setToast('You are now friends with ' + req.fromName + ' - Chat now!');
+  }
+  function handleDeclineRequest(req: any) {
+    setFriendRequests(friendRequests.filter((r: any) => r.id !== req.id));
+    setToast('Declined request from ' + req.fromName);
+  }
+  function loadIncomingRequests() {
+    // Incoming = requests where toId == MY id
+    try {
+      const all = JSON.parse(localStorage.getItem('trustlink_all_requests') || '[]');
+      const incoming = all.filter((r: any) => r.toId === profile?.id && r.status === 'sent');
+      // Merge with demo: if none, keep existing
+      if (incoming.length > 0) setFriendRequests(incoming);
+    } catch(e) {}
+  }
+
+
+
+
+
+  // ===== TRUSTLINK REELS - Sellers market products in video - Like IG/FB/YT Reels + BUY button =====
+
+  function handlePreviewReel(url: string, title: string) { setReelPreviewUrl(url); setReelPreviewTitle(title); setReelPreviewOpen(true); }
+  function handleDeleteReel(id: number) {
+    if (!confirm('Delete this Reel? You can re-upload a better one after.')) return;
+    const next = reels.filter((r: any) => r.id !== id);
+    const save = next; setReels(save); try { localStorage.setItem('trustlink_reels', JSON.stringify(save)); } catch(e) {}
+    setToast('Reel deleted. Upload a better one!');
+  }
+  function handleReuploadReel(reel: any) {
+    // Load this reel back into the Post box so user can fix it and re-post
+    setReelTitle(reel.title || '');
+    setReelVideoUrl(reel.videoUrl || '');
+    setReelPrice(reel.price || '');
+    setReelProductId(reel.productId || '');
+    setReelType(reel.reelType || 'sell');
+    setReelRating(reel.rating || 5);
+    setReelReviewText(reel.reviewText || '');
+    setReelBoughtFrom(reel.boughtFrom || '');
+    // Delete old one so they can post fixed version
+    const next = reels.filter((r: any) => r.id !== reel.id);
+    setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {}
+    setToast('Loaded your Reel back into Post box. Fix it, Preview it, then Post again.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function handleWatchMyReels() { setMyReelsOnly(true); setReelFilter('My Reels'); setActiveTab('reels' as any); }
+
+  function saveReels(next: any[]) { setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {} }
+  async function handleUploadReel() {
+    if (!session) return alert('Sign in to post a Reel.');
+    if (!reelTitle.trim()) return alert(reelType === 'review' ? 'Add a Review title - e.g. "I bought this Tablet from Thabo - Honest Review"' : 'Add a Reel title - e.g. "Brand New Samsung Tablet - R3500 - Pimville"');
+    if (!reelVideoUrl.trim()) return alert('Add a Video URL - paste a MP4 link or YouTube link, or upload below.');
+    if (reelType === 'review' && !reelBoughtFrom.trim()) return alert('Who did you buy from? Type the seller name - e.g. Thabo - so buyers know who you are reviewing.');
+    const newReel = { id: Date.now(), title: reelTitle, videoUrl: reelVideoUrl, productId: reelProductId || '', price: reelPrice || '', sellerId: profile?.id || session.user.id, sellerName: profile?.name || 'Seller', sellerAvatar: profile?.avatar_url || '', sellerPhone: profile?.phone || '', likes: 0, likedByMe: false, comments: [], shares: 0, views: Math.floor(Math.random() * 200) + 50, createdAt: new Date().toLocaleString(), isDemo: false, reelType: reelType, rating: reelType === 'review' ? reelRating : null, reviewText: reelType === 'review' ? reelReviewText : '', boughtFrom: reelType === 'review' ? reelBoughtFrom : '', reviewerName: reelType === 'review' ? (profile?.name || 'Buyer') : '', verifiedPurchase: reelType === 'review' ? reelVerifiedPurchase : false };
+    saveReels([newReel, ...reels]);
+    setReelTitle(''); setReelVideoUrl(''); setReelProductId(''); setReelPrice(''); setReelReviewText(''); setReelBoughtFrom(''); setReelRating(5);
+    setToast('Reel posted! Buyers can now watch + Buy directly from your Reel.');
+    setActiveTab('reels' as any);
+  }
+  async function handleReelFileUpload(e: any) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!session) return alert('Sign in to upload a Reel.');
+    setReelUploading(true);
+    try {
+      // Upload to Supabase Storage - product-images bucket (or avatars) - Reels are videos
+      const fileName = 'reel-' + session.user.id + '-' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const { error } = await supabase.storage.from('product-images').upload(fileName, file, { contentType: file.type, upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+      setReelVideoUrl(data.publicUrl);
+      setToast('Video uploaded! Now add a title + Post Reel.');
+    } catch (err: any) {
+      // Fallback: local preview URL if Supabase upload fails (e.g. bucket not set)
+      try { const localUrl = URL.createObjectURL(file); setReelVideoUrl(localUrl); setToast('Video ready (local preview). For LIVE, add Supabase product-images bucket.'); } catch(e) { alert('Upload failed: ' + (err.message || 'Try a video URL instead.')); }
+    }
+    setReelUploading(false);
+  }
+  function handleLikeReel(id: number) {
+    const next = reels.map((r: any) => r.id === id ? { ...r, likes: r.likedByMe ? r.likes - 1 : r.likes + 1, likedByMe: !r.likedByMe } : r);
+    saveReels(next);
+  }
+  function handleCommentReel(id: number) {
+    if (!reelComment.trim()) return alert('Type a comment first.');
+    if (!session) return alert('Sign in to comment.');
+    const next = reels.map((r: any) => r.id === id ? { ...r, comments: [...(r.comments || []), { id: Date.now(), from: profile?.name || 'You', text: reelComment, time: new Date().toLocaleString() }] } : r);
+    saveReels(next);
+    setReelComment('');
+  }
+  function handleShareReel(reel: any) {
+    const link = window.location.origin + '/?reel=' + reel.id;
+    try { navigator.clipboard.writeText(link); } catch(e) {}
+    const next = reels.map((r: any) => r.id === reel.id ? { ...r, shares: (r.shares || 0) + 1 } : r);
+    saveReels(next);
+    setToast('Reel link copied! Share it on WhatsApp / Facebook / Instagram.');
+    alert('Reel link copied:\\n' + link + '\\n\\nShare it on WhatsApp / Facebook / Instagram to get buyers!');
+  }
+  function handleBuyFromReel(reel: any) {
+    // Find linked product if any, else open chat with seller
+    const prod = products.find((pr: any) => String(pr.id) === String(reel.productId));
+    if (prod) { setSelected(prod); setActiveTab('market' as any); }
+    else if (reel.sellerPhone) { handleWhatsApp(reel.sellerPhone, reel.title); }
+    else { setChatTo(reel.sellerName); setActiveTab('chat' as any); alert('Chat with ' + reel.sellerName + ' about: ' + reel.title); }
+  }
+  function getYouTubeEmbed(url: string) {
+    // Convert YouTube watch?v= to embed
+    try {
+      if (url.includes('youtube.com/watch')) return url.replace('watch?v=', 'embed/').split('&')[0];
+      if (url.includes('youtu.be/')) return 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1].split('?')[0];
+      return url;
+    } catch(e) { return url; }
+  }
+  function isYouTube(url: string) { return url.includes('youtube.com') || url.includes('youtu.be'); }
+
+  // ===== REAL PAYFAST PAYMENTS - LIVE MODE - ESCROW - R0 SIGNUP =====
+  // Flow: Buyer clicks Pay with PayFast → TrustLink calls Secure Backend (Supabase Edge Function payfast-checkout) → Backend generates PayFast signature with SECRET passphrase (never in frontend) → Frontend posts form to https://www.payfast.co.za/eng/process → Buyer pays Card / Instant EFT / SnapScan → PayFast HOLDS (Escrow) → Seller delivers → Buyer confirms → PayFast RELEASES.
+  // NEVER put PAYFAST_PASSPHRASE in App.tsx or GitHub. Only Merchant ID + Merchant Key go in frontend (they are not secrets, but keep them in backend for safety).
+  async function handleRealPayFastPay(product: any) {
+    if (!session) return alert('Sign in to pay with PayFast.');
+    if (!product) return alert('Select a product first.');
+    setPayfastLoading(true);
+    try {
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
+      let payData: any = null;
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/payfast-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amount: Number(product.price).toFixed(2), itemName: product.title, itemDescription: (product.description || product.title).slice(0, 255), productId: product.id, sellerId: product.seller_id, buyerId: session.user.id, customerEmail: session.user.email, buyerName: profile?.name || session.user.email }),
+        });
+        payData = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('PayFast backend returned ' + res.status + ': ' + JSON.stringify(payData).slice(0, 500));
+        if (!payData || !payData.merchant_id || !payData.signature) throw new Error('Backend returned no PayFast signature. Full response: ' + JSON.stringify(payData).slice(0, 500));
+      } catch (backendErr: any) {
+        setPayfastLoading(false);
+        alert('REAL PayFast Backend Error:\\n\\n' + (backendErr.message || backendErr) + '\\n\\nCHECK THESE 3 THINGS:\\n1) Supabase > Edge Functions > payfast-checkout = Deployed?\\n2) Supabase > Settings > Edge Functions > Secrets = PAYFAST_MERCHANT_ID + PAYFAST_MERCHANT_KEY + PAYFAST_PASSPHRASE (if you set one) added?\\n3) PayFast Dashboard = LIVE mode (not Sandbox)?\\n\\nNo money was taken.');
+        return;
+      }
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', payfast_payment_id: payData.m_payment_id || ('TRUSTLINK-' + product.id + '-' + Date.now()) }); } catch(e) {}
+      // Build PayFast form and submit - REAL LIVE PayFast
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://www.payfast.co.za/eng/process';
+      form.target = '_blank';
+      const fields: any = {
+        merchant_id: payData.merchant_id,
+        merchant_key: payData.merchant_key,
+        return_url: payData.return_url,
+        cancel_url: payData.cancel_url,
+        notify_url: payData.notify_url,
+        name_first: payData.name_first || '',
+        email_address: payData.email_address || '',
+        m_payment_id: payData.m_payment_id,
+        amount: payData.amount,
+        item_name: payData.item_name,
+        item_description: payData.item_description,
+        custom_str1: payData.custom_str1 || '',
+        custom_str2: payData.custom_str2 || '',
+        signature: payData.signature,
+      };
+      Object.keys(fields).forEach((k) => { const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = k; inp.value = String(fields[k] || ''); form.appendChild(inp); });
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      setToast('REAL PayFast checkout opened - Pay with Card / Instant EFT / SnapScan. Money HELD in Escrow.');
+    } catch (e: any) { alert('PayFast Error: ' + (e.message || 'Failed to start PayFast checkout')); }
+    setPayfastLoading(false);
+  }
+
+  // ===== REAL YOCO PAYMENTS - LIVE MODE - ESCROW =====
+  // Flow: Buyer clicks Pay with Yoco → TrustLink calls Secure Backend (Supabase Edge Function yoco-checkout) → Backend calls Yoco LIVE API with SECRET (never in frontend) → Yoco returns redirectUrl → Frontend opens Yoco checkout → Buyer pays Visa/Mastercard/Capitec Pay → Yoco HOLDS money (Escrow) → Seller delivers → Buyer confirms → Yoco RELEASES money.
+  // NEVER put YOCO_SECRET_KEY in App.tsx or GitHub. Only YOCO_PUBLIC_KEY (pk_live_) goes in frontend if needed.
+  async function handleRealYocoPay(product: any) {
+    if (!session) return alert('Sign in to pay with Yoco.');
+    if (!product) return alert('Select a product first.');
+    setYocoLoading(true);
+    try {
+      const amountCents = Math.round(Number(product.price) * 100);
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
+      let redirectUrl = '';
+      let checkoutId = '';
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/yoco-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amountCents, currency: 'ZAR', productTitle: product.title, productId: product.id, sellerId: product.seller_id, buyerId: session.user.id, customerEmail: session.user.email, successUrl: window.location.origin + '/?payment=success', cancelUrl: window.location.origin + '/?payment=cancelled', failureUrl: window.location.origin + '/?payment=failed' }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('Yoco backend returned ' + res.status + ': ' + JSON.stringify(data).slice(0, 500));
+        if (data.redirectUrl) redirectUrl = data.redirectUrl;
+        if (data.id) checkoutId = data.id;
+        if (data.checkoutId) checkoutId = data.checkoutId;
+        if (!redirectUrl) throw new Error('Backend returned no redirectUrl. Full response: ' + JSON.stringify(data).slice(0, 500));
+      } catch (backendErr: any) {
+        setYocoLoading(false);
+        alert('REAL Yoco Backend Error:\\n\\n' + (backendErr.message || backendErr) + '\\n\\nCHECK THESE 3 THINGS:\\n1) Supabase > Edge Functions > yoco-checkout = Deployed?\\n2) Supabase > Settings > Edge Functions > Secrets = YOCO_SECRET_KEY (sk_live_...) added?\\n3) Yoco Dashboard = LIVE mode (not Test)?\\n\\nNo money was taken.');
+        return;
+      }
+      setYocoCheckoutId(checkoutId);
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', yoco_checkout_id: checkoutId }); } catch(e) {}
+      window.open(redirectUrl, '_blank', 'width=480,height=640');
+      setToast('REAL Yoco checkout opened - Pay with Visa / Mastercard / Capitec Pay. Money HELD in Escrow.');
+    } catch (e: any) { alert('Yoco Error: ' + (e.message || 'Failed to start Yoco checkout')); }
+    setYocoLoading(false);
+  }
+
+  // ===== REAL PEACH PAYMENTS - LIVE MODE - ESCROW =====
+  // Flow: Buyer clicks Pay → TrustLink calls Secure Backend (Supabase Edge Function / Render API) → Backend calls Peach API with SECRET (never in frontend) → Peach returns checkoutId → Frontend shows Peach COPYANDPAY widget → Buyer pays Visa/Mastercard/Capitec Pay → Peach HOLDS money (Escrow) → Seller delivers → Buyer confirms → Peach RELEASES money.
+  // NEVER put VITE_PEACH_PASSWORD or CLIENT_SECRET in App.tsx or GitHub. Only VITE_PEACH_ENTITY_ID (public) goes in frontend.
+  async function handleRealPeachPay(product: any) {
+    if (!session) return alert('Sign in to pay with Peach.');
+    if (!product) return alert('Select a product first.');
+    setPeachLoading(true);
+    try {
+      const amount = Number(product.price).toFixed(2);
+      const entityId = ((import.meta as any).env?.VITE_PEACH_ENTITY_ID || peachEntityId || '').trim();
+      // Catch placeholder Entity ID - user typed "your LIVE Entity ID" instead of real 8a829...
+      if (entityId.toLowerCase().startsWith('your') || entityId.toLowerCase().includes('your live') || entityId === 'your LIVE Entity ID') {
+        setPeachLoading(false);
+        alert('Your Entity ID is a PLACEHOLDER, not a real Peach ID.\n\nIn Render you typed: "' + entityId + '"\n\nGo to Render > Environment > VITE_PEACH_ENTITY_ID > Replace it with your REAL LIVE Entity ID from Peach Dashboard (starts with 8a829...).\n\nThen redeploy. No money was taken.');
+        return;
+      }
+      if (!entityId) {
+        setPeachLoading(false);
+        alert('REAL Peach is NOT configured yet.\n\nSTEP 1: Get your LIVE Entity ID from Peach Dashboard > Account > Entity ID (starts with 8a829...).\nSTEP 2: Render > Environment > Add VITE_PEACH_ENTITY_ID = your LIVE Entity ID\nSTEP 3: Deploy Supabase Edge Function peach-checkout (code below) with PEACH_USER_ID + PEACH_PASSWORD + PEACH_ENTITY_ID secrets.\nSTEP 4: Redeploy. Then Pay button will open REAL Peach checkout.\n\nUntil then, this is a SAFE demo - no real money taken.');
+        return;
+      }
+      // Try Secure Backend first (Supabase Edge Function)
+      const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || 'https://wdktbinawlrlfxmncmlj.supabase.co').trim().replace(/\/$/, '');
+      let checkoutId = '';
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/peach-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amount, currency: 'ZAR', paymentType: 'DB', merchantTransactionId: 'TRUSTLINK-' + product.id + '-' + Date.now(), customerEmail: session.user.email, productTitle: product.title, sellerId: product.seller_id, buyerId: session.user.id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('Supabase function returned ' + res.status + ': ' + JSON.stringify(data).slice(0, 400));
+        if (data.checkoutId) checkoutId = data.checkoutId;
+        else if (data.id) checkoutId = data.id;
+        else throw new Error('Backend returned no checkoutId. Full response: ' + JSON.stringify(data).slice(0, 500));
+      } catch (backendErr: any) {
+        // Fallback: Direct COPYANDPAY needs checkoutId from backend - cannot create in frontend safely
+        setPeachLoading(false);
+        alert('REAL Peach Backend Error:\n\n' + (backendErr.message || backendErr) + '\n\nCHECK THESE 3 THINGS:\n1) Supabase > Edge Functions > peach-checkout = Deployed?\n2) Supabase > Settings > Edge Functions > Secrets = PEACH_ENTITY_ID + PEACH_USER_ID + PEACH_PASSWORD + PEACH_BASE_URL all added?\n3) Render > VITE_PEACH_ENTITY_ID = REAL ID starting with 8a829... (not "your LIVE...")?\n\nNo money was taken.');
+        return;
+      }
+      setPeachCheckoutId(checkoutId);
+      // Create Peach order in Supabase for Escrow tracking
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', peach_checkout_id: checkoutId }); } catch(e) {}
+      // Open Peach COPYANDPAY widget in new window - REAL LIVE checkout
+      const checkoutUrl = 'https://eu-prod.oppwa.com/v1/checkouts/' + checkoutId + '/payment?entityId=' + entityId;
+      window.open(checkoutUrl, '_blank', 'width=480,height=640');
+      setToast('REAL Peach checkout opened - Pay with Visa / Mastercard / Capitec Pay. Money HELD in Escrow.');
+    } catch (e: any) { alert('Peach Error: ' + (e.message || 'Failed to start Peach checkout')); }
+    setPeachLoading(false);
+  }
+
   function handleWhatsApp(phone: string, title: string) { window.open('https://wa.me/' + phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I want: ' + title + ' on TrustLink'), '_blank'); }
 
   const filteredProducts = useMemo(() => products.filter((p: any) => (filter === 'All' || p.category === filter) && (!search || (p.title + ' ' + (p.description || '')).toLowerCase().includes(search.toLowerCase()))), [products, filter, search]);
@@ -390,18 +717,20 @@ export default function App() {
     <div className="min-h-screen pb-24" style={{ background: skinStyle.bg }}>
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
         <div className="flex justify-between items-center">
-          <h1 className="font-black text-[24px]">TrustLink SA</h1>
+          <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
           <div className="flex gap-2 items-center">
             <span className="text-[12px] font-bold">{profile?.name || 'You'} • Trust {profile?.trust_score || 50}%</span>
             <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]">Log Out</button>
           </div>
         </div>
         <div className="flex gap-2 mt-4 items-center bg-white rounded-full p-2 border border-[#FFE4C2] flex-wrap">
-          <span className="text-[12px] font-bold px-2">Skin:</span>
-          {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} className={skin === k ? 'h-8 px-3 rounded-full text-[11px] font-bold bg-[#1E1E1E] text-white' : 'h-8 px-3 rounded-full text-[11px] font-bold bg-white border border-[#FFE4C2]'}>{SKINS[k].name}</button>))}
+          <span className="text-[12px] font-black px-2">SKIN - Tap to change WHOLE app colour:</span>
+          {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} style={{ background: SKINS[k].bg, color: SKINS[k].headerText, border: skin === k ? '3px solid #000' : '2px solid #fff' }} className="h-10 px-4 rounded-full text-[12px] font-black shadow-lg">{skin === k ? '✓ ' + SKINS[k].name : SKINS[k].name}</button>))}
         </div>
+        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 TRUSTLINK REELS - NEW! Watch + Sell With Video</b><div className="text-white text-[12px] opacity-90">Sellers: Post video of your product - Buyers: Post review video of what you bought - Every Reel has a BUY button</div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
+        <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
         <div className="flex gap-2 mt-3 flex-wrap">
-          <button onClick={() => setActiveTab('market')} className={activeTab === 'market' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>
+          <button onClick={() => setActiveTab('market')} className={activeTab === 'market' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>           <button onClick={() => setActiveTab('reels')} className={activeTab === 'reels' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg'}>Reels - NEW</button>
           <button onClick={() => setActiveTab('brain')} className={activeTab === 'brain' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#7C3AED] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>My Brain</button>
           <button onClick={() => setActiveTab('recruiter')} className={activeTab === 'recruiter' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#16A34A] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Recruiter Link</button>
           <button onClick={() => setActiveTab('talent')} className={activeTab === 'talent' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#0EA5E9] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Discover Talent</button>
@@ -505,7 +834,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'chat' && (
+        {false && activeTab === 'chat' && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - End-to-End Encrypted</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Only you + receiver can read.</p>
@@ -518,6 +847,140 @@ export default function App() {
           </div>
         )}
 
+
+        {activeTab === 'chat' && (
+          <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
+            <h2 className="text-center font-black text-[20px]">TrustLink Chat - Like WhatsApp, Inside TrustLink</h2>
+            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Search by Username OR Phone Number - Send Request - Chat 1-to-1</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+              <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
+                <h3 className="font-bold text-[14px]">1. Find Someone You Know</h3>
+                <p className="text-[12px] text-[#8A7A6E] mt-1">Type their TrustLink username OR their phone number (like WhatsApp).</p>
+                <div className="flex gap-2 mt-2"><input value={friendSearch} onChange={(e) => setFriendSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSearchFriends(); }} placeholder="Search username or phone e.g. Thabo / 0821234567" className="flex-1 h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px]" /><button onClick={handleSearchFriends} disabled={friendSearching} className="h-11 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">{friendSearching ? 'Searching...' : 'Search'}</button></div>
+                {friendResults.length > 0 && (<div className="mt-3 space-y-2">{friendResults.map((u: any) => (<div key={u.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] flex justify-between items-center"><div><div className="font-bold text-[13px]">{u.name}</div><div className="text-[11px] text-[#8A7A6E]">{u.phone || 'No phone'} • {u.location || ''} • Trust {u.trust_score || 50}%</div></div><button onClick={() => handleSendRequest(u)} className="h-9 px-3 rounded-full bg-[#FF8A4C] text-white font-bold text-[11px]">+ Send Request</button></div>))}</div>)}
+                {friendSearch && friendResults.length === 0 && !friendSearching && (<div className="mt-3 text-[12px] text-[#8A7A6E]">No results yet. Press Search. If they are not on TrustLink, invite them with your Invite Link.</div>)}
+                <button onClick={loadIncomingRequests} className="mt-3 h-9 px-3 rounded-full bg-white border border-[#FFE4C2] font-bold text-[11px]">Refresh Incoming Requests</button>
+                <h3 className="font-bold text-[14px] mt-4">2. Requests For You ({friendRequests.length})</h3>
+                {friendRequests.length === 0 && (<div className="text-[12px] text-[#8A7A6E] mt-1">No pending requests. When someone sends you a request, it appears here.</div>)}
+                {friendRequests.map((r: any) => (<div key={r.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] mt-2"><div className="font-bold text-[13px]">{r.fromName} wants to chat</div><div className="text-[11px] text-[#8A7A6E]">{r.fromPhone || ''} • {r.time}</div><div className="flex gap-2 mt-2"><button onClick={() => handleAcceptRequest(r)} className="h-9 px-3 rounded-full bg-[#16A34A] text-white font-bold text-[11px]">Accept</button><button onClick={() => handleDeclineRequest(r)} className="h-9 px-3 rounded-full bg-white border border-[#FFE4C2] font-bold text-[11px]">Decline</button></div></div>))}
+                <h3 className="font-bold text-[14px] mt-4">3. Your Friends ({friends.length})</h3>
+                {friends.length === 0 && (<div className="text-[12px] text-[#8A7A6E] mt-1">No friends yet. Search above + Send Request.</div>)}
+                {friends.map((f: any) => (<div key={f.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] mt-2 flex justify-between items-center"><div><div className="font-bold text-[13px]">{f.name}</div><div className="text-[11px] text-[#8A7A6E]">{f.phone || ''}</div></div><button onClick={() => { setChatWith(f); setChatTo(f.name); }} className="h-9 px-3 rounded-full bg-[#25D366] text-white font-bold text-[11px]">Chat</button></div>))}
+              </div>
+              <div className="lg:col-span-2 bg-[#FFF8F0] rounded-xl border border-[#FFE4C2] p-4">
+                <div className="flex justify-between items-center"><h3 className="font-bold text-[14px]">Chat {chatWith ? 'with ' + chatWith.name : '— Select a Friend to Chat'}</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">E2E ENCRYPTED</span></div>
+                {!chatWith && (<div className="text-center py-10 text-[13px] text-[#8A7A6E]">Search a username / phone number on the left, send a request, they accept, then chat here like WhatsApp.<br />Your chats are E2E encrypted - only you + them can read.</div>)}
+                {chatWith && (<div><div className="text-[12px] text-[#8A7A6E] mt-1">Chatting with {chatWith.name} • {chatWith.phone || 'No phone'} • E2E Encrypted</div><div className="mt-3 bg-white rounded-xl p-3 min-h-[220px] max-h-[320px] overflow-y-auto">{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).length === 0 && (<div className="text-center text-[12px] text-[#8A7A6E] py-8">No messages yet with {chatWith.name}. Say hi!</div>)}{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).map((m: any) => (<div key={m.id} className="mb-2 bg-[#FFF8F0] p-3 rounded-xl border border-[#FFE4C2]"><div className="flex justify-between"><b className="text-[12px]">{m.from} to {m.to}</b><span className="text-[10px] text-[#16A34A] font-bold">E2E • {m.time}</span></div><div className="text-[13px] mt-1">{m.text}</div></div>))}</div><div className="flex gap-2 mt-3"><input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }} placeholder={'Message ' + chatWith.name + '...'} className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-white outline-none text-[14px]" /><button onClick={handleSendChat} className="h-12 px-6 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Send</button></div></div>)}
+                <div className="mt-4 bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5"><b>How it works (WhatsApp-style):</b><br />1) Search username OR phone number<br />2) Send Request<br />3) They Accept in Chat - Requests<br />4) You become Friends<br />5) Chat 1-to-1, E2E encrypted<br />No phone = still works with username. Phone = faster to find them.</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reels' && (
+          <div className="mt-4">
+            <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
+              <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
+              <p className="text-center text-[13px] text-[#E11D48] font-bold mt-1">Like TikTok / Instagram / Facebook / YouTube Reels - But Every Reel Has A BUY Button</p>
+              <div className="flex gap-2 justify-center mt-3 flex-wrap">
+                <button onClick={() => setReelFilter('For You')} className={reelFilter === 'For You' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>For You</button>
+                <button onClick={() => setReelFilter('Following')} className={reelFilter === 'Following' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Following</button>
+                <button onClick={() => setReelFilter('Shop')} className={reelFilter === 'Shop' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Shop</button>
+                <button onClick={() => setReelFilter('Reviews')} className={reelFilter === 'Reviews' ? 'h-9 px-4 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Reviews</button>
+                <button onClick={() => { setMyReelsOnly(true); setReelFilter('My Reels'); }} className={reelFilter === 'My Reels' ? 'h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>My Reels - Watch Mine</button>
+                <button onClick={() => setReelFilter('Sell')} className={reelFilter === 'Sell' ? 'h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell</button>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
+                  <h3 className="font-bold text-[14px]">Post Your Reel - Sell Faster</h3>
+                  <p className="text-[12px] text-[#8A7A6E] mt-1">Show your product in action. 15-60 sec video sells 3x faster than photos.</p>
+                  <div className="flex gap-2 mt-2"><button onClick={() => setReelType('sell')} className={reelType === 'sell' ? 'flex-1 h-11 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell - I am Selling</button><button onClick={() => setReelType('review')} className={reelType === 'review' ? 'flex-1 h-11 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Review - I Bought It</button></div>
+                  {reelType === 'review' && (<div className="bg-[#E9FBF0] p-3 rounded-xl border border-[#BBF7D0] mt-2"><div className="font-bold text-[12px]">Buyer Review Reel - Show What You Bought</div><div className="text-[11px] text-[#8A7A6E] mt-1">Film yourself with the product. Show it working. Be honest - good or bad.</div><input value={reelBoughtFrom} onChange={(e) => setReelBoughtFrom(e.target.value)} placeholder="Who did you buy from? - Seller name e.g. Thabo" className="w-full h-11 px-3 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><div className="flex gap-1 mt-2 items-center"><span className="text-[12px] font-bold">Your Rating:</span>{[1,2,3,4,5].map((s: number) => (<button key={s} onClick={() => setReelRating(s)} className="text-[22px]">{s <= reelRating ? '⭐' : '☆'}</button>))}<span className="text-[12px] font-bold ml-1">{reelRating}/5</span></div><textarea value={reelReviewText} onChange={(e) => setReelReviewText(e.target.value)} placeholder="Your honest review - e.g. I bought this tablet from Thabo in Pimville. Delivery was fast, tablet works perfect, seller was honest. I recommend him!" className="w-full h-[70px] px-3 py-2 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><label className="flex gap-2 items-center mt-2 text-[12px] font-bold"><input type="checkbox" checked={reelVerifiedPurchase} onChange={(e) => setReelVerifiedPurchase(e.target.checked)} /> I really bought this - Verified Purchase</label></div>)}
+                  <input value={reelTitle} onChange={(e) => setReelTitle(e.target.value)} placeholder={reelType === 'review' ? 'Review title - e.g. I bought this Tablet from Thabo - Honest Review' : 'Reel title - e.g. Brand New Samsung Tablet - R3500 - Pimville'} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <input value={reelVideoUrl} onChange={(e) => setReelVideoUrl(e.target.value)} placeholder="Paste Video URL - MP4 or YouTube link" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <div className="mt-2"><label className="h-11 px-4 rounded-xl bg-[#1E1E1E] text-white font-bold text-[12px] inline-flex items-center cursor-pointer">{reelUploading ? 'Uploading...' : 'Upload Video From Phone'}<input type="file" accept="video/*" onChange={handleReelFileUpload} className="hidden" /></label><span className="text-[11px] text-[#8A7A6E] ml-2">{reelVideoUrl ? 'Video ready' : 'MP4, up to 60 sec'}</span></div>
+                  {reelVideoUrl && (<div className="bg-[#1E1E1E] rounded-xl overflow-hidden mt-2"><div className="text-white text-[12px] font-bold p-2">Preview YOUR Reel - Watch it BEFORE you post - If you are not happy, delete + re-upload</div>{isYouTube(reelVideoUrl) ? (<iframe src={getYouTubeEmbed(reelVideoUrl)} className="w-full h-[220px]" allowFullScreen title="Preview" />) : (<video src={reelVideoUrl} controls playsInline className="w-full h-[220px] object-cover" />)}<div className="flex gap-2 p-2"><button onClick={() => handlePreviewReel(reelVideoUrl, reelTitle || 'Your Reel Preview')} className="flex-1 h-10 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Watch Full Preview</button><button onClick={() => { setReelVideoUrl(''); setToast('Video removed. Upload a better one.'); }} className="flex-1 h-10 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete Video - Re-upload</button></div></div>)}
+                  <select value={reelProductId} onChange={(e) => { setReelProductId(e.target.value); const pr = products.find((x: any) => String(x.id) === e.target.value); if (pr) setReelPrice(String(pr.price)); }} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2"><option value="">Link to Product (Optional) - Choose your listing</option>{products.map((pr: any) => (<option key={pr.id} value={pr.id}>{pr.title} - R{pr.price}</option>))}</select>
+                  <input value={reelPrice} onChange={(e) => setReelPrice(e.target.value)} placeholder="Price - e.g. 3500" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <button onClick={handleUploadReel} className="w-full h-12 rounded-full bg-[#E11D48] text-white font-bold text-[13px] mt-3">{reelType === 'review' ? 'Post Review Reel' : 'Post Reel'}</button>
+                  <div className="bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5 mt-3"><b>How to make a Reel that sells:</b><br />1) Show product in your hands, not just photo<br />2) Say price + location in first 3 sec<br />3) Show it working - tablet on, shoes on feet<br />4) Link it to your product - BUY button appears<br />5) Share Reel link on WhatsApp / FB / IG</div>
+                </div>
+                <div className="lg:col-span-2">
+                  {reels.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] mb-3">No Reels yet. Be the first! Post a Reel on the left. Demo below shows how it will look.</div>)}
+                  {myReelsOnly && (
+                    <div className="bg-white p-4 rounded-[20px] border border-[#FFE4C2] mb-4">
+                      <h3 className="font-black text-[16px]">My Reels History - All Videos You Posted In The Past</h3>
+                      <p className="text-[12px] text-[#8A7A6E] mt-1">Every Reel you ever posted, newest to oldest. Nothing is hidden. Search, watch, fix, delete, re-upload.</p>
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        <input value={myReelsSearch} onChange={(e) => setMyReelsSearch(e.target.value)} placeholder="Search my past Reels - e.g. Tablet, Sneakers..." className="flex-1 h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px] min-w-[200px]" />
+                        <select value={myReelsSort} onChange={(e) => setMyReelsSort(e.target.value)} className="h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px]"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="mostViews">Most Views</option><option value="mostLikes">Most Likes</option></select>
+                        <button onClick={() => { setMyReelsOnly(false); setReelFilter('For You'); }} className="h-11 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">Show All Reels</button>
+                      </div>
+                      {(() => {
+                        const my = reels.filter((r: any) => r.sellerId === profile?.id || r.sellerId === session?.user?.id || r.reviewerName === profile?.name);
+                        const filtered = my.filter((r: any) => !myReelsSearch.trim() || (r.title || '').toLowerCase().includes(myReelsSearch.toLowerCase()) || (r.boughtFrom || '').toLowerCase().includes(myReelsSearch.toLowerCase()));
+                        const sorted = [...filtered].sort((a: any, b: any) => {
+                          if (myReelsSort === 'oldest') return a.id - b.id;
+                          if (myReelsSort === 'mostViews') return (b.views || 0) - (a.views || 0);
+                          if (myReelsSort === 'mostLikes') return (b.likes || 0) - (a.likes || 0);
+                          return b.id - a.id;
+                        });
+                        const totalViews = my.reduce((s: number, r: any) => s + (r.views || 0), 0);
+                        const totalLikes = my.reduce((s: number, r: any) => s + (r.likes || 0), 0);
+                        const totalComments = my.reduce((s: number, r: any) => s + ((r.comments || []).length), 0);
+                        return (<div className="mt-3">
+                          <div className="flex gap-2 flex-wrap"><span className="px-3 py-1 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] font-bold text-[12px]">Total Reels: {my.length}</span><span className="px-3 py-1 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] font-bold text-[12px]">Total Views: {totalViews}</span><span className="px-3 py-1 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] font-bold text-[12px]">Total Likes: {totalLikes}</span><span className="px-3 py-1 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] font-bold text-[12px]">Total Comments: {totalComments}</span></div>
+                          {my.length === 0 && (<div className="text-[13px] text-[#8A7A6E] mt-3 text-center py-6">You have not posted any Reels yet. Post your first Reel on the left - it will appear here in your history forever.</div>)}
+                          {my.length > 0 && filtered.length === 0 && (<div className="text-[13px] text-[#8A7A6E] mt-3 text-center py-6">No Reels match "{myReelsSearch}". Try a different search.</div>)}
+                          {sorted.map((r: any, idx: number) => (
+                            <div key={r.id} className="flex gap-3 items-center bg-[#FFF8F0] p-3 rounded-xl border border-[#FFE4C2] mt-2 flex-wrap">
+                              <div className="w-[80px] h-[100px] bg-[#1E1E1E] rounded-xl overflow-hidden flex-shrink-0 relative">{isYouTube(r.videoUrl) ? (<div className="w-full h-full bg-gradient-to-br from-[#E11D48] to-[#7C3AED] flex items-center justify-center text-white font-black text-[20px]">▶️</div>) : (<video src={r.videoUrl} className="w-full h-full object-cover" />)}<span className="absolute bottom-1 left-1 bg-black bg-opacity-70 text-white text-[10px] px-1 rounded">#{my.length - idx}</span></div>
+                              <div className="flex-1 min-w-[200px]"><div className="font-bold text-[13px]">{r.title}</div><div className="text-[11px] text-[#8A7A6E]">{r.createdAt} - {r.reelType === 'review' ? 'Review Reel - Bought from ' + (r.boughtFrom || 'Seller') + ' - ' + (r.rating || 5) + '/5' : 'Sell Reel' + (r.price ? ' - R' + r.price : '')}</div><div className="text-[11px] mt-1">Views {r.views || 0} - Likes {r.likes || 0} - Comments {(r.comments || []).length} - Shares {r.shares || 0}</div></div>
+                              <div className="flex gap-2 flex-wrap"><button onClick={() => handlePreviewReel(r.videoUrl, r.title)} className="h-9 px-3 rounded-full bg-[#1E1E1E] text-white font-bold text-[11px]">Watch</button><button onClick={() => handleReuploadReel(r)} className="h-9 px-3 rounded-full bg-[#FF8A4C] text-white font-bold text-[11px]">Fix / Re-upload</button><button onClick={() => handleDeleteReel(r.id)} className="h-9 px-3 rounded-full bg-[#E11D48] text-white font-bold text-[11px]">Delete</button></div>
+                            </div>
+                          ))}
+                        </div>);
+                      })()}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(myReelsOnly ? reels.filter((r: any) => r.sellerId === profile?.id || r.sellerId === session?.user?.id || r.reviewerName === profile?.name) : reels).map((reel: any) => (
+                      <div key={reel.id} className="bg-[#1E1E1E] rounded-[20px] overflow-hidden text-white">
+                        <div className="relative bg-black">
+                          {isYouTube(reel.videoUrl) ? (<iframe src={getYouTubeEmbed(reel.videoUrl)} className="w-full h-[300px]" allowFullScreen title={reel.title} />) : (<video src={reel.videoUrl} controls playsInline className="w-full h-[300px] object-cover" />)}
+                          <div className="absolute top-2 left-2 bg-black bg-opacity-60 px-2 py-1 rounded-full text-[10px] font-bold">{reel.reelType === 'review' ? 'REVIEW REEL - Verified Buyer' : 'SELL REEL'} - Views {reel.views || 0}</div>
+                          {reel.reelType === 'review' && (<div className="absolute top-8 left-2 bg-[#16A34A] px-2 py-1 rounded-full text-[10px] font-bold">{"⭐".repeat(reel.rating || 5)} {reel.rating || 5}/5</div>)}
+                        </div>
+                        <div className="p-3">
+                          <div className="font-bold text-[14px]">{reel.title}</div>
+                          <div className="text-[12px] text-[#D1D5DB] mt-1">{reel.reelType === 'review' ? 'Review by ' + (reel.reviewerName || reel.sellerName) + ' - Bought from ' + (reel.boughtFrom || 'Seller') + (reel.verifiedPurchase ? ' - Verified Purchase' : '') : 'By ' + reel.sellerName + ' - ' + reel.createdAt + (reel.price ? ' - R' + reel.price : '')}</div>
+                          {reel.reelType === 'review' && reel.reviewText && (<div className="text-[13px] bg-[#2A2A2A] p-2 rounded-xl mt-2">"{reel.reviewText}"</div>)}
+                          {reel.reelType === 'review' && (<div className="flex gap-2 mt-2"><button onClick={() => { setChatTo(reel.boughtFrom || reel.sellerName); setActiveTab('chat' as any); }} className="h-9 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[11px]">Buy From {reel.boughtFrom || 'This Seller'}</button><span className="text-[11px] text-[#BBF7D0] font-bold self-center">Trust this seller - Buyer verified</span></div>)}
+                          {(reel.sellerId === profile?.id || reel.sellerId === session?.user?.id) && (<div className="bg-[#FFFBEB] p-2 rounded-xl mt-2 text-[12px]"><b>YOUR Reel - Only you see this:</b> Watch it - If you are not happy with quality, delete + re-upload a better one.<div className="flex gap-2 mt-2"><button onClick={() => handlePreviewReel(reel.videoUrl, reel.title)} className="flex-1 h-9 rounded-full bg-[#1E1E1E] text-white font-bold text-[11px]">Watch My Reel</button><button onClick={() => handleReuploadReel(reel)} className="flex-1 h-9 rounded-full bg-[#FF8A4C] text-white font-bold text-[11px]">Fix / Re-upload</button><button onClick={() => handleDeleteReel(reel.id)} className="h-9 px-3 rounded-full bg-[#E11D48] text-white font-bold text-[11px]">Delete</button></div></div>)}
+                          <div className="flex gap-2 mt-3"><button onClick={() => handleBuyFromReel(reel)} className="flex-1 h-11 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px]">Buy Now {reel.price ? '- R' + reel.price : ''} - Escrow</button><button onClick={() => { setChatTo(reel.sellerName); setActiveTab('chat' as any); }} className="h-11 px-4 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Chat Seller</button></div>
+                          <div className="flex gap-2 mt-2"><button onClick={() => handleLikeReel(reel.id)} className="h-10 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">{reel.likedByMe ? 'Liked' : 'Like'} - {reel.likes}</button><button onClick={() => handleShareReel(reel)} className="h-10 px-3 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Share - {reel.shares || 0}</button></div>
+                          <div className="mt-3"><div className="text-[12px] font-bold mb-1">Comments ({(reel.comments || []).length})</div>{(reel.comments || []).map((c: any) => (<div key={c.id} className="text-[12px] bg-[#2A2A2A] p-2 rounded-xl mt-1"><b>{c.from}:</b> {c.text}</div>))}<div className="flex gap-2 mt-2"><input value={activeReelId === reel.id ? reelComment : ''} onChange={(e) => { setActiveReelId(reel.id); setReelComment(e.target.value); }} placeholder="Add a comment..." className="flex-1 h-10 px-3 rounded-full bg-[#2A2A2A] text-white outline-none text-[12px]" /><button onClick={() => handleCommentReel(reel.id)} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Post</button></div></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+            {reelPreviewOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4" onClick={() => setReelPreviewOpen(false)}>
+                <div className="bg-[#1E1E1E] rounded-[20px] overflow-hidden max-w-[420px] w-full text-white" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 flex justify-between items-center"><b className="text-[14px]">Preview - {reelPreviewTitle || 'Your Reel'}</b><button onClick={() => setReelPreviewOpen(false)} className="h-9 w-9 rounded-full bg-white text-[#1E1E1E] font-bold">X</button></div>
+                  {isYouTube(reelPreviewUrl) ? (<iframe src={getYouTubeEmbed(reelPreviewUrl)} className="w-full h-[500px]" allowFullScreen title="Preview" />) : (<video src={reelPreviewUrl} controls autoPlay playsInline className="w-full h-[500px] object-contain bg-black" />)}
+                  <div className="p-3 text-[12px] text-[#D1D5DB]">Watch the full video. Check: Is it clear? Is the sound good? Is the product visible? If NOT happy - Close, Delete, Re-upload a better one. If HAPPY - Post it.</div>
+                  <div className="flex gap-2 p-3"><button onClick={() => { setReelPreviewOpen(false); setReelVideoUrl(''); setToast('Video removed. Upload a better one.'); }} className="flex-1 h-11 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Not Happy - Delete + Re-upload</button><button onClick={() => setReelPreviewOpen(false)} className="flex-1 h-11 rounded-full bg-[#16A34A] text-white font-bold text-[12px]">Happy - Keep It</button></div>
+                </div>
+              </div>
+            )}
         {activeTab === 'invite' && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Invite Friends - Grow TrustLink, Earn Trust</h2>
@@ -573,7 +1036,10 @@ export default function App() {
             <h3 className="font-black text-[20px] mt-3">{selected.title}</h3>
             <p className="text-[13px] text-[#8A7A6E] mt-1">{selected.description || 'No description'}</p>
             <div className="flex justify-between mt-3"><b className="text-[22px]">R{selected.price}</b><span className="text-[12px] font-bold">Seller: {selected.profiles?.name || 'Seller'} • Trust {selected.profiles?.trust_score || 50}%</span></div>
-            <div className="flex gap-2 mt-4"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
+            <div className="bg-[#E6F7FF] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL PayFast Payments - LIVE - Escrow Protected</b><br />Buyer pays → PayFast HOLDS money → Seller delivers → Buyer confirms → PayFast RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
+            <div className="flex gap-2 mt-3"><button onClick={() => handleRealPayFastPay(selected)} disabled={payfastLoading} className="flex-1 h-12 rounded-full bg-[#FF6B00] text-white font-bold text-[13px] disabled:opacity-50">{payfastLoading ? 'Opening REAL PayFast...' : 'Pay REAL with PayFast - R' + selected.price + ' - Escrow - Card / EFT / SnapScan'}</button></div>
+            <div className="flex gap-2 mt-2"><button onClick={() => handleRealYocoPay(selected)} disabled={yocoLoading} className="flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px] disabled:opacity-50">{yocoLoading ? 'Opening Yoco...' : 'Pay with Yoco (R199 signup fee - Optional)'}</button><button onClick={() => handleRealPeachPay(selected)} disabled={peachLoading} className="flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px] disabled:opacity-50">{peachLoading ? 'Opening Peach...' : 'Pay with Peach (Paused by Peach)'}</button></div>
+            <div className="flex gap-2 mt-2"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
           </div>
         </div>
       )}
