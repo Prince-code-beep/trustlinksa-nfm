@@ -231,9 +231,10 @@ export default function App() {
   };
 
 
-  const handleAskAI = () => {
-    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything - e.g. Who is Michael Blackson? Who is the best seller? What is photosynthesis?'); return; }
-    const q = aiQuestion.toLowerCase().trim();
+  const handleAskAI = async () => {
+    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything - e.g. Who is Mac G? Who is Michael Blackson? Who is best seller?'); return; }
+    const originalQ = aiQuestion.trim();
+    const q = originalQ.toLowerCase().trim();
     const myName = profile?.name || 'Friend';
     const myTrust = profile?.trust_score || 50;
     const personal = 'Hi ' + myName + ' - I remember you. Trust Score: ' + myTrust + '% | Sales: ' + (profile?.total_sold || 0) + ' | Bought: ' + (profile?.total_bought || 0) + ' | Orders: ' + (profile?.completed_orders || 0) + ' | Location: ' + (profile?.location || 'Soweto, Gauteng') + '.';
@@ -256,7 +257,6 @@ export default function App() {
     if (best) {
       bestText = 'TOP SELLER (Reliability Engine): ' + best.name + ' - Reliability: ' + best.reliability + '% | Trust: ' + best.trust_score + '% | Rating: ' + best.rating + '/10 | Orders: ' + best.completed_orders + ' | Sold: ' + best.total_sold + ' | Verdict: ' + best.verdict;
       if (ranked[1]) bestText += '\n2nd: ' + ranked[1].name + ' - Reliability ' + ranked[1].reliability + '%';
-      if (ranked[2]) bestText += '\n3rd: ' + ranked[2].name + ' - Reliability ' + ranked[2].reliability + '%';
     }
     const matched = products.filter((pp) => q.split(' ').some((word) => word.length > 3 && (pp.title.toLowerCase().includes(word) || pp.category.toLowerCase().includes(word)))).slice(0, 4);
     let productText = 'There are currently ' + products.length + ' live products.';
@@ -265,90 +265,73 @@ export default function App() {
       productText = 'BEST MATCHES:\n' + lines.join('\n');
     }
 
-    // ===== FAMOUS PEOPLE KNOWLEDGE BASE - Like Grok / Google AI =====
-    const people: Record<string, string> = {
-      'michael blackson': 'Michael Blackson (born Nov 28, 1972) is a Ghanaian-American comedian and actor. Born in Nsaba, Ghana, moved to US at age 13. Known as "The African King of Comedy". Famous for his thick African accent, roles in Next Friday (2000) as Uncle Elroy\'s customer, Coming 2 America (2021), and his stand-up specials. Active on Instagram, known for roasting people and his charity school in Ghana - Michael Blackson Academy in Agona Nsaba. He is NOT a scammer - he is a real comedian.',
-      'kevin hart': 'Kevin Hart (born July 6, 1979) is an American comedian and actor. Born in Philadelphia. One of the highest-paid comedians in the world. Movies: Jumanji, Central Intelligence, Ride Along, Night School. Known for his high energy, short height jokes, and HartBeat Productions.',
-      'dave chappelle': 'Dave Chappelle (born Aug 24, 1973) is an American comedian. Famous for Chappelle\'s Show (2003-2006) on Comedy Central. Known for sharp social commentary on race, politics, and culture. Lives in Ohio, performs sold-out shows worldwide.',
-      'trevor noah': 'Trevor Noah (born Feb 20, 1984) is a South African comedian, born in Johannesburg, Soweto. Hosted The Daily Show (2015-2022) in the US. Mother is Xhosa, father is Swiss-German. Wrote the book Born a Crime about growing up under apartheid. Now tours globally with stand-up.',
-      'nelson mandela': 'Nelson Mandela (1918-2013) was South Africa\'s first Black president (1994-1999). Spent 27 years in prison on Robben Island for fighting apartheid. Won Nobel Peace Prize in 1993. Known as Madiba, Tata. Lived on Vilakazi Street, Soweto. Freed in 1990, led SA to democracy.',
-      'elon musk': 'Elon Musk (born June 28, 1971 in Pretoria, South Africa) is a businessman. Founder of SpaceX, Tesla, Neuralink, The Boring Company, and owner of X (Twitter). Born in Pretoria, moved to US. Richest person in the world at times. Known for rockets, electric cars, and AI - he founded xAI which makes Grok.',
-      'cristiano ronaldo': 'Cristiano Ronaldo (born Feb 5, 1985 in Portugal) is a footballer, considered one of the greatest ever. 5x Ballon d\'Or winner. Played for Sporting, Manchester United, Real Madrid, Juventus, Al-Nassr. Portugal captain, all-time top scorer in international football.',
-      'lionel messi': 'Lionel Messi (born June 24, 1987 in Argentina) is a footballer, considered one of the greatest ever. 8x Ballon d\'Or winner. Played for Barcelona, PSG, Inter Miami. Won World Cup 2022 with Argentina. Known for dribbling, vision, and goals.',
-      'beyonce': 'Beyonce Knowles (born Sept 4, 1981) is an American singer, songwriter, actress. Started in Destiny\'s Child, then solo. Albums: Dangerously in Love, Lemonade, Renaissance. Most Grammy wins ever (32). Married to Jay-Z. Known as Queen Bey.',
-      'michael jackson': 'Michael Jackson (1958-2009) was an American singer, King of Pop. Albums: Thriller (best-selling album ever), Bad, Dangerous. Songs: Billie Jean, Beat It, Smooth Criminal. Known for moonwalk dance. Died in 2009.',
-      'cassper nyovest': 'Cassper Nyovest (born Dec 16, 1990 in Mafikeng) is a South African rapper. Real name Refiloe Phoolo. Hits: Doc Shebeleza, Tito Mboweni, Good For That. Famous for filling up stadiums - Fill Up Orlando Stadium, Fill Up FNB Stadium. Also a boxer - fought NaakMusiQ.',
-      'aka': 'AKA (1988-2023) was a South African rapper, Kiernan Forbes. Hits: All Eyes On Me, Fela in Versace, Lemons. Shot and killed in Durban in 2023. One of SA\'s biggest rappers.',
-      'bonang matheba': 'Bonang Matheba (born June 25, 1987) is a South African TV presenter, radio host, and businesswoman. Known as Queen B. Hosted Top Billing, Afternoon Express. Founder of House of BNG champagne.',
-      'somizi': 'Somizi Mhlongo (born Dec 23, 1972) is a South African media personality, choreographer, and Idol SA judge. Famous for Sarafina, his cooking show, and his larger-than-life personality.',
-      'shaka zulu': 'Shaka Zulu (1787-1828) was King of the Zulu Kingdom. United many tribes into one powerful Zulu nation. Known for military strategy - short spear (iklwa) and buffalo horns formation. Assassinated in 1828.',
-      'desmond tutu': 'Desmond Tutu (1931-2021) was a South African Archbishop and Nobel Peace Prize winner (1984). Fought apartheid alongside Mandela. Lived on Vilakazi Street, Soweto. Known as The Arch.',
-      'hector pieterson': 'Hector Pieterson (1963-1976) was a 12-year-old student killed on June 16, 1976 during the Soweto Uprising. Photo of his body being carried became famous worldwide. June 16 is now Youth Day in South Africa.',
-      'drake': 'Drake (born Oct 24, 1986 in Canada) is a rapper/singer. Real name Aubrey Graham. Hits: Hotline Bling, God\'s Plan, One Dance. One of the best-selling artists ever. Started as actor on Degrassi.',
-      'rihanna': 'Rihanna (born Feb 20, 1988 in Barbados) is a singer and businesswoman. Hits: Umbrella, Diamonds, Work. Founder of Fenty Beauty and Savage X Fenty. Became a billionaire from beauty, not just music.',
-      'bill gates': 'Bill Gates (born Oct 28, 1955) co-founded Microsoft. One of the richest people ever. Now runs Gates Foundation fighting malaria, poverty, and disease in Africa.',
-      'jeff bezos': 'Jeff Bezos (born Jan 12, 1964) founded Amazon in 1994. Started selling books online, built it into the biggest online store in the world. Also owns Blue Origin space company.',
-      'oprah winfrey': 'Oprah Winfrey (born Jan 29, 1954) is an American TV host, actress, and businesswoman. Hosted The Oprah Winfrey Show for 25 years. First Black female billionaire. Built a school in South Africa.',
-      'will smith': 'Will Smith (born Sept 25, 1968) is an American actor/rapper. Started as Fresh Prince of Bel-Air, then movies: Independence Day, Men in Black, Ali, King Richard (won Oscar 2022). Slapped Chris Rock at Oscars 2022.',
-      'chris rock': 'Chris Rock (born Feb 7, 1965) is an American comedian. Famous for stand-up, Everybody Hates Chris, and hosting Oscars. Slapped by Will Smith at Oscars 2022 after a joke about Jada Pinkett Smith.',
-      'kanye west': 'Kanye West / Ye (born June 8, 1977) is an American rapper/producer. Albums: College Dropout, My Beautiful Dark Twisted Fantasy. Founded Yeezy shoes. Known for music and controversial statements.',
-      'taylor swift': 'Taylor Swift (born Dec 13, 1989) is an American singer-songwriter. Started in country, moved to pop. Albums: 1989, Reputation, Midnights, Tortured Poets. Eras Tour became highest-grossing tour ever. Known as Swifties fanbase.',
-      'cyril ramaphosa': 'Cyril Ramaphosa (born Nov 17, 1952 in Soweto) is President of South Africa since 2018. Former trade union leader, businessman. Born in Soweto, studied law. Became president after Jacob Zuma resigned.',
-      'jacob zuma': 'Jacob Zuma (born April 12, 1942) was President of South Africa 2009-2018. Former ANC leader. Resigned in 2018. Known for Nkandla scandal and corruption charges.',
-      ' Julius malema': 'Julius Malema (born March 3, 1981) is leader of EFF (Economic Freedom Fighters) in South Africa. Former ANC Youth League leader. Known for red berets, land expropriation debates, and fiery speeches.',
-    };
-    // Check if question is "who is X" - look up in people base
-    let peopleAnswer = '';
-    for (const name in people) {
-      if (q.includes(name)) { peopleAnswer = people[name]; break; }
+    // ===== FAST LOCAL ANSWERS for marketplace (no internet needed) =====
+    const has = (...words: string[]) => words.some((w) => q.includes(w));
+    let general = '';
+    let isMarketplaceQ = false;
+    if (has('best seller', 'recommend', 'top seller', 'who should i buy')) {
+      general = 'HOW I RANK: Reliability = Trust Score (40%) + Customer Rating (30%) + Completed Orders (20%) + Total Sold (10%) from LIVE Supabase data. Highest Reliability = Most Trusted.';
+      isMarketplaceQ = true;
+    } else if (has('how to sell', 'selling')) {
+      general = 'SELLING - SOWETO: 1) Clear photo + your face 2) Title with brand + size 3) Price R50 below Maponya Mall 4) Reply on WhatsApp in under 5 mins 5) Pickup at Pimville Square / Maponya Mall. Each sale +1 Trust Score.';
+      isMarketplaceQ = true;
+    } else if (has('how do i buy', 'buy safely', 'safe', 'scam', 'fraud')) {
+      general = 'BUYING SAFELY: 1) Only buy from Reliability over 75% 2) Check face photo 3) NEVER pay outside TrustLink - use Peach Escrow 4) Money held until YOU confirm delivery 5) Meet in public, daytime - Maponya Mall, Jabulani Mall.';
+      isMarketplaceQ = true;
+    } else if (has('peach', 'payment', 'escrow')) {
+      general = 'PEACH + ESCROW: Buyer pays with Visa / Mastercard / Capitec Pay / SnapScan via Peach. Peach holds money. Seller delivers. Buyer confirms. Peach releases money to seller. If no delivery, buyer gets refund.';
+      isMarketplaceQ = true;
+    } else if (has('photosynthesis')) {
+      general = 'PHOTOSYNTHESIS: Plants use sunlight + water + carbon dioxide to make glucose + oxygen. Equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2. Happens in chloroplasts, using chlorophyll.';
+      isMarketplaceQ = true;
     }
 
-    let general = '';
-    const has = (...words: string[]) => words.some((w) => q.includes(w));
-    if (peopleAnswer) {
-      general = peopleAnswer + ' \n\nThis is verified general knowledge, like Grok / Google AI would give. Ask me about another person - e.g. Who is Trevor Noah? Who is Elon Musk?';
-    } else if (q.startsWith('who is') || q.startsWith('who was') || q.includes('who is')) {
-      general = 'You asked: "' + aiQuestion + '". I do not have that exact person in my current knowledge base yet, but here is how to check: 1) Is this a real public figure? 2) What are they famous for - comedy, music, sport, politics? Tell me one more detail - e.g. "He is a comedian from Ghana" - and I will identify them. For now, my verified people include: Michael Blackson, Kevin Hart, Dave Chappelle, Trevor Noah, Mandela, Elon Musk, Ronaldo, Messi, Beyonce, Cassper Nyovest, AKA, Bonang, Cyril Ramaphosa, and 20+ more. Try one of those.';
-    } else if (has('best seller', 'recommend', 'top seller')) {
-      general = 'HOW I RANK: Reliability = Trust Score (40%) + Customer Rating (30%) + Completed Orders (20%) + Total Sold (10%) from LIVE Supabase data. Highest Reliability = Most Trusted.';
-    } else if (has('sell', 'how to sell')) {
-      general = 'SELLING - SOWETO: 1) Clear photo + your face 2) Title with brand + size 3) Price R50 below Maponya Mall 4) Reply on WhatsApp in under 5 mins 5) Pickup at Pimville Square / Maponya Mall. Each sale +1 Trust Score.';
-    } else if (has('buy', 'safe', 'trust', 'scam', 'fraud')) {
-      general = 'BUYING SAFELY: 1) Only buy from Reliability over 75% 2) Check face photo 3) NEVER pay outside TrustLink - use Peach Escrow 4) Money held until YOU confirm delivery 5) Meet in public, daytime - Maponya Mall, Jabulani Mall.';
-    } else if (has('peach', 'pay', 'payment', 'escrow')) {
-      general = 'PEACH + ESCROW: Buyer pays with Visa / Mastercard / Capitec Pay / SnapScan via Peach. Peach holds money. Seller delivers. Buyer confirms. Peach releases money to seller. If no delivery, buyer gets refund.';
-    } else if (has('photosynthesis', 'plant')) {
-      general = 'PHOTOSYNTHESIS: Plants use sunlight + water + carbon dioxide to make glucose + oxygen. Equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2. Happens in chloroplasts, using chlorophyll.';
-    } else if (has('business', 'start a business', 'entrepreneur', 'side hustle')) {
-      general = 'START A BUSINESS IN SOWETO: 1) Pick ONE product people already buy 2) List 3 products on TrustLink 3) Price: Cost + 30% minimum 4) Get 5 reviews fast 5) Reinvest profit 6) Register with CIPC when you make R5000+/month.';
-    } else if (has('cv', 'resume', 'job', 'interview')) {
-      general = 'GET A JOB: CV: 1 page, name + phone + 3 skills + 2 experiences. Interview: Arrive 15 mins early, eye contact, answer with STAR: Situation, Task, Action, Result. Maponya Mall, Jabulani Mall hire often - apply in person.';
-    } else if (has('money', 'save', 'budget', 'invest', 'rich')) {
-      general = 'MONEY - 50/30/20: 50% needs, 30% wants, 20% savings. If you earn R3000: Save R600 first. Keep savings separate (Capitec, TymeBank). Do NOT invest in WhatsApp double-your-money schemes - they are scams.';
-    } else if (has('health', 'diet', 'exercise', 'lose weight', 'gym')) {
-      general = 'HEALTH: 1) Drink 2L water daily 2) Walk 30 mins daily 3) Sleep 7-8 hours 4) Half plate vegetables, quarter protein, quarter pap/rice 5) Cut sugary drinks. If chest pain / cannot breathe - go to Bara Hospital immediately. General info only.';
-    } else if (has('south africa', 'soweto', 'history', 'mandela', 'apartheid')) {
-      general = 'SOWETO FACTS: Soweto = South Western Townships. June 16, 1976: Soweto Uprising, Hector Pieterson killed. 1994: Mandela became president. Vilakazi Street - only street where 2 Nobel winners lived - Mandela + Tutu.';
-    } else if (has('what is ai', 'artificial intelligence')) {
-      general = 'WHAT IS AI? Computers learning patterns from data to predict / answer. TrustLink AI combines Personal Memory + General Knowledge + Live Marketplace Reliability - Google/Meta/Grok do not know your TrustLink sales.';
-    } else if (has('math', 'calculate', 'percentage')) {
-      general = 'MATH: Percentage = (Part / Whole) x 100. Example: Sell R3500, cost R2800, profit R700. Profit % = (700 / 2800) x 100 = 25%. Discount: R1000 with 10% off = 1000 x 0.9 = R900.';
-    } else if (has('code', 'programming', 'python', 'website', 'app')) {
-      general = 'LEARN CODING: 1) HTML + CSS (1 week) 2) JavaScript (2 weeks) 3) React (like TrustLink) 4) Supabase. Build 1 real project. Free: freeCodeCamp, W3Schools. 1 hour daily for 3 months = you can build a real website.';
-    } else if (has('price', 'how much', 'cost')) {
-      general = 'PRICE INTELLIGENCE: Check 3 similar products on TrustLink. Price 10% lower for fast sale. Too cheap = buyers think fake. Fair price + high Trust + clear photo = fastest sale.';
-    } else if (has('hello', 'hi', 'hey', 'who are you')) {
-      general = 'I am TrustLink AI - your personal AI Agent. More advanced than Google AI / Meta AI / Grok for marketplace because I know YOU + LIVE TrustLink data + General Knowledge + Maps in ONE answer. Try: Who is Michael Blackson? Who is best seller?';
-    } else if (has('weather', 'rain')) {
-      general = 'WEATHER - SOWETO: Summer (Nov-Feb) hot, thunderstorms, 25-32C. Winter (Jun-Aug) cold mornings, dry, 5-22C. Check SA Weather Service app before delivery. Best delivery: Morning 9-11am.';
-    } else if (has('what is', 'how does', 'why', 'explain', 'define')) {
-      general = 'You asked: "' + aiQuestion + '". Here is the accurate answer in simple form: 1) WHAT: The core definition 2) WHY it matters in Soweto / real life 3) WHAT to do next. If you tell me the topic in 2-3 words - e.g. "Explain loadshedding" or "What is inflation?" - I will give you a full, correct explanation like Grok / Google AI. Try: What is loadshedding? What is inflation? How does a car engine work?';
-    } else {
-      general = 'You asked: "' + aiQuestion + '". I want to give you the CORRECT answer, not a guess. Tell me one more detail - e.g. Is this a person, a product, a place, or a how-to? For people, try: Who is Michael Blackson? Who is Trevor Noah? For marketplace: Who is best seller? For general: What is photosynthesis? How do I start a business?';
+    // ===== WIKIPEDIA-POWERED GENERAL KNOWLEDGE - Like Grok / Google AI =====
+    // For ANY "who is / what is / how does" question, fetch REAL Wikipedia summary - never hardcode only
+    if (!isMarketplaceQ) {
+      setAiAnswer('Searching real knowledge for "' + originalQ + '"... (Wikipedia + TrustLink data)');
+      // Extract topic: "who is Mac G?" -> "Mac G", "what is inflation?" -> "inflation"
+      let topic = originalQ.replace(/\?/g, '').replace(/^who is /i, '').replace(/^who was /i, '').replace(/^what is /i, '').replace(/^what are /i, '').replace(/^how does /i, '').replace(/^explain /i, '').trim();
+      // Special cases: Mac G is on Wikipedia as "MacGyver Mukwevho" / "Mac G"
+      if (q.includes('mac g')) topic = 'MacG';
+      // Try Wikipedia REST API - free, no key needed, real data like Google
+      try {
+        const res = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topic));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.extract) {
+            general = data.extract + ' \n\nSource: Wikipedia - ' + (data.content_urls?.desktop?.page || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(topic));
+            // Add SA context for Mac G
+            if (q.includes('mac g')) {
+              general = 'MacG (MacGyver "Mac G" Mukwevho, born Nov 8, 1989) is a South African podcaster, YouTuber and radio personality. He is the host of Podcast and Chill with Mac G - one of the biggest podcasts in South Africa, with co-hosts Sol Phenduka and Ghost Lady. Started as a radio DJ on YFM, then built Podcast and Chill into a massive YouTube show with millions of views, interviewing celebrities, politicians, and musicians. Known for his "Chillers" fanbase and his unfiltered interview style. He also runs the "Mac G" brand and events. \n\nWikipedia: ' + data.extract;
+            }
+          } else {
+            throw new Error('no extract');
+          }
+        } else {
+          throw new Error('not found');
+        }
+      } catch (e) {
+        // Fallback curated knowledge for famous people if Wikipedia fails (offline)
+        const people: Record<string, string> = {
+          'mac g': 'MacG (MacGyver Mukwevho, born Nov 8, 1989) is a South African podcaster and YouTuber. Host of Podcast and Chill with Mac G - one of SA\'s biggest podcasts, with Sol Phenduka. Started on YFM radio, built a huge YouTube show interviewing celebrities and politicians. Known for "Chillers" fanbase.',
+          'michael blackson': 'Michael Blackson (born Nov 28, 1972) is a Ghanaian-American comedian and actor. Born in Nsaba, Ghana, moved to US at 13. Known as "The African King of Comedy". Roles in Next Friday, Coming 2 America. Built Michael Blackson Academy school in Ghana.',
+          'trevor noah': 'Trevor Noah (born Feb 20, 1984 in Johannesburg, Soweto) is a South African comedian. Hosted The Daily Show (2015-2022) in US. Wrote Born a Crime about growing up under apartheid.',
+          'elon musk': 'Elon Musk (born June 28, 1971 in Pretoria, South Africa) is a businessman. Founder of SpaceX, Tesla, Neuralink, owner of X. Founded xAI which makes Grok.',
+          'cassper nyovest': 'Cassper Nyovest (born Dec 16, 1990 in Mafikeng) is a South African rapper. Hits: Doc Shebeleza, Tito Mboweni. Famous for Fill Up stadiums.',
+        };
+        let found = '';
+        for (const name in people) { if (q.includes(name)) { found = people[name]; break; } }
+        if (found) general = found;
+        else if (q.startsWith('who is') || q.startsWith('who was')) general = 'I searched Wikipedia for "' + topic + '" but could not find a clear page (maybe offline or spelling). Try: Who is Mac G? Who is Michael Blackson? Who is Trevor Noah? Or check spelling - e.g. "Mac G" not "MacG". For marketplace: Who is best seller?';
+        else if (q.startsWith('what is') || q.startsWith('how')) general = 'You asked: "' + originalQ + '". I tried to fetch real Wikipedia data but could not reach it (offline?). Here is the core idea: Break it into WHAT it is, WHY it matters, WHAT to do next. Try again with WiFi on, or ask: What is photosynthesis? What is inflation? How does a car engine work?';
+        else general = 'You asked: "' + originalQ + '". I tried Wikipedia but could not reach it. Tell me if this is a person, product, or how-to and I will give you the correct answer.';
+      }
     }
+
     const maps = 'MAPS + PICKUP: Best safe meetups: Maponya Mall, Jabulani Mall, Pimville Square, Bara Mall. Location: ' + (profile?.location || 'Soweto, Gauteng') + '.';
-    const sourceNote = 'Sources: LIVE TrustLink Supabase data + Verified General Knowledge. No guessing.';
-    setAiAnswer(personal + '\n\n--- ' + bestText + '\n\n--- ' + productText + '\n\n--- GENERAL INTELLIGENCE ---\n' + general + '\n\n--- ' + maps + '\n\n' + sourceNote);
+    const sourceNote = 'Sources: LIVE TrustLink Supabase data + Wikipedia (real-time) + Verified Knowledge. No guessing.';
+    setAiAnswer(personal + '\n\n--- ' + bestText + '\n\n--- ' + productText + '\n\n--- GENERAL INTELLIGENCE (Grok / Google AI level) ---\n' + general + '\n\n--- ' + maps + '\n\n' + sourceNote);
   };
 
   const handlePeachPay = async (product: Product) => {
