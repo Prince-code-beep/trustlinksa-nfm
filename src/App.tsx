@@ -87,6 +87,9 @@ export default function App() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [viewProfile, setViewProfile] = useState<Profile | null>(null);
   const [showSell, setShowSell] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+const [aiQuestion, setAiQuestion] = useState('');
+const [aiAnswer, setAiAnswer] = useState('');
   const [activeNav, setActiveNav] = useState('Home');
   const [toast, setToast] = useState<string | null>(null);
 
