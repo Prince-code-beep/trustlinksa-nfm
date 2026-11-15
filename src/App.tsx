@@ -720,15 +720,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24 relative overflow-hidden" style={{ background: skin === 'rain' ? 'linear-gradient(180deg,#0F2233 0%,#1E3A52 45%,#2A4A62 100%)' : skinStyle.bg }}>
-       {skin === 'rain' && (<>
-         <style>{`@keyframes rainFall { 0%{ transform: translateY(-100px); opacity:0; } 10%{opacity:0.9;} 90%{opacity:0.9;} 100%{ transform: translateY(110vh); opacity:0; } } @keyframes dripDown { 0%{ transform: translateY(0) scale(1); opacity:0.9; height:8px; } 70%{ transform: translateY(85vh) scale(1.2); opacity:0.7; height:22px; } 100%{ transform: translateY(100vh) scale(1.4); opacity:0; height:28px; } } @keyframes fogMove { 0%{ transform: translateX(-20px); opacity:0.3; } 50%{ transform: translateX(20px); opacity:0.5; } 100%{ transform: translateX(-20px); opacity:0.3; } } .rain-drop{ position:fixed; top:0; width:1.5px; background:linear-gradient(to bottom, transparent, #BAE6FD); pointer-events:none; z-index:1; animation: rainFall linear infinite; } .window-drop{ position:fixed; top:0; width:3px; background:linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(186,230,253,0.9)); border-radius:999px; pointer-events:none; z-index:2; animation: dripDown linear infinite; box-shadow:0 0 6px rgba(186,230,253,0.8); } .window-drop::after{ content:"x"; position:absolute; bottom:-4px; left:-2px; width:7px; height:7px; background:rgba(186,230,253,0.9); border-radius:50%; }`}</style>
-         <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:1, background:'radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.12) 0%, transparent 40%), radial-gradient(ellipse at 80% 30%, rgba(253,224,71,0.15) 0%, transparent 35%)' }} />
-         {Array.from({length: 60}).map((_, i) => (<div key={'r'+i} className="rain-drop" style={{ left: (i * 1.7) + '%', height: (60 + (i % 5) * 20) + 'px', animationDuration: (0.5 + (i % 7) * 0.12) + 's', animationDelay: ((i % 10) * 0.2) + 's' }} />))}
-         {Array.from({length: 22}).map((_, i) => (<div key={'d'+i} className="window-drop" style={{ left: (3 + i * 4.5) + '%', animationDuration: (4 + (i % 5) * 1.5) + 's', animationDelay: (i * 0.6) + 's' }} />))}
-         <div style={{ position:'fixed', bottom:'18px', left:'50%', transform:'translateX(-50%)', zIndex:2, pointerEvents:'none', background:'rgba(15,34,51,0.7)', color:'#E0F2FE', padding:'6px 14px', borderRadius:'999px', fontSize:'11px', fontWeight:700 }}>Rainy Window - Rain behind glass - Droplets dripping down</div>
-       </>)}
-       <div style={{ position:'relative', zIndex:10 }}>
+    <div className="min-h-screen pb-24" style={{ background: skinStyle.bg }}>
+       
+
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
         <div className="flex justify-between items-center">
           <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
@@ -1076,7 +1070,6 @@ export default function App() {
           </div>
         </div>
       )}
-    </div>
     </div>
     </div>
   );
