@@ -70,7 +70,7 @@ export default function App() {
 
   const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' }, dark: { name: 'Dark Mode', bg: '#1E1E1E', accent: '#FF8A4C' }, purple: { name: 'Brain Purple', bg: '#F5F0FF', accent: '#7C3AED' }, green: { name: 'Money Green', bg: '#F0FDF4', accent: '#16A34A' }, blue: { name: 'Ocean Blue', bg: '#EFF6FF', accent: '#0EA5E9' }, pink: { name: 'Pink Hustle', bg: '#FFF5F7', accent: '#FF5A7A' } };
 
-  // ANN ENGINE - 6 -> 8 -> 4 -> 1
+  // ANN ENGINE - 6 → 8 → 4 → 1
   const ANN: any = {
     w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
     b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
@@ -98,7 +98,7 @@ export default function App() {
       const r = ANN.forward([userTrust / 100, userSkill / 100, skillGap, 0.5, 0.8, locMatch]);
       return Math.round(r.output * 100);
     },
-    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden (ReLU) -> 4 Hidden (ReLU) -> 1 Output (Sigmoid 0-100%). Every sale/review updates weights. It learns YOU, the signed-in user.',
+    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) → 8 Hidden (ReLU) → 4 Hidden (ReLU) → 1 Output (Sigmoid 0-100%). Every sale/review updates weights. It learns YOU, the signed-in user.',
   };
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function App() {
     const secondSkill = (profile as any).second_skill || saved.secondSkill || '';
     const careerGoal = (profile as any).career_goal || saved.careerGoal || '';
     const canShare = ((profile as any).allow_recruiter ?? saved.allowRecruiter ?? true);
-    return { name: profile.name, location: profile.location || 'South Africa', education, topSkill, topScore, secondSkill, careerGoal, allowRecruiter: canShare, hasBrainData: !!(education || topSkill || careerGoal), facts: [ { label: 'Your Education (You Provided)', detail: education || 'Not added yet', score: education ? 'Added by You' : 'Add Yours' }, { label: 'Your Top Skill (You Provided)', detail: topSkill || 'Not added yet', score: topScore ? String(topScore) + '%' : 'Add Yours' }, { label: 'Your Second Skill (You Provided)', detail: secondSkill || 'Not added yet', score: secondSkill ? 'Added by You' : 'Add Yours' }, { label: 'Your Career Goal (You Provided)', detail: careerGoal || 'Not added yet', score: careerGoal ? 'Added by You' : 'Add Yours' }, { label: 'Your Trust Score', detail: 'From sales + reviews', score: (profile.trust_score || 50) + '%' }, { label: 'Your Location', detail: 'From YOUR profile', score: profile.location || 'Not set' } ], graph: (topSkill ? topSkill + ' (' + (topScore || '') + '%)' : 'Your top skill') + ' -> ' + (secondSkill || 'Your second skill') + ' -> ' + (careerGoal || 'Your career goal') + ' - built from data YOU provided.', vault: [ { name: 'Your ID Document', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your CV / Transcript', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your Phone + ID Number', hash: 'SHA256: sealed - never used for training', status: 'SEALED' } ] };
+    return { name: profile.name, location: profile.location || 'South Africa', education, topSkill, topScore, secondSkill, careerGoal, allowRecruiter: canShare, hasBrainData: !!(education || topSkill || careerGoal), facts: [ { label: 'Your Education (You Provided)', detail: education || 'Not added yet', score: education ? 'Added by You' : 'Add Yours' }, { label: 'Your Top Skill (You Provided)', detail: topSkill || 'Not added yet', score: topScore ? String(topScore) + '%' : 'Add Yours' }, { label: 'Your Second Skill (You Provided)', detail: secondSkill || 'Not added yet', score: secondSkill ? 'Added by You' : 'Add Yours' }, { label: 'Your Career Goal (You Provided)', detail: careerGoal || 'Not added yet', score: careerGoal ? 'Added by You' : 'Add Yours' }, { label: 'Your Trust Score', detail: 'From sales + reviews', score: (profile.trust_score || 50) + '%' }, { label: 'Your Location', detail: 'From YOUR profile', score: profile.location || 'Not set' } ], graph: (topSkill ? topSkill + ' (' + (topScore || '') + '%)' : 'Your top skill') + ' → ' + (secondSkill || 'Your second skill') + ' → ' + (careerGoal || 'Your career goal') + ' - built from data YOU provided.', vault: [ { name: 'Your ID Document', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your CV / Transcript', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' }, { name: 'Your Phone + ID Number', hash: 'SHA256: sealed - never used for training', status: 'SEALED' } ] };
   }
   function getANNInsights() {
     const s: any = getMySoul();
@@ -265,15 +265,15 @@ export default function App() {
       if (q.includes('car engine')) {
         localAnswer = 'HOW DOES A CAR ENGINE WORK? 1) INTAKE: Piston down, sucks air + fuel 2) COMPRESSION: Piston up, squeezes 3) POWER: Spark fires, explosion pushes piston down - moves car 4) EXHAUST: Piston up, pushes gas out. Repeats 1000s/min.';
       } else if (q.includes('photosynthesis')) {
-        localAnswer = 'HOW DOES PHOTOSYNTHESIS WORK? Plants use sunlight + water + CO2 to make glucose + oxygen. Equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2.';
+        localAnswer = 'HOW DOES PHOTOSYNTHESIS WORK? Plants use sunlight + water + CO2 to make glucose + oxygen. Equation: 6CO2 + 6H2O + light → C6H12O6 + 6O2.';
       } else if (q.includes('inflation')) {
-        localAnswer = 'HOW DOES INFLATION WORK? Inflation = prices up, R100 buys less. Bread R15 -> R18 = 20% inflation. Why: Fuel up -> transport up -> food up. Rand weak -> imports up.';
+        localAnswer = 'HOW DOES INFLATION WORK? Inflation = prices up, R100 buys less. Bread R15 → R18 = 20% inflation. Why: Fuel up → transport up → food up. Rand weak → imports up.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^how /i, '').trim(); }
     } else if (isWhat) {
       if (q.includes('inflation')) {
         localAnswer = 'WHAT IS INFLATION? Inflation = General rise in prices. Money loses buying power. R100 in 2020 bought 10 breads, in 2026 buys 6. SA inflation ~5-6%/yr.';
       } else if (q.includes('escrow')) {
-        localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays -> Peach holds -> Seller delivers -> Buyer confirms -> Peach releases. If no delivery, refund.';
+        localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays → Peach holds → Seller delivers → Buyer confirms → Peach releases. If no delivery, refund.';
       } else if (q.includes('trustlink')) {
         localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Soweto. Private, POPIA compliant.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^what is /i, '').replace(/^what are /i, '').trim(); }
@@ -365,7 +365,7 @@ export default function App() {
 
 
   // ===== REAL PEACH PAYMENTS - LIVE MODE - ESCROW =====
-  // Flow: Buyer clicks Pay -> TrustLink calls Secure Backend (Supabase Edge Function / Render API) -> Backend calls Peach API with SECRET (never in frontend) -> Peach returns checkoutId -> Frontend shows Peach COPYANDPAY widget -> Buyer pays Visa/Mastercard/Capitec Pay -> Peach HOLDS money (Escrow) -> Seller delivers -> Buyer confirms -> Peach RELEASES money.
+  // Flow: Buyer clicks Pay → TrustLink calls Secure Backend (Supabase Edge Function / Render API) → Backend calls Peach API with SECRET (never in frontend) → Peach returns checkoutId → Frontend shows Peach COPYANDPAY widget → Buyer pays Visa/Mastercard/Capitec Pay → Peach HOLDS money (Escrow) → Seller delivers → Buyer confirms → Peach RELEASES money.
   // NEVER put VITE_PEACH_PASSWORD or CLIENT_SECRET in App.tsx or GitHub. Only VITE_PEACH_ENTITY_ID (public) goes in frontend.
   async function handleRealPeachPay(product: any) {
     if (!session) return alert('Sign in to pay with Peach.');
@@ -712,7 +712,7 @@ export default function App() {
             <h3 className="font-black text-[20px] mt-3">{selected.title}</h3>
             <p className="text-[13px] text-[#8A7A6E] mt-1">{selected.description || 'No description'}</p>
             <div className="flex justify-between mt-3"><b className="text-[22px]">R{selected.price}</b><span className="text-[12px] font-bold">Seller: {selected.profiles?.name || 'Seller'} • Trust {selected.profiles?.trust_score || 50}%</span></div>
-            <div className="bg-[#FFF8F0] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL Peach Payments - LIVE - Escrow Protected</b><br />Buyer pays -> Peach HOLDS money -> Seller delivers -> Buyer confirms -> Peach RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
+            <div className="bg-[#FFF8F0] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL Peach Payments - LIVE - Escrow Protected</b><br />Buyer pays → Peach HOLDS money → Seller delivers → Buyer confirms → Peach RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
             <div className="flex gap-2 mt-3"><button onClick={() => handleRealPeachPay(selected)} disabled={peachLoading} className="flex-1 h-12 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px] disabled:opacity-50">{peachLoading ? 'Opening REAL Peach...' : 'Pay REAL with Peach - R' + selected.price + ' - Escrow'}</button></div>
             <div className="flex gap-2 mt-2"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
           </div>
