@@ -272,6 +272,46 @@ export default function App() {
   };
 
 
+
+  // ===== TRUSTLINK ANN - ARTIFICIAL NEURAL NETWORK - Real ML =====
+  const ANN: any = {
+    w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
+    b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
+    w2: [[0.6,0.5,0.7,0.4],[0.4,0.6,0.5,0.7],[0.7,0.4,0.6,0.5],[0.5,0.7,0.4,0.6],[0.6,0.5,0.7,0.4],[0.4,0.7,0.5,0.6],[0.7,0.5,0.4,0.6],[0.5,0.6,0.7,0.4]],
+    b2: [0.05,0.03,0.06,0.02],
+    w3: [0.7,0.6,0.8,0.5],
+    b3: 0.05,
+    relu: (x: number) => Math.max(0, x),
+    sigmoid: (x: number) => 1 / (1 + Math.exp(-x)),
+    forward: (inputs: number[]) => {
+      const h1: number[] = [];
+      for (let j=0;j<8;j++) { let sum = ANN.b1[j]; for (let i=0;i<6;i++) sum += inputs[i] * ANN.w1[j][i]; h1.push(ANN.relu(sum)); }
+      const h2: number[] = [];
+      for (let j=0;j<4;j++) { let sum = ANN.b2[j]; for (let i=0;i<8;i++) sum += h1[i] * ANN.w2[i][j]; h2.push(ANN.relu(sum)); }
+      let out = ANN.b3; for (let i=0;i<4;i++) out += h2[i] * ANN.w3[i];
+      return { h1, h2, output: ANN.sigmoid(out), raw: out };
+    },
+    predictTrust: (trust: number, skillScore: number, orders: number, sold: number, rating: number, locMatch: number) => {
+      const inputs = [trust/100, (skillScore||50)/100, Math.min(orders,10)/10, Math.min(sold,10)/10, (rating||8.5)/10, locMatch];
+      const r = ANN.forward(inputs);
+      return Math.round(r.output * 100);
+    },
+    predictMatch: (userSkill: number, requiredSkill: number, userTrust: number, distanceKm: number) => {
+      const skillGap = Math.max(0, 1 - Math.abs(userSkill - requiredSkill)/100);
+      const locMatch = distanceKm <= 20 ? 1 : distanceKm <= 50 ? 0.6 : 0.2;
+      const r = ANN.forward([userTrust/100, userSkill/100, skillGap, 0.5, 0.8, locMatch]);
+      return Math.round(r.output * 100);
+    },
+    predictPriceFairness: (price: number, avgPrice: number) => {
+      const ratio = price / Math.max(avgPrice, 1);
+      if (ratio <= 0.85) return 'GOOD DEAL - ANN says ' + Math.round((1-ratio)*100) + '% below market';
+      if (ratio <= 1.1) return 'FAIR PRICE - ANN says within market range';
+      return 'SLIGHTLY HIGH - ANN says ' + Math.round((ratio-1)*100) + '% above market';
+    },
+    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden Neurons (ReLU) -> 4 Hidden Neurons (ReLU) -> 1 Output (Sigmoid 0-100%). Trained on TrustLink sales + reviews. Every new sale/review updates weights so predictions get smarter for YOU.',
+  };
+
+
   // ===== PRIVACY: Brain = data USER provided at signup, protected by login. NO hardcoded personal data. =====
   const SKINS: any = {
     sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' },
@@ -283,7 +323,7 @@ export default function App() {
   };
   const changeSkin = (s: string) => { setSkin(s); try { localStorage.setItem('trustlink_skin', s); } catch(e) {} };
   const getInviteLink = () => 'https://trustlinksa-nfm.onrender.com/?ref=' + (profile?.id?.slice(0,8) || 'trustlink') + '&invite=' + encodeURIComponent(profile?.name || 'Friend');
-  const getMySoul = () => { // PURE USER BRAIN: Uses ONLY profile (signed-in user) + localStorage trustlink_brain_<YOUR id>. NO hardcoded name. ML learns signed-in user only.
+  const getMySoul = () => {
     if (!session || !profile) return null;
     let saved: any = {};
     try { saved = JSON.parse(localStorage.getItem('trustlink_brain_' + profile.id) || '{}'); } catch (e) { saved = {}; }
@@ -313,6 +353,18 @@ export default function App() {
       ],
     };
   };
+  const getANNInsights = () => {
+    const s: any = getMySoul();
+    const trust = profile?.trust_score || 50;
+    const skill = parseInt(s?.topScore || '50') || 50;
+    const orders = profile?.completed_orders || 0;
+    const sold = profile?.total_sold || 0;
+    const rating = profile?.rating || 8.5;
+    const annTrust = ANN.predictTrust(trust, skill, orders, sold, rating, 1);
+    const annMatch = ANN.predictMatch(skill, 85, trust, 15);
+    return { annTrust, annMatch, skill, trust };
+  };
+
   const handleSaveBrain = async () => {
     if (!session || !profile) return alert('Sign in first to save YOUR Brain data.');
     const data = { education: brainEducation, topSkill: brainTopSkill, topScore: brainTopScore, secondSkill: brainSecondSkill, careerGoal: brainCareerGoal, allowRecruiter: allowRecruiter };
@@ -338,7 +390,7 @@ export default function App() {
   const handleAskBrain = () => {
     if (!session || !profile) { setBrainAnswer('LOCKED - Sign in to unlock YOUR Brain. Your Brain is PRIVATE.'); return; }
     const s: any = getMySoul();
-    setBrainAnswer('FOR: Signed-In User = ' + (s?.name || 'You') + ' - ' + (s?.location || '') + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYour Trust: ' + (profile.trust_score || 50) + '%, Sales: ' + (profile.total_sold || 0) + '. YOUR Data: Education=' + (s?.education || 'Not added') + ', Top Skill=' + (s?.topSkill || 'Not added') + ' ' + (s?.topScore || '') + '%, Goal=' + (s?.careerGoal || 'Not added') + '.\n\n--- 2. DIAGNOSTIC ---\nYour Trust reflects sales + reviews. Skills connect to goal via Graph.\n\n--- 3. PREDICTIVE ---\nIf you complete 2 more sales + 5-star reviews, Trust rises, buyers + recruiters pick you first.\n\n--- 4. PRESCRIPTIVE ---\nTODAY: 1) Update Brain data 2) List 1 product 3) Turn ON Sell Myself 4) Meet at safe mall near ' + (s?.location || '') + '.');
+    setBrainAnswer('FOR: ' + (s?.name || 'You') + ' - ' + (s?.location || '') + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYour Trust: ' + (profile.trust_score || 50) + '%, Sales: ' + (profile.total_sold || 0) + '. YOUR Data: Education=' + (s?.education || 'Not added') + ', Top Skill=' + (s?.topSkill || 'Not added') + ' ' + (s?.topScore || '') + '%, Goal=' + (s?.careerGoal || 'Not added') + '.\n\n--- 2. DIAGNOSTIC ---\nYour Trust reflects sales + reviews. Skills connect to goal via Graph.\n\n--- 3. PREDICTIVE ---\nIf you complete 2 more sales + 5-star reviews, Trust rises, buyers + recruiters pick you first.\n\n--- 4. PRESCRIPTIVE ---\nTODAY: 1) Update Brain data 2) List 1 product 3) Turn ON Sell Myself 4) Meet at safe mall near ' + (s?.location || '') + '.');
   };
   // ===== TRUSTLINK AI AGENT v6 - FULL OPERATIONAL - WHAT / HOW / WHERE / WHEN / WHO / WHY =====
   const handleAskAI = async () => {
@@ -422,68 +474,20 @@ export default function App() {
         else if (isWhere) prefix = 'WHERE IS ' + wikiTopic.toUpperCase() + '?\n';
         else if (isWhen) prefix = 'WHEN DID ' + wikiTopic.toUpperCase() + ' HAPPEN?\n';
         else if (isWhy) prefix = 'WHY ' + wikiTopic.toUpperCase() + '?\n';
-        const final = prefix + extra + (data.extract || '') + '\n\n--- MAPPED TO YOU - Signed-In User Only (' + myName + ' in ' + myLoc + ') ---\nUse this to: 1) Sell better 2) Pitch to recruiters 3) Pitch to investors.\n\nSource: Wikipedia - Real-time research.';
+        const final = prefix + extra + (data.extract || '') + '\n\n--- MAPPED TO YOU (' + myName + ' in ' + myLoc + ') ---\nUse this to: 1) Sell better 2) Pitch to recruiters 3) Pitch to investors.\n\nSource: Wikipedia - Real-time research.';
         setAiAnswer(final); pushHistory(originalQ, final);
       } catch (e) {
         const fallback = 'You asked: "' + originalQ + '". I tried Wikipedia but could not reach it (offline?). Try again with WiFi on. Or try: What is inflation? How do I sell faster? Where is Maponya Mall? When is best time to sell? Who is Mac G? Why is my Trust low?';
         setAiAnswer(fallback); pushHistory(originalQ, fallback);
       }
     } else {
-      const final = localAnswer + '\n\n--- MAPPED TO YOU - Signed-In User Only (' + myName + ' in ' + myLoc + ') ---\nYour Trust: ' + myTrust + '%. ANN Predicted Trust (Neural Network): ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. Use this to act TODAY.\n\nSource: LIVE TrustLink data + Verified Knowledge.';
+      const final = localAnswer + '\n\n--- MAPPED TO YOU (' + myName + ' in ' + myLoc + ') ---\nYour Trust: ' + myTrust + '%. ANN Predicted Trust (Neural Network): ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. Use this to act TODAY.\n\nSource: LIVE TrustLink data + Verified Knowledge.';
       setAiAnswer(final); pushHistory(originalQ, final);
     }
     setAiLoading(false);
   };
 
 
-  // ===== TRUSTLINK ANN - ARTIFICIAL NEURAL NETWORK - Real ML =====
-  const ANN: any = {
-    w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
-    b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
-    w2: [[0.6,0.5,0.7,0.4],[0.4,0.6,0.5,0.7],[0.7,0.4,0.6,0.5],[0.5,0.7,0.4,0.6],[0.6,0.5,0.7,0.4],[0.4,0.7,0.5,0.6],[0.7,0.5,0.4,0.6],[0.5,0.6,0.7,0.4]],
-    b2: [0.05,0.03,0.06,0.02],
-    w3: [0.7,0.6,0.8,0.5],
-    b3: 0.05,
-    relu: (x: number) => Math.max(0, x),
-    sigmoid: (x: number) => 1 / (1 + Math.exp(-x)),
-    forward: (inputs: number[]) => {
-      const h1: number[] = [];
-      for (let j=0;j<8;j++) { let sum = ANN.b1[j]; for (let i=0;i<6;i++) sum += inputs[i] * ANN.w1[j][i]; h1.push(ANN.relu(sum)); }
-      const h2: number[] = [];
-      for (let j=0;j<4;j++) { let sum = ANN.b2[j]; for (let i=0;i<8;i++) sum += h1[i] * ANN.w2[i][j]; h2.push(ANN.relu(sum)); }
-      let out = ANN.b3; for (let i=0;i<4;i++) out += h2[i] * ANN.w3[i];
-      return { h1, h2, output: ANN.sigmoid(out), raw: out };
-    },
-    predictTrust: (trust: number, skillScore: number, orders: number, sold: number, rating: number, locMatch: number) => {
-      const inputs = [trust/100, (skillScore||50)/100, Math.min(orders,10)/10, Math.min(sold,10)/10, (rating||8.5)/10, locMatch];
-      const r = ANN.forward(inputs);
-      return Math.round(r.output * 100);
-    },
-    predictMatch: (userSkill: number, requiredSkill: number, userTrust: number, distanceKm: number) => {
-      const skillGap = Math.max(0, 1 - Math.abs(userSkill - requiredSkill)/100);
-      const locMatch = distanceKm <= 20 ? 1 : distanceKm <= 50 ? 0.6 : 0.2;
-      const r = ANN.forward([userTrust/100, userSkill/100, skillGap, 0.5, 0.8, locMatch]);
-      return Math.round(r.output * 100);
-    },
-    predictPriceFairness: (price: number, avgPrice: number) => {
-      const ratio = price / Math.max(avgPrice, 1);
-      if (ratio <= 0.85) return 'GOOD DEAL - ANN says ' + Math.round((1-ratio)*100) + '% below market';
-      if (ratio <= 1.1) return 'FAIR PRICE - ANN says within market range';
-      return 'SLIGHTLY HIGH - ANN says ' + Math.round((ratio-1)*100) + '% above market';
-    },
-    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden Neurons (ReLU) -> 4 Hidden Neurons (ReLU) -> 1 Output (Sigmoid 0-100%). Trained on TrustLink sales + reviews. Every new sale/review updates weights so predictions get smarter for YOU.',
-  };
-  const getANNInsights = () => {
-    const s: any = getMySoul();
-    const trust = profile?.trust_score || 50;
-    const skill = parseInt(s?.topScore || '50') || 50;
-    const orders = profile?.completed_orders || 0;
-    const sold = profile?.total_sold || 0;
-    const rating = profile?.rating || 8.5;
-    const annTrust = ANN.predictTrust(trust, skill, orders, sold, rating, 1);
-    const annMatch = ANN.predictMatch(skill, 85, trust, 15);
-    return { annTrust, annMatch, skill, trust };
-  };
 
   const handleWhatsApp = (product: Product) => {
     const sellerPhone = product.profiles?.phone || '27711234567';
@@ -634,12 +638,9 @@ export default function App() {
           {activeTab === 'brain' && (
             <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               {!session && <div className="bg-[#FEF3C7] p-3 rounded-xl text-center text-[13px] font-bold">🔒 Locked - Sign In to Unlock YOUR Brain. Your Soul + Vault are PRIVATE.</div>}
-              <h2 className="text-center font-[900] text-[20px]">🧠 MY BRAIN</h2>
-              <p className="text-center text-[13px] font-bold text-[#7C3AED] mt-1">👤 Signed in as: {session ? (profile?.name || 'You') : 'Not signed in'} - This is YOUR Brain only</p>
-              <p className="text-center text-[11px] text-[#8A7A6E]">ML learns YOU - the signed-in user. NOT a fixed name. If you log out and another person logs in, they see THEIR Brain, not yours.</p>
+              <h2 className="text-center font-[900] text-[20px]">🧠 MY BRAIN - {getMySoul() ? getMySoul()?.name : 'Locked - Sign In'}</h2>
               <p className="text-center text-[12px] text-[#8A7A6E] mt-1">Private - Only you see this. Data = what YOU provided at signup.</p>
-              <h3 className="font-bold mt-4">✨ THE SOUL - YOUR Data Only</h3>
-              <div className="bg-[#F3E8FF] p-3 rounded-xl text-[12px] leading-5"><b>🔒 Privacy Proof:</b> Name below = <b>{profile?.name || 'Not set'}</b> - This comes from <b>YOUR signup / YOUR profile</b> in Supabase (profiles.name where id = YOUR user id). It is NOT hardcoded. No other user sees this. If you change your profile name, this changes. If someone else logs in, they see THEIR name, not yours.</div>
+              <h3 className="font-bold mt-4">✨ THE SOUL</h3>
               {(getMySoul() ? getMySoul()!.facts : []).map((f:any,i:number)=>(
                 <div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{f.label}</b><br/><span className="text-[12px] text-[#8A7A6E]">{f.detail}</span></div><span className="bg-[#FFF0E6] px-3 py-1 rounded-full font-bold text-[12px] text-[#FF8A4C]">{f.score}</span></div>
               ))}
@@ -677,10 +678,10 @@ export default function App() {
           )}
           {activeTab === 'recruiter' && (
             <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
-              <h2 className="font-[900] text-[20px]">✅ Recruiter Link - For Signed-In User Only</h2>
+              <h2 className="font-[900] text-[20px]">✅ Recruiter Link - For THIS User Only</h2>
               <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
               {getMySoul() && getMySoul()?.allowRecruiter ? (
-                <div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for YOU (signed-in user) (YOU provided this):</b><br/>✔ Education: {getMySoul()?.education || 'Not provided'}<br/>✔ Top Skill: {getMySoul()?.topSkill || 'Not provided'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''}<br/>✔ Second Skill: {getMySoul()?.secondSkill || 'Not provided'}<br/>✔ Career Goal: {getMySoul()?.careerGoal || 'Not provided'}<br/>✔ Trust: {profile?.trust_score || 50}% | Location: {getMySoul()?.location}<br/><br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED.</div>
+                <div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for {getMySoul()?.name} (YOU provided this):</b><br/>✔ Education: {getMySoul()?.education || 'Not provided'}<br/>✔ Top Skill: {getMySoul()?.topSkill || 'Not provided'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''}<br/>✔ Second Skill: {getMySoul()?.secondSkill || 'Not provided'}<br/>✔ Career Goal: {getMySoul()?.careerGoal || 'Not provided'}<br/>✔ Trust: {profile?.trust_score || 50}% | Location: {getMySoul()?.location}<br/><br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED.</div>
               ) : (
                 <div className="text-left bg-[#FEF3C7] p-4 rounded-xl mt-3 text-[13px]"><b>🔒 Recruiter View LOCKED</b><br/>{!session ? 'Sign in to see YOUR Recruiter Link.' : 'You turned OFF Allow Recruiters.'}</div>
               )}
@@ -694,7 +695,7 @@ export default function App() {
               <div className="mt-4 bg-[#F0F9FF] p-4 rounded-xl">
                 <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={sellMyself} onChange={e=>setSellMyself(e.target.checked)} /> ✅ I want to SELL MYSELF - Discoverable by Recruiters / HR</label>
                 <label className="flex items-center gap-2 text-[12px] mt-2"><input type="checkbox" checked={allowRecruiter} onChange={e=>setAllowRecruiter(e.target.checked)} /> Allow Recruiters to see my Soul</label>
-                {sellMyself && session && <div className="mt-3 bg-white p-3 rounded-xl border"><b>Your Talent Card Preview (YOU - Signed-In User):</b><br/><span className="text-[13px]">{getMySoul()?.name} - {getMySoul()?.education || 'Add education'} - Top Skill: {getMySoul()?.topSkill || 'Add skill'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''} - Goal: {getMySoul()?.careerGoal || 'Add goal'} - Trust {profile?.trust_score || 50}%</span></div>}
+                {sellMyself && session && <div className="mt-3 bg-white p-3 rounded-xl border"><b>Your Talent Card Preview:</b><br/><span className="text-[13px]">{getMySoul()?.name} - {getMySoul()?.education || 'Add education'} - Top Skill: {getMySoul()?.topSkill || 'Add skill'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''} - Goal: {getMySoul()?.careerGoal || 'Add goal'} - Trust {profile?.trust_score || 50}%</span></div>}
               </div>
               <div className="flex gap-2 mt-4 flex-wrap">
                 <input value={talentSearch} onChange={e=>setTalentSearch(e.target.value)} placeholder="Search skill e.g. Machine Learning, SEO, Sales..." className="flex-1 min-w-[200px] h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" />
