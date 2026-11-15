@@ -44,7 +44,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('market');
   const [skin, setSkin] = useState(() => { try { return localStorage.getItem('trustlink_skin') || 'sunset'; } catch(e) { return 'sunset'; } });
   const [rainTick, setRainTick] = useState(0);
-  const ANIMATED_SKINS = ['rain', 'aurora', 'ocean', 'forest', 'sunsetglow', 'lavender'];
+  const ANIMATED_SKINS = ['rain', 'aurora', 'ocean', 'forest', 'sunsetglow', 'lavender', 'sunset'];
   // Animated skins - pure JS timer, NO <style> / keyframes so build never breaks
   useEffect(() => { if (!ANIMATED_SKINS.includes(skin)) return; const id = setInterval(() => setRainTick((v) => v + 1), 50); return () => clearInterval(id); }, [skin]);
   const [savedAddress, setSavedAddress] = useState(() => { try { return localStorage.getItem('trustlink_address') || ''; } catch(e) { return ''; } });
@@ -856,7 +856,39 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24 relative" style={{ background: skin === 'rain' ? '#0F2233' : skinStyle.bg }}>
+    <div className="min-h-screen pb-24 relative" style={{ background: skin === 'rain' ? '#0F2233' : skin === 'sunset' ? '#1A0A00' : skinStyle.bg }}>
+      {skin === 'sunset' && (
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#2A0A00 0%,#4A1200 25%,#7A1E00 45%,#FF6B00 65%,#FFB800 85%,#FFD700 100%)' }}>
+          {/* Big fire glow - pulsing */}
+          <div style={{ position: 'absolute', bottom: '-10%', left: '50%', width: '120%', height: '60%', transform: 'translateX(-50%)', borderRadius: '50%', background: 'radial-gradient(ellipse at center, rgba(255,215,0,0.9) 0%, rgba(255,107,0,0.8) 30%, rgba(255,0,0,0.6) 55%, transparent 75%)', filter: 'blur(20px)', opacity: 0.85 + Math.sin(rainTick * 0.08) * 0.15 }} />
+          {/* Conflagration flames - 45 flames rising, flickering with rainTick */}
+          {Array.from({ length: 45 }).map((_, i) => {
+            const baseX = (i * 2.3) % 100;
+            const flick = Math.sin((rainTick * 0.25 + i * 1.7)) * 12;
+            const flick2 = Math.cos((rainTick * 0.18 + i * 2.3)) * 18;
+            const h = 90 + (i % 7) * 28 + Math.sin(rainTick * 0.3 + i) * 35;
+            const w = 28 + (i % 5) * 12;
+            const y = -5 + Math.sin(rainTick * 0.12 + i * 0.5) * 4;
+            const colors = ['#FFD700', '#FFA500', '#FF6B00', '#FF4500', '#FF0000'];
+            const col = colors[i % 5];
+            return (<div key={'flame' + i} style={{ position: 'absolute', left: (baseX + flick * 0.2) + '%', bottom: y + '%', width: w + 'px', height: h + 'px', background: 'radial-gradient(ellipse at bottom, #FFD700 0%, ' + col + ' 35%, #FF4500 60%, #8B0000 85%, transparent 100%)', borderRadius: '50% 50% 50% 50% / 85% 85% 15% 15%', transform: 'translateX(-50%) rotate(' + (flick2 * 0.15) + 'deg) scaleY(' + (1 + Math.sin(rainTick * 0.4 + i * 2) * 0.25) + ')', filter: 'blur(1px)', opacity: 0.9 }} />);
+          })}
+          {/* Embers flying up */}
+          {Array.from({ length: 35 }).map((_, i) => {
+            const x = (i * 29 + rainTick * (0.8 + (i % 4) * 0.4)) % 100;
+            const y = 95 - ((i * 17 + rainTick * (1.2 + (i % 3) * 0.6)) % 105);
+            const s = 2 + (i % 4);
+            return (<div key={'ember' + i} style={{ position: 'absolute', left: x + '%', bottom: y + '%', width: s + 'px', height: s + 'px', background: i % 2 === 0 ? '#FFD700' : '#FFA500', borderRadius: '50%', boxShadow: '0 0 8px 2px rgba(255,215,0,0.9)', opacity: 0.9 }} />);
+          })}
+          {/* Smoke */}
+          <div style={{ position: 'absolute', top: '0%', left: '10%', width: '40%', height: '30%', background: 'radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, transparent 70%)', filter: 'blur(30px)', opacity: 0.6 + Math.sin(rainTick * 0.05) * 0.2 }} />
+          <div style={{ position: 'absolute', top: '5%', right: '5%', width: '35%', height: '25%', background: 'radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 70%)', filter: 'blur(25px)' }} />
+          {/* Burning ground - logs */}
+          <div style={{ position: 'absolute', bottom: '0%', left: '0%', right: '0%', height: '18%', background: 'linear-gradient(180deg, transparent 0%, #1A0A00 40%, #000000 100%)' }} />
+          <div style={{ position: 'absolute', bottom: '2%', left: '15%', width: '70%', height: '6px', background: '#3A1A00', borderRadius: '10px', transform: 'rotate(-1deg)' }} />
+          <div style={{ position: 'absolute', bottom: '4%', left: '25%', width: '50%', height: '5px', background: '#2A1200', borderRadius: '10px', transform: 'rotate(1.5deg)' }} />
+        </div>
+      )}
       {skin === 'rain' && (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
           {/* GLASS - frosted window pane */}
