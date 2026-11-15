@@ -98,13 +98,6 @@ export default function App() {
   const [yocoLoading, setYocoLoading] = useState(false);
   const [payfastLoading, setPayfastLoading] = useState(false);
   const [reels, setReels] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_reels') || '[]'); } catch(e) { return []; } });
-  const [reelFilter, setReelFilter] = useState('All');
-  const [reelPreviewOpen, setReelPreviewOpen] = useState(false);
-  const [reelType, setReelType] = useState('Product');
-  const [reelRating, setReelRating] = useState('5');
-  const [reelVideoUrl, setReelVideoUrl] = useState('');
-  const [chatWith, setChatWith] = useState('');
-  const [reelTitle, setReelTitle] = useState('');
   const [reelSeller, setReelSeller] = useState('');
   const [reelTitle, setReelTitle] = useState('');
   const [reelVideoUrl, setReelVideoUrl] = useState('');
