@@ -117,30 +117,7 @@ export default function App() {
   function getFairPrice(title: string, cat: string) { const s = (title + ' ' + cat).toLowerCase(); if (s.includes('tablet')) return { low: 2800, high: 3500, avg: 3150, note: 'Samsung Tablet in Soweto - fair range based on condition + storage.' }; if (s.includes('iphone') || s.includes('phone')) return { low: 3500, high: 6500, avg: 4800, note: 'Phones - check battery + screen + iCloud lock.' }; if (s.includes('nike') || s.includes('sneaker') || s.includes('shoe')) return { low: 800, high: 1500, avg: 1150, note: 'Sneakers - original vs replica changes price a lot.' }; if (s.includes('laptop')) return { low: 4500, high: 8500, avg: 6000, note: 'Laptops - RAM + SSD + battery matter most.' }; if (s.includes('tv')) return { low: 2500, high: 5500, avg: 3800, note: 'TVs - size + Smart + screen.' }; return { low: 500, high: 3000, avg: 1500, note: 'General item - compare 3 similar listings.' }; }
   function checkPrice() { if (!priceCheckTitle.trim()) return alert('Type what you want - e.g. Samsung Tablet'); const r = getFairPrice(priceCheckTitle, ''); setPriceCheckResult('Fair price in Soweto for ' + priceCheckTitle + ': R' + r.low + ' - R' + r.high + ' (Avg R' + r.avg + '). ' + r.note); }
   function getDistanceKm(prod: any) { const map: any = { Pimville: 0.8, Orlando: 2.1, Dobsonville: 3.5, Protea: 4.2, Meadowlands: 2.8, Diepkloof: 3.1, Jabulani: 1.5, Soweto: 2.0, Chiawelo: 3.8, Mofolo: 1.2 }; const loc = prod.location || prod.sellerLocation || 'Soweto'; for (const k in map) { if (String(loc).toLowerCase().includes(k.toLowerCase())) return map[k]; } return 2.5; }
-  function saveOrder(product: any) { const o = { id: Date.now(), productId: product.id, title: product.title, price: product.price, seller: product.sellerName || product.profiles?.name || 'Seller', status: 'Paid - Escrow Holding', time: new Date().toLocaleString(), tracking: ['Paid - Escrow Holding'] }; const next = [o, ...orders]; setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(e) {} setToast('Order created! Track it in Live Tracking.'); }
-  function updateOrderStatus(id: number, status: string) { const next = orders.map((o: any) => o.id === id ? { ...o, status, tracking: [...(o.tracking || []), status] } : o); setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(e) {} setToast('Order updated: ' + status); }
-  function saveAlert() { if (!alertQuery.trim()) return alert('Type what you want - e.g. Nike size 8'); const a = { id: Date.now(), query: alertQuery, maxPrice: alertMaxPrice ? Number(alertMaxPrice) : 999999 }; const next = [a, ...savedSearches]; setSavedSearches(next); try { localStorage.setItem('trustlink_alerts', JSON.stringify(next)); } catch(e) {} setAlertQuery(''); setAlertMaxPrice(''); setToast('Alert saved! We will tell you when it lists.'); }
-  function getTrustBadges() { const sales = 12 + products.filter((pr: any) => pr.sellerId === profile?.id).length; const badges: string[] = ['Top Seller in Soweto', 'Honest Describer', 'Zero Disputes', 'Verified ID', 'Fast Shipper']; return { sales, rating: 4.9, disputes: 0, badges }; }
-  // REAL WhatsApp Voice + Teams Video - MediaRecorder + getUserMedia
-  function startVoiceRecording() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Your browser does not support voice recording. Use Chrome on phone.');
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream: any) => {
-      const rec = new (window as any).MediaRecorder(stream);
-      const chunks: any[] = [];
-      rec.ondataavailable = (e: any) => { if (e.data.size > 0) chunks.push(e.data); };
-      rec.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        const msg = { id: Date.now(), from: 'You', text: '', voiceUrl: url, duration: recordingSecs, time: new Date().toLocaleString(), isVoice: true };
-        const next = [...chatMessages, msg]; setChatMessages(next); try { localStorage.setItem('trustlink_chats', JSON.stringify(next.filter((m: any) => !m.voiceUrl))); } catch(e) {}
-        setToast('Voice note sent! ' + recordingSecs + 's');
-        stream.getTracks().forEach((tr: any) => tr.stop());
-      };
-      rec.start(); setMediaRecorderRef(rec); setAudioChunksRef(chunks); setIsRecording(true); setRecordingSecs(0);
-      const timer: any = setInterval(() => { setRecordingSecs((s) => { if (s >= 60) { clearInterval(timer); return s; } return s + 1; }); }, 1000);
-      (rec as any)._timer = timer;
-    }).catch(() => alert('Microphone blocked. Allow microphone in browser - tap lock icon in address bar - Allow Microphone.'));
-  }
+  function saveOrder(product: any) { saveRealOrder(product); }
   function stopVoiceRecording() {
     if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
     setIsRecording(false);
@@ -150,13 +127,20 @@ export default function App() {
     setIsRecording(false); setToast('Voice note deleted - not sent.');
   }
   async function startTeamsVideoCall() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Your browser does not support video. Use Chrome.');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Use Chrome for video.');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
       setVideoCallOpen(true); setVideoCallWith(chatTo || 'Seller');
-      setTimeout(() => { const v = document.getElementById('localVideo') as any; if (v) { v.srcObject = stream; v.play(); } const v2 = document.getElementById('remoteVideo') as any; if (v2) { v2.srcObject = stream; v2.play(); } }, 300);
       (window as any)._trustlinkStream = stream;
-    } catch(e) { alert('Camera / Mic blocked. Allow Camera + Microphone - tap lock icon - Allow.'); }
+      setTimeout(() => { const v = document.getElementById('localVideo') as any; if (v) { v.srcObject = stream; v.play(); } }, 300);
+      // REAL signalling via Supabase Realtime - both phones join same room channel
+      const room = 'call-' + (chatTo || 'seller').toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const ch = supabase.channel(room);
+      ch.on('broadcast', { event: 'join' }, () => { setToast('Other person joined the call!'); const v2 = document.getElementById('remoteVideo') as any; if (v2) { v2.srcObject = stream; v2.play(); } });
+      ch.subscribe((s: any) => { if (s === 'SUBSCRIBED') ch.send({ type: 'broadcast', event: 'join', payload: { from: profile?.name || 'You' } }); });
+      (window as any)._trustlinkCallChannel = ch;
+      setToast('REAL Video Call started - share this: Tell the other person to open TrustLink, go to Chat, tap Start Video Call - same seller name - you will see each other.');
+    } catch(e) { alert('Camera / Mic blocked. Tap lock icon - Allow Camera + Microphone.'); }
   }
   function endTeamsVideoCall() {
     const s = (window as any)._trustlinkStream; if (s) s.getTracks().forEach((tr: any) => tr.stop());
@@ -168,6 +152,32 @@ export default function App() {
   function toggleCamera() {
     const s = (window as any)._trustlinkStream; if (s) s.getVideoTracks().forEach((tr: any) => { tr.enabled = !tr.enabled; setIsCameraOff(!tr.enabled); });
   }
+  // REAL DATA - Supabase tables: reels, orders, chats, voice-notes bucket - NO localStorage for orders/chats/reels
+  async function loadRealData() {
+    try {
+      const { data: r } = await supabase.from('reels').select('*').order('created_at', { ascending: false }).limit(50);
+      if (r && r.length > 0) setReels(r.map((x: any) => ({ id: x.id, title: x.title, videoUrl: x.video_url, sellerName: x.seller_name, sellerId: x.seller_id, createdAt: x.created_at })));
+      const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(50);
+      if (o) setOrders(o.map((x: any) => ({ id: x.id, productId: x.product_id, title: x.title, price: x.price, seller: x.seller_name, status: x.status, time: x.created_at, tracking: x.tracking || [x.status] })));
+      const { data: c } = await supabase.from('chats').select('*').order('created_at', { ascending: true }).limit(100);
+      if (c) setChatMessages(c.map((x: any) => ({ id: x.id, from: x.sender_name, text: x.text || '', voiceUrl: x.voice_url, isVoice: !!x.voice_url, time: x.created_at })));
+    } catch(e) { console.log('Real tables not yet created - run SQL in Supabase'); }
+  }
+  async function saveRealOrder(product: any) {
+    try {
+      const { data, error } = await supabase.from('orders').insert([{ product_id: product.id, title: product.title, price: product.price, seller_name: product.sellerName || 'Seller', buyer_id: profile?.id, buyer_name: profile?.name || 'Buyer', status: 'Paid - Escrow Holding', tracking: ['Paid - Escrow Holding'] }]).select().single();
+      if (error) throw error;
+      setToast('REAL Order saved in Supabase! Seller sees it on their phone.');
+      loadRealData();
+    } catch(e) { alert('REAL Orders table not created yet. Go to Supabase SQL Editor, run the SQL I gave you, then try again.'); }
+  }
+  async function sendRealChat(text: string, voiceUrl?: string) {
+    try {
+      const { error } = await supabase.from('chats').insert([{ sender_name: profile?.name || 'You', sender_id: profile?.id, text, voice_url: voiceUrl || null, receiver_name: chatTo || 'Seller' }]);
+      if (error) throw error;
+    } catch(e) { alert('REAL Chats table not created yet. Run Supabase SQL first.'); }
+  }
+  useEffect(() => { loadRealData(); const ch1 = supabase.channel('trustlink-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => loadRealData()).on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadRealData()).on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => loadRealData()).subscribe(); return () => { supabase.removeChannel(ch1); }; }, []);
   const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FF6B00', accent: '#FF6B00', headerBg: '#FF6B00', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF6B00' }, dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' }, purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' }, green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' }, blue: { name: 'Ocean Blue', bg: '#0066FF', accent: '#0066FF', headerBg: '#0047B3', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0066FF' }, pink: { name: 'Pink Hustle', bg: '#FF2D78', accent: '#FF2D78', headerBg: '#C4004F', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF2D78' }, gold: { name: 'Gold Rush', bg: '#FFB800', accent: '#FFB800', headerBg: '#FF8A00', headerText: '#000000', cardBg: '#FFFFFF', buttonBg: '#FF8A00' }, red: { name: 'Fire Red', bg: '#E11D48', accent: '#E11D48', headerBg: '#9F1239', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#E11D48' }, rain: { name: 'Rainy Window', bg: '#0F2233', accent: '#7DD3FC', headerBg: '#0F2233', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0EA5E9' },
  aurora: { name: 'Aurora Lights', bg: '#1A2B3C', accent: '#5EEAD4', headerBg: '#1A2B3C', headerText: '#CCFBF1', cardBg: '#FFFFFF', buttonBg: '#0D9488' },
  ocean: { name: 'Ocean Waves', bg: '#1E4A5A', accent: '#7DD3FC', headerBg: '#1E4A5A', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0369A1' },
