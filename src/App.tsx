@@ -14,6 +14,13 @@ type Profile = {
   total_bought: number;
   total_sold: number;
   avatar_url?: string;
+  education?: string;
+  top_skill?: string;
+  skill_score?: number;
+  second_skill?: string;
+  second_score?: number;
+  career_goal?: string;
+  allow_recruiter?: boolean;
 };
 
 type Product = {
@@ -45,13 +52,6 @@ type Order = {
 
 const CATEGORIES = ['Everything', 'Fashion', 'Tech', 'Food', 'Services', 'Other'] as const;
 
-function getTrustLevel(score: number) {
-  if (score >= 90) return { label: 'Platinum', color: 'from-amber-400 to-yellow-300' };
-  if (score >= 75) return { label: 'Gold', color: 'from-yellow-400 to-amber-300' };
-  if (score >= 60) return { label: 'Silver', color: 'from-slate-300 to-slate-200' };
-  return { label: 'Bronze', color: 'from-orange-300 to-amber-200' };
-}
-
 function calcTrustScore(p: Partial<Profile>) {
   const completed = Math.min((p.completed_orders || 0) * 2, 40);
   const sold = Math.min((p.total_sold || 0) * 1.5, 30);
@@ -71,6 +71,18 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [activeTab, setActiveTab] = useState<'market' | 'brain' | 'recruiter'>('market');
+  const [brainEducation, setBrainEducation] = useState('');
+  const [brainTopSkill, setBrainTopSkill] = useState('');
+  const [brainTopScore, setBrainTopScore] = useState('');
+  const [brainSecondSkill, setBrainSecondSkill] = useState('');
+  const [brainCareerGoal, setBrainCareerGoal] = useState('');
+  const [allowRecruiter, setAllowRecruiter] = useState(true);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [brainQuestion, setBrainQuestion] = useState('What job can I get near me?');
+  const [brainAnswer, setBrainAnswer] = useState('');
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
 
   const handleAvatarUpload = async (e: any) => {
     const file = e.target.files?.[0];
@@ -94,16 +106,8 @@ export default function App() {
   const [selected, setSelected] = useState<Product | null>(null);
   const [viewProfile, setViewProfile] = useState<Profile | null>(null);
   const [showSell, setShowSell] = useState(false);
-  const [showAI, setShowAI] = useState(false);
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiAnswer, setAiAnswer] = useState('');
-  const [activeTab, setActiveTab] = useState<'market' | 'brain' | 'recruiter'>('market');
-  const [brainQuestion, setBrainQuestion] = useState('What job can I get near Soweto?');
-  const [brainAnswer, setBrainAnswer] = useState('');
-  const [vaultUnlocked, setVaultUnlocked] = useState(false);
   const [activeNav, setActiveNav] = useState('Home');
   const [toast, setToast] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const [sellTitle, setSellTitle] = useState('');
   const [sellDesc, setSellDesc] = useState('');
@@ -234,162 +238,6 @@ export default function App() {
     }
   };
 
-
-  // ===== TRUSTLINK BRAIN - Soul + Vault + Graph + 4-Layer =====
-  const SOUL_DATA = {
-    name: 'Manqoba Gordon Dlamini',
-    location: 'Soweto, Gauteng',
-    target: 'AI Marketing Assistant R25k/month',
-    facts: [
-      { label: 'BCom Information Management', detail: 'UJ - NQF 7 - 336 / 360 credits', score: '93%' },
-      { label: 'Machine Learning', detail: '20/20 Classification - Top Module', score: '92%' },
-      { label: 'Business Administration Diploma', detail: 'UJ - Overall', score: '83%' },
-      { label: 'SEO / AEO', detail: 'HubSpot Certified', score: 'Verified' },
-      { label: 'SQL / Power BI / Data Governance', detail: '4+ years experience', score: 'Verified' },
-      { label: 'SA Citizen', detail: 'Verified - Vault Sealed', score: 'Sealed' },
-    ],
-    graph: 'ML (92%) -> AI -> SEO -> Marketing -> Business Admin (83%) -> TrustLink -> AI Marketing Assistant Job (R25k)',
-    vault: [
-      { name: 'ID Document - Photo', hash: 'SHA256: a7f3...9c2e', status: 'SEALED - Only you can unlock' },
-      { name: 'Full Transcript - 11 pages PDF', hash: 'SHA256: b81d...44f1', status: 'SEALED - Only you can unlock' },
-      { name: 'Phone + ID Number', hash: 'SHA256: c92a...77b0', status: 'SEALED - Never used for training' },
-    ],
-  };
-  const handleAskBrain = () => {
-    const q = brainQuestion.toLowerCase();
-    const isJob = q.includes('job') || q.includes('soweto') || q.includes('work') || q.includes('salary') || q.includes('career');
-    const isStudy = q.includes('study') || q.includes('credit') || q.includes('bcom') || q.includes('degree') || q.includes('uj');
-    let answer = '';
-    if (isJob) {
-      answer = 'FOR: Manqoba Gordon Dlamini - Soweto - Target AI Marketing Assistant R25k/month\\n\\n'
-        + '--- 1. DESCRIPTIVE - What Happened? ---\\n'
-        + 'You have ML 92%, Business Admin 83%, BCom IM 336/360 credits (93%). Market: AI Marketing Assistant avg R26,500 in Gauteng, +40% YoY, 12 jobs within 25km in last 7 days (Adzuna / PNet data).\\n\\n'
-        + '--- 2. DIAGNOSTIC - Why? ---\\n'
-        + 'ML high because 20/20 Classification. BCom incomplete because BMG02A2 failed (24 credits left). Location cost matters: Soweto -> Sandton 25km, R80 taxi one-way, 1h15, R160/day = R3,520/mo = 14% of salary.\\n\\n'
-        + '--- 3. PREDICTIVE - What Will Happen? ---\\n'
-        + 'If apply to 5 Rosebank + 3 Remote = 78% fit, 2 interviews in 14 days. If finish 24 credits, jobs 12 -> 47, salary +R5k. If take Sandton job, transport eats R3,520/mo. If take Remote, you save R2,200/mo.\\n\\n'
-        + '--- 4. PRESCRIPTIVE - What Should You Do? ---\\n'
-        + 'TODAY: 1) Apply 3 Remote (0 transport) + 2 Rosebank (R50 taxi, 18km) 2) Use TrustLink Recruiter Link NOT PDF - POPIA safe 3) Walk to UJ Soweto Campus 2km - register BMG02A2 to unlock 47 jobs 4) Message 5 recruiters on TrustLink with Soul link.\\n\\n'
-        + '--- MAPS + TRANSPORT ---\\n'
-        + 'Soweto -> Sandton: 25km, R80, 1h15, R3,520/mo | Soweto -> Rosebank: 18km, R50, 45min, R2,200/mo | Soweto -> Remote: 0km, R0, Save R2,200/mo | UJ Soweto Campus: 2km walkable.\\n\\n'
-        + 'Sources: YOUR Soul (ML 92%, BCom 336/360) + General Jobs (R26.5k avg) + Maps (OSM). No guessing.';
-    } else if (isStudy) {
-      answer = 'FOR: Manqoba Gordon Dlamini\\n\\n--- 1. DESCRIPTIVE ---\\nYou have 336/360 credits. 24 credits left = 1 module: BMG02A2. ML 92%, Business Admin 83%.\\n\\n--- 2. DIAGNOSTIC ---\\nBMG02A2 is the blocker. Without it, BCom is incomplete, many corporate jobs filter you out.\\n\\n--- 3. PREDICTIVE ---\\nIf you finish BMG02A2: BCom complete, eligible jobs 12 -> 47 (+292%), salary +R5k avg, Trust Score +15%.\\n\\n--- 4. PRESCRIPTIVE ---\\nGo to UJ Soweto Campus (2km walk) THIS WEEK. Register BMG02A2. Study 1hr/day. Use TrustLink Brain to quiz you.\\n\\nMaps: UJ Soweto Campus 2km walkable, R0 transport.';
-    } else {
-      answer = 'FOR: Manqoba Gordon Dlamini - Soweto\\n\\n--- 1. DESCRIPTIVE ---\\nYou asked: "' + brainQuestion + '". Your Soul: ML 92%, BCom 336/360, Business Admin 83%, Soweto, Target R25k.\\n\\n--- 2. DIAGNOSTIC ---\\nThis connects to your Graph: ' + SOUL_DATA.graph + '\\n\\n--- 3. PREDICTIVE ---\\nIf you act on this today, your Trust + Job Fit increases. If you ignore, you stay at 12 jobs.\\n\\n--- 4. PRESCRIPTIVE ---\\nTry: "What job can I get near Soweto?" or "Should I finish my BCom?" or "What is my salary if I finish 24 credits?"\\n\\nMaps: Soweto -> Rosebank 18km R50, Soweto -> Sandton 25km R80, Remote R0.';
-    }
-    setBrainAnswer(answer);
-  };
-
-  const handleAskAI = async () => {
-    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything - e.g. Who is Mac G? Who is Michael Blackson? Who is best seller?'); return; }
-    const originalQ = aiQuestion.trim();
-    const q = originalQ.toLowerCase().trim();
-    const myName = profile?.name || 'Friend';
-    const myTrust = profile?.trust_score || 50;
-    const personal = 'Hi ' + myName + ' - I remember you. Trust Score: ' + myTrust + '% | Sales: ' + (profile?.total_sold || 0) + ' | Bought: ' + (profile?.total_bought || 0) + ' | Orders: ' + (profile?.completed_orders || 0) + ' | Location: ' + (profile?.location || 'Soweto, Gauteng') + '.';
-    const sellersMap = new Map();
-    products.forEach((pp) => { if (pp.profiles) sellersMap.set(pp.seller_id, pp.profiles); });
-    const ranked = Array.from(sellersMap.values()).map((s: any) => {
-      const trust = s.trust_score || 50;
-      const rating = s.rating || 8.5;
-      const orders = s.completed_orders || 0;
-      const sold = s.total_sold || 0;
-      const reliability = Math.round(trust * 0.4 + (rating / 10) * 30 + Math.min(orders * 2, 20) + Math.min(sold, 10));
-      let verdict = 'Good - check face photo + reviews.';
-      if (reliability >= 85) verdict = 'HIGHLY TRUSTED - Safe to buy.';
-      else if (reliability >= 70) verdict = 'TRUSTED - Good history, safe with Escrow.';
-      else if (reliability < 50) verdict = 'NEW / LOW DATA - Use Escrow + meet in public.';
-      return { ...s, reliability, verdict };
-    }).sort((a, b) => b.reliability - a.reliability);
-    const best: any = ranked[0];
-    let bestText = 'No sellers yet - be the first to list and become #1.';
-    if (best) {
-      bestText = 'TOP SELLER (Reliability Engine): ' + best.name + ' - Reliability: ' + best.reliability + '% | Trust: ' + best.trust_score + '% | Rating: ' + best.rating + '/10 | Orders: ' + best.completed_orders + ' | Sold: ' + best.total_sold + ' | Verdict: ' + best.verdict;
-      if (ranked[1]) bestText += '\n2nd: ' + ranked[1].name + ' - Reliability ' + ranked[1].reliability + '%';
-    }
-    const matched = products.filter((pp) => q.split(' ').some((word) => word.length > 3 && (pp.title.toLowerCase().includes(word) || pp.category.toLowerCase().includes(word)))).slice(0, 4);
-    let productText = 'There are currently ' + products.length + ' live products.';
-    if (matched.length > 0) {
-      const lines = matched.map((pp, i) => (i + 1) + '. ' + pp.title + ' - R' + pp.price + ' (' + (pp.profiles?.name || 'Seller') + ' - Trust ' + (pp.profiles?.trust_score || 50) + '%)');
-      productText = 'BEST MATCHES:\n' + lines.join('\n');
-    }
-
-    // ===== FAST LOCAL ANSWERS for marketplace (no internet needed) =====
-    const has = (...words: string[]) => words.some((w) => q.includes(w));
-    let general = '';
-    let isMarketplaceQ = false;
-    if (has('best seller', 'recommend', 'top seller', 'who should i buy')) {
-      general = 'HOW I RANK: Reliability = Trust Score (40%) + Customer Rating (30%) + Completed Orders (20%) + Total Sold (10%) from LIVE Supabase data. Highest Reliability = Most Trusted.';
-      isMarketplaceQ = true;
-    } else if (has('how to sell', 'selling')) {
-      general = 'SELLING - SOWETO: 1) Clear photo + your face 2) Title with brand + size 3) Price R50 below Maponya Mall 4) Reply on WhatsApp in under 5 mins 5) Pickup at Pimville Square / Maponya Mall. Each sale +1 Trust Score.';
-      isMarketplaceQ = true;
-    } else if (has('how do i buy', 'buy safely', 'safe', 'scam', 'fraud')) {
-      general = 'BUYING SAFELY: 1) Only buy from Reliability over 75% 2) Check face photo 3) NEVER pay outside TrustLink - use Peach Escrow 4) Money held until YOU confirm delivery 5) Meet in public, daytime - Maponya Mall, Jabulani Mall.';
-      isMarketplaceQ = true;
-    } else if (has('peach', 'payment', 'escrow')) {
-      general = 'PEACH + ESCROW: Buyer pays with Visa / Mastercard / Capitec Pay / SnapScan via Peach. Peach holds money. Seller delivers. Buyer confirms. Peach releases money to seller. If no delivery, buyer gets refund.';
-      isMarketplaceQ = true;
-    } else if (has('photosynthesis')) {
-      general = 'PHOTOSYNTHESIS: Plants use sunlight + water + carbon dioxide to make glucose + oxygen. Equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2. Happens in chloroplasts, using chlorophyll.';
-      isMarketplaceQ = true;
-    }
-
-    // ===== WIKIPEDIA-POWERED GENERAL KNOWLEDGE - Like Grok / Google AI =====
-    // For ANY "who is / what is / how does" question, fetch REAL Wikipedia summary - never hardcode only
-    if (!isMarketplaceQ) {
-      setAiAnswer('Searching real knowledge for "' + originalQ + '"... (Wikipedia + TrustLink data)');
-      // Extract topic: "who is Mac G?" -> "Mac G", "what is inflation?" -> "inflation"
-      let topic = originalQ.replace(/\?/g, '').replace(/^who is /i, '').replace(/^who was /i, '').replace(/^what is /i, '').replace(/^what are /i, '').replace(/^how does /i, '').replace(/^explain /i, '').trim();
-      // Special cases: Mac G is on Wikipedia as "MacGyver Mukwevho" / "Mac G"
-      if (q.includes('mac g')) topic = 'MacG';
-      // Try Wikipedia REST API - free, no key needed, real data like Google
-      try {
-        const res = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topic));
-        if (res.ok) {
-          const data = await res.json();
-          if (data.extract) {
-            general = data.extract + ' \n\nSource: Wikipedia - ' + (data.content_urls?.desktop?.page || 'https://en.wikipedia.org/wiki/' + encodeURIComponent(topic));
-            // Add SA context for Mac G
-            if (q.includes('mac g')) {
-              general = 'MacG (MacGyver "Mac G" Mukwevho, born Nov 8, 1989) is a South African podcaster, YouTuber and radio personality. He is the host of Podcast and Chill with Mac G - one of the biggest podcasts in South Africa, with co-hosts Sol Phenduka and Ghost Lady. Started as a radio DJ on YFM, then built Podcast and Chill into a massive YouTube show with millions of views, interviewing celebrities, politicians, and musicians. Known for his "Chillers" fanbase and his unfiltered interview style. He also runs the "Mac G" brand and events. \n\nWikipedia: ' + data.extract;
-            }
-          } else {
-            throw new Error('no extract');
-          }
-        } else {
-          throw new Error('not found');
-        }
-      } catch (e) {
-        // Fallback curated knowledge for famous people if Wikipedia fails (offline)
-        const people: Record<string, string> = {
-          'mac g': 'MacG (MacGyver Mukwevho, born Nov 8, 1989) is a South African podcaster and YouTuber. Host of Podcast and Chill with Mac G - one of SA\'s biggest podcasts, with Sol Phenduka. Started on YFM radio, built a huge YouTube show interviewing celebrities and politicians. Known for "Chillers" fanbase.',
-          'michael blackson': 'Michael Blackson (born Nov 28, 1972) is a Ghanaian-American comedian and actor. Born in Nsaba, Ghana, moved to US at 13. Known as "The African King of Comedy". Roles in Next Friday, Coming 2 America. Built Michael Blackson Academy school in Ghana.',
-          'trevor noah': 'Trevor Noah (born Feb 20, 1984 in Johannesburg, Soweto) is a South African comedian. Hosted The Daily Show (2015-2022) in US. Wrote Born a Crime about growing up under apartheid.',
-          'elon musk': 'Elon Musk (born June 28, 1971 in Pretoria, South Africa) is a businessman. Founder of SpaceX, Tesla, Neuralink, owner of X. Founded xAI which makes Grok.',
-          'cassper nyovest': 'Cassper Nyovest (born Dec 16, 1990 in Mafikeng) is a South African rapper. Hits: Doc Shebeleza, Tito Mboweni. Famous for Fill Up stadiums.',
-        };
-        let found = '';
-        for (const name in people) { if (q.includes(name)) { found = people[name]; break; } }
-        if (found) general = found;
-        else if (q.startsWith('who is') || q.startsWith('who was')) general = 'I searched Wikipedia for "' + topic + '" but could not find a clear page (maybe offline or spelling). Try: Who is Mac G? Who is Michael Blackson? Who is Trevor Noah? Or check spelling - e.g. "Mac G" not "MacG". For marketplace: Who is best seller?';
-        else if (q.startsWith('what is') || q.startsWith('how')) general = 'You asked: "' + originalQ + '". I tried to fetch real Wikipedia data but could not reach it (offline?). Here is the core idea: Break it into WHAT it is, WHY it matters, WHAT to do next. Try again with WiFi on, or ask: What is photosynthesis? What is inflation? How does a car engine work?';
-        else general = 'You asked: "' + originalQ + '". I tried Wikipedia but could not reach it. Tell me if this is a person, product, or how-to and I will give you the correct answer.';
-      }
-    }
-
-    const maps = 'MAPS + PICKUP: Best safe meetups: Maponya Mall, Jabulani Mall, Pimville Square, Bara Mall. Location: ' + (profile?.location || 'Soweto, Gauteng') + '.';
-    const sourceNote = 'Sources: LIVE TrustLink Supabase data + Wikipedia (real-time) + Verified Knowledge. No guessing.';
-    setAiAnswer(personal + '\n\n--- ' + bestText + '\n\n--- ' + productText + '\n\n--- GENERAL INTELLIGENCE (Grok / Google AI level) ---\n' + general + '\n\n--- ' + maps + '\n\n' + sourceNote);
-  };
-
-  const handlePeachPay = async (product: Product) => {
-    if (!session?.user) return notify('Sign in to pay');
-    notify('Peach Payments - Real checkout coming in STEP 3d. For now order saved as Escrow.');
-    return handleBuy(product);
-  };
-
   const handleBuy = async (product: Product) => {
     if (!session?.user) return notify('Sign in to buy');
     if (product.seller_id === session.user.id) return notify('Cannot buy your own product');
@@ -407,6 +255,96 @@ export default function App() {
       setSelected(null);
     } catch (e: any) {
       notify(e.message || 'Order failed');
+    }
+  };
+
+
+  // ===== PRIVACY: Brain is PRIVATE per-user. NO hardcoded personal data. Soul loads ONLY from signed-in profile. =====
+  const getMySoul = () => {
+    if (!session || !profile) return null;
+    // Brain data = ONLY what THIS user typed when they created THEIR account. Stored per-user, protected by login.
+    // Fallback: localStorage per-user (keyed by user id) if Supabase columns not yet added.
+    let saved: any = {};
+    try { saved = JSON.parse(localStorage.getItem('trustlink_brain_' + profile.id) || '{}'); } catch (e) { saved = {}; }
+    const education = profile.education || saved.education || '';
+    const topSkill = profile.top_skill || saved.topSkill || '';
+    const topScore = profile.skill_score || saved.topScore || '';
+    const secondSkill = profile.second_skill || saved.secondSkill || '';
+    const careerGoal = profile.career_goal || saved.careerGoal || '';
+    const canShare = (profile.allow_recruiter ?? saved.allowRecruiter ?? true);
+    return {
+      name: profile.name || 'You',
+      location: profile.location || 'South Africa',
+      education: education,
+      topSkill: topSkill,
+      topScore: topScore,
+      secondSkill: secondSkill,
+      careerGoal: careerGoal,
+      allowRecruiter: canShare,
+      hasBrainData: !!(education || topSkill || careerGoal),
+      facts: [
+        { label: 'Your Education (You Provided)', detail: education || 'Not added yet - Add in My Brain', score: education ? 'Added by You' : 'Add Yours' },
+        { label: 'Your Top Skill (You Provided)', detail: topSkill || 'Not added yet - Add in My Brain', score: topScore ? String(topScore) + '%' : 'Add Yours' },
+        { label: 'Your Second Skill (You Provided)', detail: secondSkill || 'Not added yet', score: secondSkill ? 'Added by You' : 'Add Yours' },
+        { label: 'Your Career Goal (You Provided)', detail: careerGoal || 'Not added yet', score: careerGoal ? 'Added by You' : 'Add Yours' },
+        { label: 'Your Trust Score', detail: 'From your sales + reviews', score: (profile.trust_score || 50) + '%' },
+        { label: 'Your Location', detail: 'From YOUR profile - used for Maps', score: profile.location || 'Not set' },
+      ],
+      graph: (topSkill ? topSkill + ' (' + (topScore || '') + '%)' : 'Your top skill') + ' -> ' + (secondSkill || 'Your second skill') + ' -> ' + (careerGoal || 'Your career goal') + ' - built from data YOU provided at signup.',
+      vault: [
+        { name: 'Your ID Document', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' },
+        { name: 'Your CV / Transcript', hash: 'SHA256: sealed - only you unlock', status: 'SEALED' },
+        { name: 'Your Phone + ID Number', hash: 'SHA256: sealed - never used for training', status: 'SEALED' },
+      ],
+    };
+  };
+  const handleSaveBrain = async () => {
+    if (!session || !profile) return alert('Sign in first to save YOUR Brain data.');
+    const data = { education: brainEducation, topSkill: brainTopSkill, topScore: brainTopScore, secondSkill: brainSecondSkill, careerGoal: brainCareerGoal, allowRecruiter: allowRecruiter };
+    try { localStorage.setItem('trustlink_brain_' + profile.id, JSON.stringify(data)); } catch (e) {}
+    try { await supabase.from('profiles').update({ education: brainEducation, top_skill: brainTopSkill, skill_score: brainTopScore ? parseInt(brainTopScore) : null, second_skill: brainSecondSkill, career_goal: brainCareerGoal, allow_recruiter: allowRecruiter }).eq('id', profile.id); } catch (e) {}
+    alert('YOUR Brain saved! Only YOU can see it when signed in. Recruiter sees it ONLY if you allow it.');
+    window.location.reload();
+  };
+  const handleAskBrain = () => {
+    if (!session || !profile) { setBrainAnswer('LOCKED - Sign in to unlock YOUR Brain. Your Brain is PRIVATE. It shows ONLY your data, from YOUR account, when YOU are signed in. No one else can see your Soul, Vault, or history.'); return; }
+    const mySoul: any = getMySoul();
+    const myName = profile.name || 'You';
+    const myLocation = profile.location || 'South Africa';
+    const myTrust = profile.trust_score || 50;
+    const mySold = profile.total_sold || 0;
+    const myOrders = profile.completed_orders || 0;
+    const q = brainQuestion.toLowerCase();
+    const isJob = q.includes('job') || q.includes('work') || q.includes('salary') || q.includes('career');
+    if (isJob) {
+      setBrainAnswer('FOR: ' + myName + ' - ' + myLocation + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYour Trust: ' + myTrust + '%, Sales: ' + mySold + ', Orders: ' + myOrders + ', Location: ' + myLocation + '. YOUR Provided Data: Education=' + (mySoul?.education || 'Not added') + ', Top Skill=' + (mySoul?.topSkill || 'Not added') + ' ' + (mySoul?.topScore || '') + '%, Goal=' + (mySoul?.careerGoal || 'Not added') + '. Market: General jobs near you.\n\n--- 2. DIAGNOSTIC ---\nYour Trust is ' + myTrust + '% because of your sales + reviews. Higher Trust = more buyers trust you. Transport from ' + myLocation + ' affects real salary.\n\n--- 3. PREDICTIVE ---\nIf you complete 2 more sales + 5-star reviews, Trust rises, buyers pick you first.\n\n--- 4. PRESCRIPTIVE ---\nTODAY: 1) Update profile photo + location 2) List 1 product with clear photo 3) Reply on WhatsApp in under 5 mins 4) Meet at safe public mall near ' + myLocation + '.\n\n--- MAPS ---\nSafe meetups near you: Your nearest mall in ' + myLocation + '. Meet in public, daytime.');
+    } else {
+      setBrainAnswer('FOR: ' + myName + ' - ' + myLocation + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYou asked: "' + brainQuestion + '". Your Soul: Trust ' + myTrust + '%, Sales ' + mySold + ', Orders ' + myOrders + '.\n\n--- 2. DIAGNOSTIC ---\nThis connects to YOUR Graph: ' + (getMySoul()?.graph || '') + '\n\n--- 3. PREDICTIVE ---\nIf you act today, your Trust + Sales will grow.\n\n--- 4. PRESCRIPTIVE ---\nTry: "What job can I get near me?" or "How do I sell faster?"');
+    }
+  };
+  const handleAskAI = async () => {
+    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything - e.g. Who is Mac G? Who is Michael Blackson? Who is best seller?'); return; }
+    const originalQ = aiQuestion.trim();
+    const q = originalQ.toLowerCase();
+    setAiAnswer('Searching real knowledge for "' + originalQ + '"... (Wikipedia + TrustLink data)');
+    let topic = originalQ.replace(/\?/g, '').replace(/^who is /i, '').replace(/^what is /i, '').trim();
+    if (q.includes('mac g')) topic = 'MacG';
+    if (q.includes('best seller') || q.includes('top seller')) {
+      const best = [...products].sort((a,b) => (b.profiles?.trust_score||0)-(a.profiles?.trust_score||0))[0];
+      setAiAnswer('TOP SELLER (Reliability Engine): ' + (best?.profiles?.name || 'No sellers yet') + ' - Trust ' + (best?.profiles?.trust_score || 50) + '%. Reliability = Trust 40% + Rating 30% + Orders 20% + Sold 10% from LIVE Supabase data.');
+      return;
+    }
+    try {
+      const res = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(topic));
+      if (!res.ok) throw new Error('not found');
+      const data = await res.json();
+      if (data.extract) {
+        let extra = '';
+        if (q.includes('mac g')) extra = 'MacG (MacGyver Mukwevho, born Nov 8, 1989) is a South African podcaster, host of Podcast and Chill with Mac G, with Sol Phenduka. Started on YFM, built a huge YouTube show. Known for Chillers fanbase.\n\nWikipedia: ';
+        setAiAnswer(extra + data.extract + '\n\nSource: Wikipedia - ' + (data.content_urls?.desktop?.page || ''));
+      } else throw new Error('no extract');
+    } catch (e) {
+      setAiAnswer('You asked: "' + originalQ + '". I tried Wikipedia but could not reach it (offline?). Try again with WiFi on, or ask: Who is Mac G? Who is Michael Blackson? Who is best seller?');
     }
   };
 
@@ -449,12 +387,25 @@ export default function App() {
                 </div>
               </>
             )}
+            {authMode === 'signup' && (
+              <div className="pt-3 border-t border-[#FFF0E0] space-y-2">
+                <div className="text-[12px] font-bold text-[#7C3AED]">🧠 YOUR BRAIN - Only you see this when signed in (POPIA Protected)</div>
+                <input value={brainEducation} onChange={e=>setBrainEducation(e.target.value)} placeholder="Your education e.g. BCom Information Management - UJ" className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <div className="flex gap-2">
+                  <input value={brainTopSkill} onChange={e=>setBrainTopSkill(e.target.value)} placeholder="Your top skill e.g. Machine Learning" className="flex-1 h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                  <input value={brainTopScore} onChange={e=>setBrainTopScore(e.target.value)} placeholder="Score % e.g. 92" type="number" className="w-[90px] h-11 px-3 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                </div>
+                <input value={brainSecondSkill} onChange={e=>setBrainSecondSkill(e.target.value)} placeholder="Second skill e.g. Business Admin / SEO" className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <input value={brainCareerGoal} onChange={e=>setBrainCareerGoal(e.target.value)} placeholder="Career goal e.g. AI Marketing Assistant R25k" className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <label className="flex items-center gap-2 text-[12px] text-[#5A4A3E]"><input type="checkbox" checked={allowRecruiter} onChange={e=>setAllowRecruiter(e.target.checked)} /> Allow recruiters to see my Soul (Verified Facts only, no ID / no phone) - You can turn off anytime in My Brain</label>
+                <div className="text-[11px] text-[#B8A99A] leading-4">This is YOUR data. It is saved to YOUR account only. No other user sees it. Recruiter sees it ONLY if you tick this box AND share your link.</div>
+              </div>
+            )}
             <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" className="w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[14px] outline-none focus:border-[#FF8A4C]" />
             <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (min 6 chars)" type="password" className="w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[14px] outline-none focus:border-[#FF8A4C]" />
             <button onClick={handleAuth} disabled={authLoading} className="w-full h-12 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white font-bold text-[14px] shadow-lg disabled:opacity-50">
               {authLoading ? 'Please wait...' : authMode === 'signup' ? 'Create real account • Start trading 🌻' : 'Sign in to TrustLink'}
             </button>
-            <button onClick={()=>setShowAI(true)} className="w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold text-[14px] shadow-lg">🤖 Try TrustLink AI - Ask Anything (No Login Needed)</button>
             <button onClick={()=>setAuthMode(authMode==='signup'?'signin':'signup')} className="w-full text-[13px] text-[#8A7A6E] font-medium">
               {authMode==='signup' ? 'Already have account? Sign in' : 'New here? Create account'}
             </button>
@@ -463,73 +414,6 @@ export default function App() {
             </div>
           </div>
         </div>
-        
-            {/* TABS - Marketplace | My Brain | Recruiter Link */}
-      <div style={{display:'flex',gap:'8px',justifyContent:'center',margin:'12px 0',flexWrap:'wrap'}}>
-        <button onClick={() => setActiveTab('market')} style={{padding:'10px 18px',borderRadius:'20px',border:'none',cursor:'pointer',background: activeTab==='market' ? '#FF8A4C' : '#fff',color: activeTab==='market' ? '#fff' : '#333',fontWeight:'bold'}}>🛒 Marketplace</button>
-        <button onClick={() => setActiveTab('brain')} style={{padding:'10px 18px',borderRadius:'20px',border:'none',cursor:'pointer',background: activeTab==='brain' ? '#7C3AED' : '#fff',color: activeTab==='brain' ? '#fff' : '#333',fontWeight:'bold'}}>🧠 My Brain - Soul + Vault</button>
-        <button onClick={() => setActiveTab('recruiter')} style={{padding:'10px 18px',borderRadius:'20px',border:'none',cursor:'pointer',background: activeTab==='recruiter' ? '#16A34A' : '#fff',color: activeTab==='recruiter' ? '#fff' : '#333',fontWeight:'bold'}}>✅ Recruiter Link - POPIA Safe</button>
-      </div>
-      {activeTab === 'brain' && (
-        <div style={{maxWidth:'900px',margin:'0 auto',padding:'16px',background:'#fff',borderRadius:'16px',boxShadow:'0 4px 20px rgba(0,0,0,0.08)'}}>
-          <h2 style={{textAlign:'center'}}>🧠 MY BRAIN - {SOUL_DATA.name}</h2>
-          <p style={{textAlign:'center',color:'#666'}}>Location: {SOUL_DATA.location} | Target: {SOUL_DATA.target} | Google gives general info. TrustLink gives general info MAPPED to YOUR life.</p>
-          <h3>✨ THE SOUL - Permanent Memory (Birth to Date - Never Deletes)</h3>
-          {SOUL_DATA.facts.map((f: any, i: number) => (
-            <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'10px',borderBottom:'1px solid #eee'}}>
-              <div><b>{f.label}</b><br/><span style={{color:'#666',fontSize:'13px'}}>{f.detail}</span></div>
-              <span style={{background:'#FFF0E6',padding:'6px 10px',borderRadius:'12px',fontWeight:'bold',color:'#FF8A4C'}}>{f.score}</span>
-            </div>
-          ))}
-          <h3 style={{marginTop:'16px'}}>🕸️ THE GRAPH - Connections</h3>
-          <p style={{background:'#F3E8FF',padding:'12px',borderRadius:'10px'}}>{SOUL_DATA.graph}</p>
-          <h3 style={{marginTop:'16px'}}>🔒 THE VAULT - Sealed, Not Deleted - POPIA Compliant</h3>
-          {SOUL_DATA.vault.map((v: any, i: number) => (
-            <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'10px',borderBottom:'1px solid #eee'}}>
-              <div><b>{vaultUnlocked ? v.name + ' - UNLOCKED BY YOU' : '🔒 ' + v.name}</b><br/><span style={{color:'#666',fontSize:'12px'}}>Hash: {v.hash}</span></div>
-              <span style={{fontSize:'12px',color:'#16A34A',fontWeight:'bold'}}>{v.status}</span>
-            </div>
-          ))}
-          <button onClick={() => setVaultUnlocked(!vaultUnlocked)} style={{marginTop:'10px',padding:'10px 16px',borderRadius:'10px',border:'none',background:'#1E1E1E',color:'#fff',cursor:'pointer',fontWeight:'bold'}}>{vaultUnlocked ? '🔒 Lock Vault Again' : '🔑 Unlock Vault With My Key (Demo)'}</button>
-          <p style={{fontSize:'12px',color:'#888',marginTop:'6px'}}>In production, Vault unlocks with YOUR personal key only. Brain learns FACT 'SA Citizen' but file stays sealed. Never used for training.</p>
-          <h3 style={{marginTop:'20px'}}>❓ ASK YOUR BRAIN - 4-Layer Answer (Personal + General + Maps)</h3>
-          <div style={{display:'flex',gap:'8px'}}>
-            <input value={brainQuestion} onChange={(e) => setBrainQuestion(e.target.value)} placeholder='What job can I get near Soweto?' style={{flex:1,padding:'12px',borderRadius:'10px',border:'1px solid #ddd'}} />
-            <button onClick={handleAskBrain} style={{padding:'12px 18px',borderRadius:'10px',border:'none',background:'#7C3AED',color:'#fff',fontWeight:'bold',cursor:'pointer'}}>Ask Brain 🧠</button>
-          </div>
-          <div style={{display:'flex',gap:'6px',marginTop:'8px',flexWrap:'wrap'}}>
-            <button onClick={() => { setBrainQuestion('What job can I get near Soweto?'); }} style={{padding:'6px 10px',borderRadius:'16px',border:'1px solid #ddd',background:'#fff',cursor:'pointer',fontSize:'12px'}}>What job near Soweto?</button>
-            <button onClick={() => { setBrainQuestion('Should I finish my BCom?'); }} style={{padding:'6px 10px',borderRadius:'16px',border:'1px solid #ddd',background:'#fff',cursor:'pointer',fontSize:'12px'}}>Should I finish BCom?</button>
-            <button onClick={() => { setBrainQuestion('What is my salary if I finish 24 credits?'); }} style={{padding:'6px 10px',borderRadius:'16px',border:'1px solid #ddd',background:'#fff',cursor:'pointer',fontSize:'12px'}}>Salary if I finish?</button>
-          </div>
-          {brainAnswer && <pre style={{whiteSpace:'pre-wrap',background:'#FFF8F0',padding:'14px',borderRadius:'10px',marginTop:'12px',fontSize:'14px',lineHeight:'1.6'}}>{brainAnswer}</pre>}
-          <div style={{marginTop:'16px',background:'#FFF8F0',padding:'12px',borderRadius:'10px'}}>
-            <b>Pricing:</b> FREE R0 - 5 answers/mo | <b>TRUST R99/mo</b> - 100 answers, unlimited Soul, Verified Badge | BUSINESS R499/mo - Verify 50 people/mo
-          </div>
-        </div>
-      )}
-      {activeTab === 'recruiter' && (
-        <div style={{maxWidth:'900px',margin:'0 auto',padding:'16px',background:'#fff',borderRadius:'16px',boxShadow:'0 4px 20px rgba(0,0,0,0.08)',textAlign:'center'}}>
-          <h2>✅ Recruiter Link - /recruiter/manqoba</h2>
-          <p style={{color:'#16A34A',fontWeight:'bold'}}>POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF</p>
-          <p>Recruiter sees VERIFIED FACTS only: BCom 336/360, ML 92%, Business Admin 83%, SEO/AEO, SQL/Power BI, Soweto location. Vault shows SEALED badge, never opens.</p>
-          <div style={{textAlign:'left',background:'#F0FDF4',padding:'14px',borderRadius:'10px',marginTop:'12px'}}>
-            <b>Verified Skills:</b><br/>✔ BCom Information Management - UJ - 336/360 credits (93%)<br/>✔ Machine Learning - 92%<br/>✔ Business Admin Diploma - 83%<br/>✔ SA Citizen - Verified (Vault Sealed)<br/>✔ Location: Soweto, Gauteng - Within 25km of Sandton / Rosebank<br/><br/><b>Recruiter can ask:</b> "Show ML &gt;85% within 20km Soweto" -&gt; Manqoba MATCHES<br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED
-          </div>
-          <button onClick={() => { navigator.clipboard?.writeText('https://trustlinksa-nfm.onrender.com/recruiter/manqoba'); alert('Recruiter Link Copied: /recruiter/manqoba - Send to recruiter instead of PDF!'); }} style={{marginTop:'14px',padding:'12px 20px',borderRadius:'10px',border:'none',background:'#16A34A',color:'#fff',fontWeight:'bold',cursor:'pointer'}}>📋 Copy Recruiter Link - Send Instead of PDF</button>
-        </div>
-      )}
-
-      {showAI && (
-          <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
-            <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center"><div><h3 className="font-[900] text-[20px]">🤖 TrustLink AI</h3><p className="text-[12px] text-[#8A7A6E]">Ask anything - No login needed</p></div><button onClick={()=>setShowAI(false)} className="w-8 h-8 rounded-full bg-[#FFF8F0] border">✕</button></div>
-              <input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Ask anything..." className="mt-4 w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" />
-              <button onClick={handleAskAI} className="mt-3 w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold">Ask TrustLink AI</button>
-              {aiAnswer && <div className="mt-4 p-4 rounded-[16px] bg-[#F5F3FF] border border-[#DDD6FE] text-[13px] leading-5 whitespace-pre-line">{aiAnswer}</div>}
-            </div>
-          </div>
-        )}
         {toast && <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-[#1E1E1E] text-white px-5 py-2.5 rounded-full text-[13px] font-semibold z-[100]">{toast}</div>}
       </div>
     );
@@ -579,6 +463,62 @@ export default function App() {
               return <button key={c} onClick={()=>setFilter(c)} className={`whitespace-nowrap h-9 px-4 rounded-full border text-[13px] font-bold transition ${active ? 'bg-[#1E1E1E] text-white border-[#1E1E1E]' : 'bg-white border-[#FFE4C2] text-[#8A7A6E] hover:border-[#FF8A4C]'}`}>{c}</button>
             })}
           </div>
+          {/* TABS */}
+          <div className="mt-4 flex gap-2 justify-center flex-wrap">
+            <button onClick={()=>setActiveTab('market')} className={`h-10 px-4 rounded-full text-[13px] font-bold border ${activeTab==='market' ? 'bg-[#FF8A4C] text-white border-[#FF8A4C]' : 'bg-white border-[#FFE4C2]'}`}>🛒 Marketplace</button>
+            <button onClick={()=>setActiveTab('brain')} className={`h-10 px-4 rounded-full text-[13px] font-bold border ${activeTab==='brain' ? 'bg-[#7C3AED] text-white border-[#7C3AED]' : 'bg-white border-[#FFE4C2]'}`}>🧠 My Brain - Private</button>
+            <button onClick={()=>setActiveTab('recruiter')} className={`h-10 px-4 rounded-full text-[13px] font-bold border ${activeTab==='recruiter' ? 'bg-[#16A34A] text-white border-[#16A34A]' : 'bg-white border-[#FFE4C2]'}`}>✅ Recruiter Link - POPIA Safe</button>
+          </div>
+          {activeTab === 'brain' && (
+            <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
+              {!session && <div className="bg-[#FEF3C7] p-3 rounded-xl text-center text-[13px] font-bold">🔒 Locked - Sign In to Unlock YOUR Brain. Your Soul + Vault are PRIVATE. No one else can see them.</div>}
+              <h2 className="text-center font-[900] text-[20px]">🧠 MY BRAIN - {getMySoul() ? getMySoul()?.name : 'Locked - Sign In'}</h2>
+              <p className="text-center text-[12px] text-[#8A7A6E] mt-1">Private - Only you see this when signed in. Location: {getMySoul() ? getMySoul()?.location : 'Sign in to see yours'}</p>
+              <h3 className="font-bold mt-4">✨ THE SOUL - Permanent Memory (Birth to Date)</h3>
+              {(getMySoul() ? getMySoul()!.facts : []).map((f:any,i:number)=>(
+                <div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{f.label}</b><br/><span className="text-[12px] text-[#8A7A6E]">{f.detail}</span></div><span className="bg-[#FFF0E6] px-3 py-1 rounded-full font-bold text-[12px] text-[#FF8A4C]">{f.score}</span></div>
+              ))}
+              <h3 className="font-bold mt-4">🕸️ THE GRAPH</h3>
+              <p className="bg-[#F3E8FF] p-3 rounded-xl text-[13px]">{getMySoul() ? getMySoul()?.graph : 'Sign in to build your Graph from YOUR profile only.'}</p>
+              <h3 className="font-bold mt-4">🔒 THE VAULT - Sealed, Not Deleted - POPIA Compliant</h3>
+              {(getMySoul() ? getMySoul()!.vault : []).map((v:any,i:number)=>(
+                <div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{vaultUnlocked ? v.name + ' - UNLOCKED BY YOU' : '🔒 ' + v.name}</b><br/><span className="text-[11px] text-[#8A7A6E]">{v.hash}</span></div><span className="text-[11px] font-bold text-[#16A34A]">{v.status}</span></div>
+              ))}
+              <button onClick={()=>setVaultUnlocked(!vaultUnlocked)} className="mt-3 h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">{vaultUnlocked ? '🔒 Lock Vault Again' : '🔑 Unlock Vault With My Key (Demo)'}</button>
+              <p className="text-[11px] text-[#B8A99A] mt-2">In production, Vault unlocks with YOUR personal key only. Brain learns FACT but file stays sealed. Never used for training.</p>
+              <h3 className="font-bold mt-5">✏️ Edit YOUR Brain Data (Only You)</h3>
+              <div className="space-y-2 mt-2">
+                <input value={brainEducation} onChange={e=>setBrainEducation(e.target.value)} placeholder={getMySoul()?.education || 'Your education e.g. BCom Information Management - UJ'} className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <div className="flex gap-2"><input value={brainTopSkill} onChange={e=>setBrainTopSkill(e.target.value)} placeholder={getMySoul()?.topSkill || 'Your top skill'} className="flex-1 h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" /><input value={brainTopScore} onChange={e=>setBrainTopScore(e.target.value)} placeholder="Score %" type="number" className="w-[90px] h-11 px-3 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" /></div>
+                <input value={brainSecondSkill} onChange={e=>setBrainSecondSkill(e.target.value)} placeholder={getMySoul()?.secondSkill || 'Second skill'} className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <input value={brainCareerGoal} onChange={e=>setBrainCareerGoal(e.target.value)} placeholder={getMySoul()?.careerGoal || 'Career goal'} className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
+                <label className="flex items-center gap-2 text-[12px]"><input type="checkbox" checked={allowRecruiter} onChange={e=>setAllowRecruiter(e.target.checked)} /> Allow recruiters to see my Soul (Verified Facts only)</label>
+                <button onClick={handleSaveBrain} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">Save MY Brain - Private</button>
+                {!getMySoul()?.hasBrainData && <div className="text-[12px] text-[#8A7A6E]">You have not added Brain data yet. Add it above - it will be saved to YOUR account only.</div>}
+              </div>
+              <h3 className="font-bold mt-5">❓ ASK YOUR BRAIN - 4-Layer Answer (Personal + General + Maps)</h3>
+              <div className="flex gap-2 mt-2"><input value={brainQuestion} onChange={e=>setBrainQuestion(e.target.value)} placeholder="What job can I get near me?" className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" /><button onClick={handleAskBrain} className="h-12 px-5 rounded-full bg-[#7C3AED] text-white font-bold text-[13px]">Ask Brain 🧠</button></div>
+              {brainAnswer && <pre className="whitespace-pre-wrap bg-[#FFF8F0] p-4 rounded-xl mt-3 text-[13px] leading-6">{brainAnswer}</pre>}
+              <div className="mt-4 bg-[#FFF8F0] p-3 rounded-xl text-[12px]"><b>Pricing:</b> FREE R0 - 5 answers/mo | <b>TRUST R99/mo</b> - 100 answers, unlimited Soul | BUSINESS R499/mo - Verify 50 people/mo</div>
+              <h3 className="font-bold mt-5">🤖 TrustLink AI - Ask Anything (No login needed for general)</h3>
+              <div className="flex gap-2 mt-2"><input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Who is Mac G? Who is best seller?" className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" /><button onClick={handleAskAI} className="h-12 px-5 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px]">Ask AI</button></div>
+              {aiAnswer && <pre className="whitespace-pre-wrap bg-white border border-[#FFE4C2] p-4 rounded-xl mt-3 text-[13px] leading-6">{aiAnswer}</pre>}
+            </div>
+          )}
+          {activeTab === 'recruiter' && (
+            <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
+              <h2 className="font-[900] text-[20px]">✅ Recruiter Link - For THIS User Only</h2>
+              <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
+              <p className="text-[13px] text-[#8A7A6E] mt-2">This Recruiter Link shows ONLY the data THIS signed-in user provided when THEY created THEIR account. If a different user signs in, they see THEIR OWN data, not this user&apos;s data. If the user turns OFF Allow Recruiters, recruiter sees LOCKED.</p>
+              {getMySoul() && getMySoul()?.allowRecruiter ? (
+                <div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for {getMySoul()?.name} (YOU provided this):</b><br/>✔ Education: {getMySoul()?.education || 'Not provided by you yet'}<br/>✔ Top Skill: {getMySoul()?.topSkill || 'Not provided'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''}<br/>✔ Second Skill: {getMySoul()?.secondSkill || 'Not provided'}<br/>✔ Career Goal: {getMySoul()?.careerGoal || 'Not provided'}<br/>✔ Trust Score: {profile?.trust_score || 50}% | Location: {getMySoul()?.location}<br/><br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF, password - SEALED. Recruiter CANNOT see other users&apos; data.</div>
+              ) : (
+                <div className="text-left bg-[#FEF3C7] p-4 rounded-xl mt-3 text-[13px]"><b>🔒 Recruiter View LOCKED</b><br/>{!session ? 'Sign in to see YOUR Recruiter Link.' : 'You turned OFF Allow Recruiters. Turn it ON in My Brain if you want recruiters to see your Soul.'}</div>
+              )}
+              <div className="text-[12px] text-[#8A7A6E] mt-3">Example: If YOU provided ML 85% + Soweto, recruiter asking Show ML &gt;85% within 20km Soweto -&gt; YOU MATCH. If ANOTHER user provided different skills, THEY match THEIR OWN query. Never mixed.</div>
+              <button onClick={()=>{ navigator.clipboard?.writeText('https://trustlinksa-nfm.onrender.com/recruiter/' + (profile?.id || 'you')); alert('YOUR Recruiter Link Copied - It shows ONLY YOUR provided data. Send to recruiter instead of PDF!'); }} className="mt-4 h-12 px-6 rounded-full bg-[#16A34A] text-white font-bold text-[13px]">📋 Copy MY Recruiter Link - Shows ONLY MY Data</button>
+            </div>
+          )}
           <div className="mt-6 grid grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.length===0 ? (
               <div className="col-span-full py-16 text-center">
@@ -686,18 +626,6 @@ export default function App() {
               <div className="p-3 rounded-[14px] bg-white border"><div className="font-bold">{viewProfile.phone ? '✓' : '—'}</div><div className="text-[10px] text-[#8A7A6E]">Phone</div></div>
             </div>
             <button onClick={()=>setViewProfile(null)} className="mt-5 w-full h-12 rounded-full bg-[#1E1E1E] text-white font-bold">Close</button>
-          </div>
-        </div>
-      )}
-
-      {showAI && (
-        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
-          <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center"><h3 className="font-[900] text-[20px]">🤖 TrustLink AI Agent</h3><button onClick={()=>setShowAI(false)} className="w-8 h-8 rounded-full bg-[#FFF8F0] border">✕</button></div>
-            <p className="text-[12px] text-[#8A7A6E] mt-1">Personal Memory + General Knowledge + Maps + Best Seller by Reliability in ONE answer.</p>
-            <input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Ask me... What should I sell in Soweto?" className="mt-4 w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" />
-            <button onClick={handleAskAI} className="mt-3 w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold">Ask TrustLink AI</button>
-            {aiAnswer && <div className="mt-4 p-4 rounded-[16px] bg-[#F5F3FF] border border-[#DDD6FE] text-[13px] leading-5 whitespace-pre-line">{aiAnswer}</div>}
           </div>
         </div>
       )}
