@@ -8,6 +8,8 @@ const CATEGORIES = ['All','Electronics','Fashion','Home','Cars','Phones','Beauty
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [bootError, setBootError] = useState('');
   const [authMode, setAuthMode] = useState<'signin'|'signup'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -236,9 +238,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }: any) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_e: any, s: any) => setSession(s));
-    return () => listener.subscription.unsubscribe();
+    let done = false;
+    const timer = setTimeout(() => { if (!done) { setAuthChecked(true); } }, 2000);
+    try {
+      supabase.auth.getSession().then(({ data }: any) => { done = true; setSession(data.session); setAuthChecked(true); clearTimeout(timer); }).catch(() => { done = true; setAuthChecked(true); clearTimeout(timer); });
+      const { data: listener } = supabase.auth.onAuthStateChange((_e: any, s: any) => { setSession(s); setAuthChecked(true); });
+      return () => { clearTimeout(timer); try { listener.subscription.unsubscribe(); } catch(e) {} };
+    } catch(e) { setAuthChecked(true); setBootError('Supabase connection failed - check Render env VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY'); return () => { clearTimeout(timer); }; }
   }, []);
 
   useEffect(() => { loadProducts(); }, []);
@@ -790,6 +796,12 @@ export default function App() {
   const annInfo = getANNInsights();
   const skinStyle = SKINS[skin] || SKINS.sunset;
 
+  if (!authChecked) {
+    return (<div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4"><div className="text-center"><div className="font-black text-[28px]">TrustLink SA</div><div className="text-[13px] text-[#8A7A6E] mt-2">Loading real marketplace...</div><div className="text-[11px] text-[#8A7A6E] mt-1">If this stays 3 seconds, hard refresh: Ctrl + Shift + R</div></div></div>);
+  }
+  if (bootError) {
+    return (<div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4"><div className="w-full max-w-[420px] bg-white rounded-[24px] border p-6 text-center"><h1 className="font-black text-[22px]">TrustLink SA - Connection Error</h1><p className="text-[13px] mt-2">{bootError}</p><p className="text-[12px] mt-2 text-[#8A7A6E]">Render → Environment → Add VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY → Redeploy</p><button onClick={() => window.location.reload()} className="h-11 px-6 rounded-full bg-black text-white font-bold text-[13px] mt-4">Retry</button></div></div>);
+  }
   if (!session) {
     return (
       <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
