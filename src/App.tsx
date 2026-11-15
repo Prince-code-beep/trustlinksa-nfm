@@ -283,7 +283,7 @@ export default function App() {
   };
   const changeSkin = (s: string) => { setSkin(s); try { localStorage.setItem('trustlink_skin', s); } catch(e) {} };
   const getInviteLink = () => 'https://trustlinksa-nfm.onrender.com/?ref=' + (profile?.id?.slice(0,8) || 'trustlink') + '&invite=' + encodeURIComponent(profile?.name || 'Friend');
-  const getMySoul = () => {
+  const getMySoul = () => { // PURE USER BRAIN: Uses ONLY profile (signed-in user) + localStorage trustlink_brain_<YOUR id>. NO hardcoded name. ML learns signed-in user only.
     if (!session || !profile) return null;
     let saved: any = {};
     try { saved = JSON.parse(localStorage.getItem('trustlink_brain_' + profile.id) || '{}'); } catch (e) { saved = {}; }
@@ -338,7 +338,7 @@ export default function App() {
   const handleAskBrain = () => {
     if (!session || !profile) { setBrainAnswer('LOCKED - Sign in to unlock YOUR Brain. Your Brain is PRIVATE.'); return; }
     const s: any = getMySoul();
-    setBrainAnswer('FOR: ' + (s?.name || 'You') + ' - ' + (s?.location || '') + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYour Trust: ' + (profile.trust_score || 50) + '%, Sales: ' + (profile.total_sold || 0) + '. YOUR Data: Education=' + (s?.education || 'Not added') + ', Top Skill=' + (s?.topSkill || 'Not added') + ' ' + (s?.topScore || '') + '%, Goal=' + (s?.careerGoal || 'Not added') + '.\n\n--- 2. DIAGNOSTIC ---\nYour Trust reflects sales + reviews. Skills connect to goal via Graph.\n\n--- 3. PREDICTIVE ---\nIf you complete 2 more sales + 5-star reviews, Trust rises, buyers + recruiters pick you first.\n\n--- 4. PRESCRIPTIVE ---\nTODAY: 1) Update Brain data 2) List 1 product 3) Turn ON Sell Myself 4) Meet at safe mall near ' + (s?.location || '') + '.');
+    setBrainAnswer('FOR: Signed-In User = ' + (s?.name || 'You') + ' - ' + (s?.location || '') + ' - PRIVATE - Only you see this.\n\n--- 1. DESCRIPTIVE ---\nYour Trust: ' + (profile.trust_score || 50) + '%, Sales: ' + (profile.total_sold || 0) + '. YOUR Data: Education=' + (s?.education || 'Not added') + ', Top Skill=' + (s?.topSkill || 'Not added') + ' ' + (s?.topScore || '') + '%, Goal=' + (s?.careerGoal || 'Not added') + '.\n\n--- 2. DIAGNOSTIC ---\nYour Trust reflects sales + reviews. Skills connect to goal via Graph.\n\n--- 3. PREDICTIVE ---\nIf you complete 2 more sales + 5-star reviews, Trust rises, buyers + recruiters pick you first.\n\n--- 4. PRESCRIPTIVE ---\nTODAY: 1) Update Brain data 2) List 1 product 3) Turn ON Sell Myself 4) Meet at safe mall near ' + (s?.location || '') + '.');
   };
   // ===== TRUSTLINK AI AGENT v6 - FULL OPERATIONAL - WHAT / HOW / WHERE / WHEN / WHO / WHY =====
   const handleAskAI = async () => {
@@ -422,14 +422,14 @@ export default function App() {
         else if (isWhere) prefix = 'WHERE IS ' + wikiTopic.toUpperCase() + '?\n';
         else if (isWhen) prefix = 'WHEN DID ' + wikiTopic.toUpperCase() + ' HAPPEN?\n';
         else if (isWhy) prefix = 'WHY ' + wikiTopic.toUpperCase() + '?\n';
-        const final = prefix + extra + (data.extract || '') + '\n\n--- MAPPED TO YOU (' + myName + ' in ' + myLoc + ') ---\nUse this to: 1) Sell better 2) Pitch to recruiters 3) Pitch to investors.\n\nSource: Wikipedia - Real-time research.';
+        const final = prefix + extra + (data.extract || '') + '\n\n--- MAPPED TO YOU - Signed-In User Only (' + myName + ' in ' + myLoc + ') ---\nUse this to: 1) Sell better 2) Pitch to recruiters 3) Pitch to investors.\n\nSource: Wikipedia - Real-time research.';
         setAiAnswer(final); pushHistory(originalQ, final);
       } catch (e) {
         const fallback = 'You asked: "' + originalQ + '". I tried Wikipedia but could not reach it (offline?). Try again with WiFi on. Or try: What is inflation? How do I sell faster? Where is Maponya Mall? When is best time to sell? Who is Mac G? Why is my Trust low?';
         setAiAnswer(fallback); pushHistory(originalQ, fallback);
       }
     } else {
-      const final = localAnswer + '\n\n--- MAPPED TO YOU (' + myName + ' in ' + myLoc + ') ---\nYour Trust: ' + myTrust + '%. ANN Predicted Trust (Neural Network): ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. Use this to act TODAY.\n\nSource: LIVE TrustLink data + Verified Knowledge.';
+      const final = localAnswer + '\n\n--- MAPPED TO YOU - Signed-In User Only (' + myName + ' in ' + myLoc + ') ---\nYour Trust: ' + myTrust + '%. ANN Predicted Trust (Neural Network): ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. Use this to act TODAY.\n\nSource: LIVE TrustLink data + Verified Knowledge.';
       setAiAnswer(final); pushHistory(originalQ, final);
     }
     setAiLoading(false);
@@ -634,9 +634,12 @@ export default function App() {
           {activeTab === 'brain' && (
             <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               {!session && <div className="bg-[#FEF3C7] p-3 rounded-xl text-center text-[13px] font-bold">🔒 Locked - Sign In to Unlock YOUR Brain. Your Soul + Vault are PRIVATE.</div>}
-              <h2 className="text-center font-[900] text-[20px]">🧠 MY BRAIN - {getMySoul() ? getMySoul()?.name : 'Locked - Sign In'}</h2>
+              <h2 className="text-center font-[900] text-[20px]">🧠 MY BRAIN</h2>
+              <p className="text-center text-[13px] font-bold text-[#7C3AED] mt-1">👤 Signed in as: {session ? (profile?.name || 'You') : 'Not signed in'} - This is YOUR Brain only</p>
+              <p className="text-center text-[11px] text-[#8A7A6E]">ML learns YOU - the signed-in user. NOT a fixed name. If you log out and another person logs in, they see THEIR Brain, not yours.</p>
               <p className="text-center text-[12px] text-[#8A7A6E] mt-1">Private - Only you see this. Data = what YOU provided at signup.</p>
-              <h3 className="font-bold mt-4">✨ THE SOUL</h3>
+              <h3 className="font-bold mt-4">✨ THE SOUL - YOUR Data Only</h3>
+              <div className="bg-[#F3E8FF] p-3 rounded-xl text-[12px] leading-5"><b>🔒 Privacy Proof:</b> Name below = <b>{profile?.name || 'Not set'}</b> - This comes from <b>YOUR signup / YOUR profile</b> in Supabase (profiles.name where id = YOUR user id). It is NOT hardcoded. No other user sees this. If you change your profile name, this changes. If someone else logs in, they see THEIR name, not yours.</div>
               {(getMySoul() ? getMySoul()!.facts : []).map((f:any,i:number)=>(
                 <div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{f.label}</b><br/><span className="text-[12px] text-[#8A7A6E]">{f.detail}</span></div><span className="bg-[#FFF0E6] px-3 py-1 rounded-full font-bold text-[12px] text-[#FF8A4C]">{f.score}</span></div>
               ))}
@@ -674,10 +677,10 @@ export default function App() {
           )}
           {activeTab === 'recruiter' && (
             <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
-              <h2 className="font-[900] text-[20px]">✅ Recruiter Link - For THIS User Only</h2>
+              <h2 className="font-[900] text-[20px]">✅ Recruiter Link - For Signed-In User Only</h2>
               <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
               {getMySoul() && getMySoul()?.allowRecruiter ? (
-                <div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for {getMySoul()?.name} (YOU provided this):</b><br/>✔ Education: {getMySoul()?.education || 'Not provided'}<br/>✔ Top Skill: {getMySoul()?.topSkill || 'Not provided'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''}<br/>✔ Second Skill: {getMySoul()?.secondSkill || 'Not provided'}<br/>✔ Career Goal: {getMySoul()?.careerGoal || 'Not provided'}<br/>✔ Trust: {profile?.trust_score || 50}% | Location: {getMySoul()?.location}<br/><br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED.</div>
+                <div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for YOU (signed-in user) (YOU provided this):</b><br/>✔ Education: {getMySoul()?.education || 'Not provided'}<br/>✔ Top Skill: {getMySoul()?.topSkill || 'Not provided'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''}<br/>✔ Second Skill: {getMySoul()?.secondSkill || 'Not provided'}<br/>✔ Career Goal: {getMySoul()?.careerGoal || 'Not provided'}<br/>✔ Trust: {profile?.trust_score || 50}% | Location: {getMySoul()?.location}<br/><br/><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED.</div>
               ) : (
                 <div className="text-left bg-[#FEF3C7] p-4 rounded-xl mt-3 text-[13px]"><b>🔒 Recruiter View LOCKED</b><br/>{!session ? 'Sign in to see YOUR Recruiter Link.' : 'You turned OFF Allow Recruiters.'}</div>
               )}
@@ -691,7 +694,7 @@ export default function App() {
               <div className="mt-4 bg-[#F0F9FF] p-4 rounded-xl">
                 <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={sellMyself} onChange={e=>setSellMyself(e.target.checked)} /> ✅ I want to SELL MYSELF - Discoverable by Recruiters / HR</label>
                 <label className="flex items-center gap-2 text-[12px] mt-2"><input type="checkbox" checked={allowRecruiter} onChange={e=>setAllowRecruiter(e.target.checked)} /> Allow Recruiters to see my Soul</label>
-                {sellMyself && session && <div className="mt-3 bg-white p-3 rounded-xl border"><b>Your Talent Card Preview:</b><br/><span className="text-[13px]">{getMySoul()?.name} - {getMySoul()?.education || 'Add education'} - Top Skill: {getMySoul()?.topSkill || 'Add skill'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''} - Goal: {getMySoul()?.careerGoal || 'Add goal'} - Trust {profile?.trust_score || 50}%</span></div>}
+                {sellMyself && session && <div className="mt-3 bg-white p-3 rounded-xl border"><b>Your Talent Card Preview (YOU - Signed-In User):</b><br/><span className="text-[13px]">{getMySoul()?.name} - {getMySoul()?.education || 'Add education'} - Top Skill: {getMySoul()?.topSkill || 'Add skill'} {getMySoul()?.topScore ? '(' + getMySoul()?.topScore + '%)' : ''} - Goal: {getMySoul()?.careerGoal || 'Add goal'} - Trust {profile?.trust_score || 50}%</span></div>}
               </div>
               <div className="flex gap-2 mt-4 flex-wrap">
                 <input value={talentSearch} onChange={e=>setTalentSearch(e.target.value)} placeholder="Search skill e.g. Machine Learning, SEO, Sales..." className="flex-1 min-w-[200px] h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" />
