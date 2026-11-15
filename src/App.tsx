@@ -70,6 +70,32 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  // ===== ALL FEATURE STATES - DO NOT DELETE - White screen if missing =====
+  const [activeTab, setActiveTab] = useState<'market' | 'brain' | 'recruiter' | 'talent' | 'investors' | 'invite' | 'chat'>('market');
+  const [skin, setSkin] = useState<string>(() => { try { return localStorage.getItem('trustlink_skin') || 'sunset'; } catch(e) { return 'sunset'; } });
+  const [talentSearch, setTalentSearch] = useState('');
+  const [talentMinScore, setTalentMinScore] = useState('');
+  const [sellMyself, setSellMyself] = useState(true);
+  const [investorSearch, setInvestorSearch] = useState('');
+  const [businessIdea, setBusinessIdea] = useState('');
+  const [fundingAsk, setFundingAsk] = useState('');
+  const [investorVisible, setInvestorVisible] = useState(true);
+  const [chatTo, setChatTo] = useState('');
+  const [chatMsg, setChatMsg] = useState('');
+  const [chatMessages, setChatMessages] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_chats') || '[]'); } catch(e) { return []; } });
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [brainQuestion, setBrainQuestion] = useState('What job can I get near me?');
+  const [brainAnswer, setBrainAnswer] = useState('');
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const [brainEducation, setBrainEducation] = useState('');
+  const [brainTopSkill, setBrainTopSkill] = useState('');
+  const [brainTopScore, setBrainTopScore] = useState('');
+  const [brainSecondSkill, setBrainSecondSkill] = useState('');
+  const [brainCareerGoal, setBrainCareerGoal] = useState('');
+  const [allowRecruiter, setAllowRecruiter] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const handleAvatarUpload = async (e: any) => {
     const file = e.target.files?.[0];
