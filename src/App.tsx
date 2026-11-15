@@ -54,7 +54,6 @@ function calcTrustScore(p: Partial<Profile>) {
 }
 
 export default function App() {
-  // Auth
   const [session, setSession] = useState<any>(null);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [email, setEmail] = useState('');
@@ -64,33 +63,22 @@ export default function App() {
   const [phoneInput, setPhoneInput] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Data
   const [profile, setProfile] = useState<Profile | null>(null);
+
   const handleAvatarUpload = async (e: any) => {
-      const file = e.target.files?.[0]
-  if (!file) return
-  const userId = session?.user?.id || profile?.id
-  if (!userId) return alert('Please sign in first')
-  const fileName = `${userId}/${Date.now()}-${file.name}`
-  const { error } = await supabase.storage.from('avatars').upload(fileName, file)
-  if (error) return alert(error.message)
-  const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
-  await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', userId)
-  alert('Profile picture saved!')
-  window.location.reload()
-}
-  const file = e.target.files?.[0]
-  if (!file) return
-  const userId = session?.user?.id || profile?.id
-  if (!userId) return alert('Please sign in first')
-  const fileName = `${userId}/${Date.now()}-${file.name}`
-  const { error } = await supabase.storage.from('avatars').upload(fileName, file)
-  if (error) return alert(error.message)
-  const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
-  await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', userId)
-  alert('Profile picture saved!')
-  window.location.reload()
-}
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const userId = session?.user?.id || profile?.id;
+    if (!userId) return alert('Please sign in first');
+    const fileName = `${userId}/${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('avatars').upload(fileName, file);
+    if (error) return alert(error.message);
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', userId);
+    alert('Profile picture saved!');
+    window.location.reload();
+  };
+
   const [products, setProducts] = useState<Product[]>([]);
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -102,7 +90,6 @@ export default function App() {
   const [activeNav, setActiveNav] = useState('Home');
   const [toast, setToast] = useState<string | null>(null);
 
-  // Sell form
   const [sellTitle, setSellTitle] = useState('');
   const [sellDesc, setSellDesc] = useState('');
   const [sellPrice, setSellPrice] = useState('');
@@ -111,17 +98,14 @@ export default function App() {
   const [sellLoading, setSellLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const notify = (m: string) => { setToast(m); setTimeout(() => setToast(null), 3000); };
 
-  // Init session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load profile
   useEffect(() => {
     if (!session?.user) { setProfile(null); return; }
     const load = async () => {
@@ -131,7 +115,6 @@ export default function App() {
     load();
   }, [session]);
 
-  // Load products
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*, profiles(*)').order('created_at', { ascending: false }).limit(100);
     if (data) {
@@ -150,7 +133,6 @@ export default function App() {
 
   useEffect(() => { loadProducts(); loadOrders(); }, [session]);
 
-  // Auth handlers
   const handleAuth = async () => {
     if (!email || !password || (authMode === 'signup' && !nameInput)) {
       return notify('Fill all required fields');
@@ -212,7 +194,6 @@ export default function App() {
         const { data } = supabase.storage.from('product-images').getPublicUrl(path);
         imageUrl = data.publicUrl;
       }
-
       const { error } = await supabase.from('products').insert([{
         seller_id: session.user.id,
         title: sellTitle,
@@ -222,14 +203,11 @@ export default function App() {
         image_url: imageUrl,
       }]);
       if (error) throw error;
-
-      // update seller stats
       if (profile) {
         const updated = { ...profile, total_sold: profile.total_sold + 1, trust_score: Math.min(99, profile.trust_score + 1) };
         await supabase.from('profiles').update({ total_sold: updated.total_sold, trust_score: updated.trust_score }).eq('id', profile.id);
         setProfile(updated);
       }
-
       notify('Product listed! Live now 🔥');
       setShowSell(false);
       setSellTitle(''); setSellDesc(''); setSellPrice(''); setSellImage(null);
@@ -279,7 +257,6 @@ export default function App() {
     });
   }, [products, filter, search, activeNav, session]);
 
-  // Auth screen
   if (!session) {
     return (
       <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-5">
@@ -287,7 +264,6 @@ export default function App() {
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white flex items-center justify-center font-black text-xl">TL</div>
           <h1 className="text-[28px] font-[900] tracking-tight mt-5 leading-[1.1]">TrustLink SA<br/><span className="text-[#FF8A4C]">Real Marketplace</span></h1>
           <p className="text-[13px] text-[#8A7A6E] mt-2 leading-5">Buy, sell, build trust. Real accounts, real products, real escrow. Your activity creates your Trust Score.</p>
-
           <div className="mt-6 space-y-3">
             {authMode === 'signup' && (
               <>
@@ -304,15 +280,12 @@ export default function App() {
             )}
             <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" className="w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[14px] outline-none focus:border-[#FF8A4C]" />
             <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (min 6 chars)" type="password" className="w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[14px] outline-none focus:border-[#FF8A4C]" />
-
             <button onClick={handleAuth} disabled={authLoading} className="w-full h-12 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white font-bold text-[14px] shadow-lg disabled:opacity-50">
               {authLoading ? 'Please wait...' : authMode === 'signup' ? 'Create real account • Start trading 🌻' : 'Sign in to TrustLink'}
             </button>
-
             <button onClick={()=>setAuthMode(authMode==='signup'?'signin':'signup')} className="w-full text-[13px] text-[#8A7A6E] font-medium">
               {authMode==='signup' ? 'Already have account? Sign in' : 'New here? Create account'}
             </button>
-
             <div className="pt-3 text-[11px] leading-4 text-[#B8A99A] border-t border-[#FFF0E0] mt-3">
               How trust works: Completed orders • Purchases • Sales • Rating /10 • Product performance • Algorithm learns your searches, likes & time spent to suggest what you love. Real data saved in Supabase.
             </div>
@@ -323,19 +296,15 @@ export default function App() {
     );
   }
 
-  // Main marketplace (real)
   return (
     <div className="min-h-screen bg-[#FFF8F0] text-[#1E1E1E] antialiased">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-20 w-[420px] h-[420px] bg-[#FFD6BA]/40 rounded-full blur-[60px]" />
         <div className="absolute top-[200px] -right-24 w-[360px] h-[360px] bg-[#FFB6D9]/30 rounded-full blur-[50px]" />
       </div>
-
       {toast && <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] bg-[#1E1E1E] text-white text-[13px] font-semibold px-5 py-2.5 rounded-full shadow-xl whitespace-nowrap">{toast}</div>}
-
       <div className="mx-auto max-w-[960px] w-full min-h-screen relative flex flex-col">
         <div className="px-5 lg:px-8 pt-4 pb-32 relative z-10">
-          {/* Header */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <span className="text-[11px] tracking-[0.22em] font-extrabold text-[#FF8A4C]">TRUSTLINK REAL</span>
@@ -344,12 +313,13 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={loadProducts} className="w-9 h-9 rounded-full bg-white border border-[#FFE4C2] flex items-center justify-center">🔄</button>
-              <button onClick={()=>profile && setViewProfile(profile)} className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white font-bold text-[12px]">{profile?.name?.slice(0,2).toUpperCase() || 'TL'}</button>
+              <button onClick={()=>profile && setViewProfile(profile)} className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white font-bold text-[12px] overflow-hidden p-0">
+                {profile?.avatar_url ? <img src={profile.avatar_url} alt="me" className="w-full h-full object-cover" /> : (profile?.name?.slice(0,2).toUpperCase() || 'TL')}
+              </button>
               <label style={{fontSize:'11px',cursor:'pointer',background:'#fff',border:'1px solid #FFE4C2',padding:'6px 8px',borderRadius:'999px'}}>📷 Upload Pic<input type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:'none'}} /></label>
               <button onClick={handleSignOut} className="text-[11px] text-[#8A7A6E] font-bold px-2">Logout</button>
             </div>
           </div>
-
           <div className="mt-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <h1 className="text-[44px] lg:text-[52px] leading-[0.9] tracking-[-0.03em] font-[900]">
               <span className="block">Find it.</span>
@@ -358,23 +328,18 @@ export default function App() {
             </h1>
             <button onClick={()=>setShowSell(true)} className="lg:mb-2 h-12 px-6 rounded-full bg-[#1E1E1E] text-white font-bold text-[14px] hover:scale-[1.02] transition">+ List Product</button>
           </div>
-
-          {/* Search + Filters */}
           <div className="mt-6 flex gap-2">
             <div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2 shadow-sm">
               <span>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search real products..." className="flex-1 outline-none text-[14px] bg-transparent" />
             </div>
           </div>
-
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORIES.map(c=>{
               const active = filter===c;
               return <button key={c} onClick={()=>setFilter(c)} className={`whitespace-nowrap h-9 px-4 rounded-full border text-[13px] font-bold transition ${active ? 'bg-[#1E1E1E] text-white border-[#1E1E1E]' : 'bg-white border-[#FFE4C2] text-[#8A7A6E] hover:border-[#FF8A4C]'}`}>{c}</button>
             })}
           </div>
-
-          {/* Products Grid */}
           <div className="mt-6 grid grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.length===0 ? (
               <div className="col-span-full py-16 text-center">
@@ -397,8 +362,6 @@ export default function App() {
               </button>
             ))}
           </div>
-
-          {/* Orders */}
           {orders.length>0 && (
             <div className="mt-8 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
               <h3 className="font-bold text-[14px]">Your Orders ({orders.length}) — Real Escrow</h3>
@@ -416,15 +379,13 @@ export default function App() {
             </div>
           )}
         </div>
-
-        {/* Bottom Nav */}
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex justify-center pointer-events-none">
           <div className="pointer-events-auto w-[calc(100%-20px)] max-w-[390px] mx-auto mb-3 bg-white/95 backdrop-blur-xl border border-[#FFE4C2] rounded-[26px] shadow-xl flex justify-between items-center px-2 py-1.5">
             {[
               {id:'Home', icon:'🏠'},
               {id:'Map', icon:'📍'},
               {id:'Sell', icon:'+', center:true},
-              {id:'Deals', icon:'🛡️'},
+              {id:'Deals', icon:'🛡'},
               {id:'You', icon:'👤'},
             ].map(it=>{
               if((it as any).center) return <button key={it.id} onClick={()=>setShowSell(true)} className="flex-1 flex justify-center"><div className="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white flex items-center justify-center font-bold shadow-lg text-xl">+</div></button>
@@ -433,15 +394,13 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      {/* Product Detail */}
       {selected && (
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
           <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between">
                 <div className="flex gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#FFF8F0] border flex items-center justify-center text-xl">{selected.image_url ? '🖼️' : '📦'}</div>
+                  <div className="w-12 h-12 rounded-full bg-[#FFF8F0] border flex items-center justify-center text-xl overflow-hidden">{selected.profiles?.avatar_url ? <img src={selected.profiles.avatar_url} alt="seller" className="w-full h-full object-cover" /> : (selected.image_url ? '🖼' : '📦')}</div>
                   <div>
                     <div className="font-bold">{selected.title}</div>
                     <div className="text-[12px] text-[#8A7A6E]">Seller: {selected.profiles?.name || selected.seller_id.slice(0,6)} • Trust {selected.profiles?.trust_score || 50}% • {selected.category}</div>
@@ -463,14 +422,12 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* Profile */}
       {viewProfile && (
         <div className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
           <div className="w-full max-w-[420px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between">
               <div className="flex gap-3">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white flex items-center justify-center font-bold">{viewProfile.name.slice(0,2).toUpperCase()}</div>
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF8A4C] to-[#FF5A7A] text-white flex items-center justify-center font-bold overflow-hidden">{viewProfile.avatar_url ? <img src={viewProfile.avatar_url} alt={viewProfile.name} className="w-full h-full object-cover" /> : viewProfile.name.slice(0,2).toUpperCase()}</div>
                 <div>
                   <div className="font-bold flex items-center gap-2">{viewProfile.name} <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1E1E1E] text-white">{viewProfile.role}</span></div>
                   <div className="text-[12px] text-[#8A7A6E]">{viewProfile.bio}</div>
@@ -493,8 +450,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* Sell Sheet */}
       {showSell && (
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
           <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
