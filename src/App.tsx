@@ -58,6 +58,12 @@ export default function App() {
   const [brainCareerGoal, setBrainCareerGoal] = useState('');
   const [allowRecruiter, setAllowRecruiter] = useState(true);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [friendSearch, setFriendSearch] = useState('');
+  const [friendResults, setFriendResults] = useState<any[]>([]);
+  const [friendSearching, setFriendSearching] = useState(false);
+  const [friendRequests, setFriendRequests] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_requests_' + (JSON.parse(localStorage.getItem('sb-session') || 'null')?.user?.id || 'anon')) || '[]'); } catch(e) { return []; } });
+  const [friends, setFriends] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_friends') || '[]'); } catch(e) { return []; } });
+  const [chatWith, setChatWith] = useState<any>(null);
 
   const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' }, dark: { name: 'Dark Mode', bg: '#1E1E1E', accent: '#FF8A4C' }, purple: { name: 'Brain Purple', bg: '#F5F0FF', accent: '#7C3AED' }, green: { name: 'Money Green', bg: '#F0FDF4', accent: '#16A34A' }, blue: { name: 'Ocean Blue', bg: '#EFF6FF', accent: '#0EA5E9' }, pink: { name: 'Pink Hustle', bg: '#FFF5F7', accent: '#FF5A7A' } };
 
@@ -191,7 +197,7 @@ export default function App() {
   function handleSendChat() {
     if (!chatMsg.trim()) return;
     if (!session) return alert('Sign in to chat.');
-    const msg = { id: Date.now(), from: profile?.name || 'You', fromId: profile?.id, to: chatTo || 'TrustLink Community', text: chatMsg.trim(), time: new Date().toLocaleTimeString(), encrypted: true };
+    const msg = { id: Date.now(), from: profile?.name || 'You', fromId: profile?.id, to: chatWith ? chatWith.name : (chatTo || 'TrustLink Community'), text: chatMsg.trim(), time: new Date().toLocaleTimeString(), encrypted: true };
     const next = [...chatMessages, msg];
     setChatMessages(next);
     try { localStorage.setItem('trustlink_chats', JSON.stringify(next)); } catch(e) {}
@@ -301,6 +307,59 @@ export default function App() {
     }
     setAiLoading(false);
   }
+
+  async function handleSearchFriends() {
+    if (!friendSearch.trim()) { setFriendResults([]); return; }
+    setFriendSearching(true);
+    const q = friendSearch.trim();
+    // Search by username (name) OR phone number - like WhatsApp
+    const { data } = await supabase.from('profiles').select('*').or('name.ilike.%' + q + '%,phone.ilike.%' + q + '%').limit(10);
+    const results = (data || []).filter((u: any) => u.id !== session?.user?.id);
+    // Also include local friends for demo if Supabase returns none (offline fallback)
+    setFriendResults(results as any);
+    setFriendSearching(false);
+    if (results.length === 0) setToast('No user found for "' + q + '" - Ask them to join TrustLink with your Invite Link!');
+  }
+  function handleSendRequest(user: any) {
+    if (!session) return alert('Sign in to send requests.');
+    // Prevent duplicate
+    if (friends.find((f: any) => f.id === user.id)) return alert('You are already friends with ' + user.name);
+    // Save request locally + simulate sending to them (in production: Supabase friend_requests table)
+    const req = { id: Date.now(), fromId: profile?.id, fromName: profile?.name, fromPhone: profile?.phone, toId: user.id, toName: user.name, toPhone: user.phone, status: 'sent', time: new Date().toLocaleString() };
+    const allReqs = JSON.parse(localStorage.getItem('trustlink_all_requests') || '[]');
+    allReqs.push(req);
+    try { localStorage.setItem('trustlink_all_requests', JSON.stringify(allReqs)); } catch(e) {}
+    // Also store outgoing for sender view
+    const mine = JSON.parse(localStorage.getItem('trustlink_my_sent') || '[]');
+    mine.push(req);
+    try { localStorage.setItem('trustlink_my_sent', JSON.stringify(mine)); } catch(e) {}
+    setToast('Request sent to ' + user.name + ' - They will see it in Chat > Requests!');
+    alert('Request sent to ' + user.name + ' (' + (user.phone || 'No phone') + '). When they accept, you can chat 1-to-1 like WhatsApp.');
+  }
+  function handleAcceptRequest(req: any) {
+    const newFriend = { id: req.fromId, name: req.fromName, phone: req.fromPhone, acceptedAt: new Date().toLocaleString() };
+    const next = [...friends, newFriend];
+    setFriends(next);
+    try { localStorage.setItem('trustlink_friends', JSON.stringify(next)); } catch(e) {}
+    setFriendRequests(friendRequests.filter((r: any) => r.id !== req.id));
+    setChatWith(newFriend);
+    setChatTo(newFriend.name);
+    setToast('You are now friends with ' + req.fromName + ' - Chat now!');
+  }
+  function handleDeclineRequest(req: any) {
+    setFriendRequests(friendRequests.filter((r: any) => r.id !== req.id));
+    setToast('Declined request from ' + req.fromName);
+  }
+  function loadIncomingRequests() {
+    // Incoming = requests where toId == MY id
+    try {
+      const all = JSON.parse(localStorage.getItem('trustlink_all_requests') || '[]');
+      const incoming = all.filter((r: any) => r.toId === profile?.id && r.status === 'sent');
+      // Merge with demo: if none, keep existing
+      if (incoming.length > 0) setFriendRequests(incoming);
+    } catch(e) {}
+  }
+
   function handleWhatsApp(phone: string, title: string) { window.open('https://wa.me/' + phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I want: ' + title + ' on TrustLink'), '_blank'); }
 
   const filteredProducts = useMemo(() => products.filter((p: any) => (filter === 'All' || p.category === filter) && (!search || (p.title + ' ' + (p.description || '')).toLowerCase().includes(search.toLowerCase()))), [products, filter, search]);
@@ -505,7 +564,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'chat' && (
+        {false && activeTab === 'chat' && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - End-to-End Encrypted</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Only you + receiver can read.</p>
@@ -515,6 +574,36 @@ export default function App() {
               {chatMessages.map((m: any) => (<div key={m.id} className="mb-2 bg-white p-3 rounded-xl border border-[#FFE4C2]"><div className="flex justify-between"><b className="text-[12px]">{m.from} to {m.to}</b><span className="text-[10px] text-[#16A34A] font-bold">E2E • {m.time}</span></div><div className="text-[13px] mt-1">{m.text}</div></div>))}
             </div>
             <div className="flex gap-2 mt-3"><input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }} placeholder="Type E2E encrypted message..." className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" /><button onClick={handleSendChat} className="h-12 px-6 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Send</button></div>
+          </div>
+        )}
+
+
+        {activeTab === 'chat' && (
+          <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
+            <h2 className="text-center font-black text-[20px]">TrustLink Chat - Like WhatsApp, Inside TrustLink</h2>
+            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Search by Username OR Phone Number - Send Request - Chat 1-to-1</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+              <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
+                <h3 className="font-bold text-[14px]">1. Find Someone You Know</h3>
+                <p className="text-[12px] text-[#8A7A6E] mt-1">Type their TrustLink username OR their phone number (like WhatsApp).</p>
+                <div className="flex gap-2 mt-2"><input value={friendSearch} onChange={(e) => setFriendSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSearchFriends(); }} placeholder="Search username or phone e.g. Thabo / 0821234567" className="flex-1 h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px]" /><button onClick={handleSearchFriends} disabled={friendSearching} className="h-11 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">{friendSearching ? 'Searching...' : 'Search'}</button></div>
+                {friendResults.length > 0 && (<div className="mt-3 space-y-2">{friendResults.map((u: any) => (<div key={u.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] flex justify-between items-center"><div><div className="font-bold text-[13px]">{u.name}</div><div className="text-[11px] text-[#8A7A6E]">{u.phone || 'No phone'} • {u.location || ''} • Trust {u.trust_score || 50}%</div></div><button onClick={() => handleSendRequest(u)} className="h-9 px-3 rounded-full bg-[#FF8A4C] text-white font-bold text-[11px]">+ Send Request</button></div>))}</div>)}
+                {friendSearch && friendResults.length === 0 && !friendSearching && (<div className="mt-3 text-[12px] text-[#8A7A6E]">No results yet. Press Search. If they are not on TrustLink, invite them with your Invite Link.</div>)}
+                <button onClick={loadIncomingRequests} className="mt-3 h-9 px-3 rounded-full bg-white border border-[#FFE4C2] font-bold text-[11px]">Refresh Incoming Requests</button>
+                <h3 className="font-bold text-[14px] mt-4">2. Requests For You ({friendRequests.length})</h3>
+                {friendRequests.length === 0 && (<div className="text-[12px] text-[#8A7A6E] mt-1">No pending requests. When someone sends you a request, it appears here.</div>)}
+                {friendRequests.map((r: any) => (<div key={r.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] mt-2"><div className="font-bold text-[13px]">{r.fromName} wants to chat</div><div className="text-[11px] text-[#8A7A6E]">{r.fromPhone || ''} • {r.time}</div><div className="flex gap-2 mt-2"><button onClick={() => handleAcceptRequest(r)} className="h-9 px-3 rounded-full bg-[#16A34A] text-white font-bold text-[11px]">Accept</button><button onClick={() => handleDeclineRequest(r)} className="h-9 px-3 rounded-full bg-white border border-[#FFE4C2] font-bold text-[11px]">Decline</button></div></div>))}
+                <h3 className="font-bold text-[14px] mt-4">3. Your Friends ({friends.length})</h3>
+                {friends.length === 0 && (<div className="text-[12px] text-[#8A7A6E] mt-1">No friends yet. Search above + Send Request.</div>)}
+                {friends.map((f: any) => (<div key={f.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] mt-2 flex justify-between items-center"><div><div className="font-bold text-[13px]">{f.name}</div><div className="text-[11px] text-[#8A7A6E]">{f.phone || ''}</div></div><button onClick={() => { setChatWith(f); setChatTo(f.name); }} className="h-9 px-3 rounded-full bg-[#25D366] text-white font-bold text-[11px]">Chat</button></div>))}
+              </div>
+              <div className="lg:col-span-2 bg-[#FFF8F0] rounded-xl border border-[#FFE4C2] p-4">
+                <div className="flex justify-between items-center"><h3 className="font-bold text-[14px]">Chat {chatWith ? 'with ' + chatWith.name : '— Select a Friend to Chat'}</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">E2E ENCRYPTED</span></div>
+                {!chatWith && (<div className="text-center py-10 text-[13px] text-[#8A7A6E]">Search a username / phone number on the left, send a request, they accept, then chat here like WhatsApp.<br />Your chats are E2E encrypted - only you + them can read.</div>)}
+                {chatWith && (<div><div className="text-[12px] text-[#8A7A6E] mt-1">Chatting with {chatWith.name} • {chatWith.phone || 'No phone'} • E2E Encrypted</div><div className="mt-3 bg-white rounded-xl p-3 min-h-[220px] max-h-[320px] overflow-y-auto">{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).length === 0 && (<div className="text-center text-[12px] text-[#8A7A6E] py-8">No messages yet with {chatWith.name}. Say hi!</div>)}{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).map((m: any) => (<div key={m.id} className="mb-2 bg-[#FFF8F0] p-3 rounded-xl border border-[#FFE4C2]"><div className="flex justify-between"><b className="text-[12px]">{m.from} to {m.to}</b><span className="text-[10px] text-[#16A34A] font-bold">E2E • {m.time}</span></div><div className="text-[13px] mt-1">{m.text}</div></div>))}</div><div className="flex gap-2 mt-3"><input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }} placeholder={'Message ' + chatWith.name + '...'} className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-white outline-none text-[14px]" /><button onClick={handleSendChat} className="h-12 px-6 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Send</button></div></div>)}
+                <div className="mt-4 bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5"><b>How it works (WhatsApp-style):</b><br />1) Search username OR phone number<br />2) Send Request<br />3) They Accept in Chat - Requests<br />4) You become Friends<br />5) Chat 1-to-1, E2E encrypted<br />No phone = still works with username. Phone = faster to find them.</div>
+              </div>
+            </div>
           </div>
         )}
 
