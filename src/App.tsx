@@ -272,46 +272,6 @@ export default function App() {
   };
 
 
-
-  // ===== TRUSTLINK ANN - ARTIFICIAL NEURAL NETWORK - Real ML =====
-  const ANN: any = {
-    w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
-    b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
-    w2: [[0.6,0.5,0.7,0.4],[0.4,0.6,0.5,0.7],[0.7,0.4,0.6,0.5],[0.5,0.7,0.4,0.6],[0.6,0.5,0.7,0.4],[0.4,0.7,0.5,0.6],[0.7,0.5,0.4,0.6],[0.5,0.6,0.7,0.4]],
-    b2: [0.05,0.03,0.06,0.02],
-    w3: [0.7,0.6,0.8,0.5],
-    b3: 0.05,
-    relu: (x: number) => Math.max(0, x),
-    sigmoid: (x: number) => 1 / (1 + Math.exp(-x)),
-    forward: (inputs: number[]) => {
-      const h1: number[] = [];
-      for (let j=0;j<8;j++) { let sum = ANN.b1[j]; for (let i=0;i<6;i++) sum += inputs[i] * ANN.w1[j][i]; h1.push(ANN.relu(sum)); }
-      const h2: number[] = [];
-      for (let j=0;j<4;j++) { let sum = ANN.b2[j]; for (let i=0;i<8;i++) sum += h1[i] * ANN.w2[i][j]; h2.push(ANN.relu(sum)); }
-      let out = ANN.b3; for (let i=0;i<4;i++) out += h2[i] * ANN.w3[i];
-      return { h1, h2, output: ANN.sigmoid(out), raw: out };
-    },
-    predictTrust: (trust: number, skillScore: number, orders: number, sold: number, rating: number, locMatch: number) => {
-      const inputs = [trust/100, (skillScore||50)/100, Math.min(orders,10)/10, Math.min(sold,10)/10, (rating||8.5)/10, locMatch];
-      const r = ANN.forward(inputs);
-      return Math.round(r.output * 100);
-    },
-    predictMatch: (userSkill: number, requiredSkill: number, userTrust: number, distanceKm: number) => {
-      const skillGap = Math.max(0, 1 - Math.abs(userSkill - requiredSkill)/100);
-      const locMatch = distanceKm <= 20 ? 1 : distanceKm <= 50 ? 0.6 : 0.2;
-      const r = ANN.forward([userTrust/100, userSkill/100, skillGap, 0.5, 0.8, locMatch]);
-      return Math.round(r.output * 100);
-    },
-    predictPriceFairness: (price: number, avgPrice: number) => {
-      const ratio = price / Math.max(avgPrice, 1);
-      if (ratio <= 0.85) return 'GOOD DEAL - ANN says ' + Math.round((1-ratio)*100) + '% below market';
-      if (ratio <= 1.1) return 'FAIR PRICE - ANN says within market range';
-      return 'SLIGHTLY HIGH - ANN says ' + Math.round((ratio-1)*100) + '% above market';
-    },
-    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden Neurons (ReLU) -> 4 Hidden Neurons (ReLU) -> 1 Output (Sigmoid 0-100%). Trained on TrustLink sales + reviews. Every new sale/review updates weights so predictions get smarter for YOU.',
-  };
-
-
   // ===== PRIVACY: Brain = data USER provided at signup, protected by login. NO hardcoded personal data. =====
   const SKINS: any = {
     sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' },
@@ -353,18 +313,6 @@ export default function App() {
       ],
     };
   };
-  const getANNInsights = () => {
-    const s: any = getMySoul();
-    const trust = profile?.trust_score || 50;
-    const skill = parseInt(s?.topScore || '50') || 50;
-    const orders = profile?.completed_orders || 0;
-    const sold = profile?.total_sold || 0;
-    const rating = profile?.rating || 8.5;
-    const annTrust = ANN.predictTrust(trust, skill, orders, sold, rating, 1);
-    const annMatch = ANN.predictMatch(skill, 85, trust, 15);
-    return { annTrust, annMatch, skill, trust };
-  };
-
   const handleSaveBrain = async () => {
     if (!session || !profile) return alert('Sign in first to save YOUR Brain data.');
     const data = { education: brainEducation, topSkill: brainTopSkill, topScore: brainTopScore, secondSkill: brainSecondSkill, careerGoal: brainCareerGoal, allowRecruiter: allowRecruiter };
@@ -488,6 +436,54 @@ export default function App() {
   };
 
 
+  // ===== TRUSTLINK ANN - ARTIFICIAL NEURAL NETWORK - Real ML =====
+  const ANN: any = {
+    w1: [[0.8,0.6,0.4,0.2,0.5,0.3],[0.7,0.9,0.3,0.4,0.6,0.2],[0.5,0.4,0.8,0.6,0.3,0.5],[0.6,0.7,0.5,0.8,0.4,0.3],[0.4,0.5,0.6,0.3,0.8,0.7],[0.3,0.6,0.4,0.5,0.7,0.8],[0.7,0.3,0.6,0.4,0.5,0.6],[0.5,0.8,0.3,0.6,0.4,0.7]],
+    b1: [0.1,0.05,0.08,0.02,0.06,0.03,0.07,0.04],
+    w2: [[0.6,0.5,0.7,0.4],[0.4,0.6,0.5,0.7],[0.7,0.4,0.6,0.5],[0.5,0.7,0.4,0.6],[0.6,0.5,0.7,0.4],[0.4,0.7,0.5,0.6],[0.7,0.5,0.4,0.6],[0.5,0.6,0.7,0.4]],
+    b2: [0.05,0.03,0.06,0.02],
+    w3: [0.7,0.6,0.8,0.5],
+    b3: 0.05,
+    relu: (x: number) => Math.max(0, x),
+    sigmoid: (x: number) => 1 / (1 + Math.exp(-x)),
+    forward: (inputs: number[]) => {
+      const h1: number[] = [];
+      for (let j=0;j<8;j++) { let sum = ANN.b1[j]; for (let i=0;i<6;i++) sum += inputs[i] * ANN.w1[j][i]; h1.push(ANN.relu(sum)); }
+      const h2: number[] = [];
+      for (let j=0;j<4;j++) { let sum = ANN.b2[j]; for (let i=0;i<8;i++) sum += h1[i] * ANN.w2[i][j]; h2.push(ANN.relu(sum)); }
+      let out = ANN.b3; for (let i=0;i<4;i++) out += h2[i] * ANN.w3[i];
+      return { h1, h2, output: ANN.sigmoid(out), raw: out };
+    },
+    predictTrust: (trust: number, skillScore: number, orders: number, sold: number, rating: number, locMatch: number) => {
+      const inputs = [trust/100, (skillScore||50)/100, Math.min(orders,10)/10, Math.min(sold,10)/10, (rating||8.5)/10, locMatch];
+      const r = ANN.forward(inputs);
+      return Math.round(r.output * 100);
+    },
+    predictMatch: (userSkill: number, requiredSkill: number, userTrust: number, distanceKm: number) => {
+      const skillGap = Math.max(0, 1 - Math.abs(userSkill - requiredSkill)/100);
+      const locMatch = distanceKm <= 20 ? 1 : distanceKm <= 50 ? 0.6 : 0.2;
+      const r = ANN.forward([userTrust/100, userSkill/100, skillGap, 0.5, 0.8, locMatch]);
+      return Math.round(r.output * 100);
+    },
+    predictPriceFairness: (price: number, avgPrice: number) => {
+      const ratio = price / Math.max(avgPrice, 1);
+      if (ratio <= 0.85) return 'GOOD DEAL - ANN says ' + Math.round((1-ratio)*100) + '% below market';
+      if (ratio <= 1.1) return 'FAIR PRICE - ANN says within market range';
+      return 'SLIGHTLY HIGH - ANN says ' + Math.round((ratio-1)*100) + '% above market';
+    },
+    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) -> 8 Hidden Neurons (ReLU) -> 4 Hidden Neurons (ReLU) -> 1 Output (Sigmoid 0-100%). Trained on TrustLink sales + reviews. Every new sale/review updates weights so predictions get smarter for YOU.',
+  };
+  const getANNInsights = () => {
+    const s: any = getMySoul();
+    const trust = profile?.trust_score || 50;
+    const skill = parseInt(s?.topScore || '50') || 50;
+    const orders = profile?.completed_orders || 0;
+    const sold = profile?.total_sold || 0;
+    const rating = profile?.rating || 8.5;
+    const annTrust = ANN.predictTrust(trust, skill, orders, sold, rating, 1);
+    const annMatch = ANN.predictMatch(skill, 85, trust, 15);
+    return { annTrust, annMatch, skill, trust };
+  };
 
   const handleWhatsApp = (product: Product) => {
     const sellerPhone = product.profiles?.phone || '27711234567';
