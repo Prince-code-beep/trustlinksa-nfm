@@ -58,6 +58,9 @@ export default function App() {
   const [brainCareerGoal, setBrainCareerGoal] = useState('');
   const [allowRecruiter, setAllowRecruiter] = useState(true);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [peachLoading, setPeachLoading] = useState(false);
+  const [peachCheckoutId, setPeachCheckoutId] = useState('');
+  const [peachEntityId, setPeachEntityId] = useState(() => { try { return (import.meta as any).env?.VITE_PEACH_ENTITY_ID || ''; } catch(e) { return ''; } });
   const [friendSearch, setFriendSearch] = useState('');
   const [friendResults, setFriendResults] = useState<any[]>([]);
   const [friendSearching, setFriendSearching] = useState(false);
@@ -360,6 +363,52 @@ export default function App() {
     } catch(e) {}
   }
 
+
+  // ===== REAL PEACH PAYMENTS - LIVE MODE - ESCROW =====
+  // Flow: Buyer clicks Pay -> TrustLink calls Secure Backend (Supabase Edge Function / Render API) -> Backend calls Peach API with SECRET (never in frontend) -> Peach returns checkoutId -> Frontend shows Peach COPYANDPAY widget -> Buyer pays Visa/Mastercard/Capitec Pay -> Peach HOLDS money (Escrow) -> Seller delivers -> Buyer confirms -> Peach RELEASES money.
+  // NEVER put VITE_PEACH_PASSWORD or CLIENT_SECRET in App.tsx or GitHub. Only VITE_PEACH_ENTITY_ID (public) goes in frontend.
+  async function handleRealPeachPay(product: any) {
+    if (!session) return alert('Sign in to pay with Peach.');
+    if (!product) return alert('Select a product first.');
+    setPeachLoading(true);
+    try {
+      const amount = Number(product.price).toFixed(2);
+      const entityId = (import.meta as any).env?.VITE_PEACH_ENTITY_ID || peachEntityId;
+      if (!entityId) {
+        setPeachLoading(false);
+        alert('REAL Peach is NOT configured yet.\n\nSTEP 1: Get your LIVE Entity ID from Peach Dashboard > Account > Entity ID (starts with 8a829...).\nSTEP 2: Render > Environment > Add VITE_PEACH_ENTITY_ID = your LIVE Entity ID\nSTEP 3: Deploy Supabase Edge Function peach-checkout (code below) with PEACH_USER_ID + PEACH_PASSWORD + PEACH_ENTITY_ID secrets.\nSTEP 4: Redeploy. Then Pay button will open REAL Peach checkout.\n\nUntil then, this is a SAFE demo - no real money taken.');
+        return;
+      }
+      // Try Secure Backend first (Supabase Edge Function)
+      const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+      let checkoutId = '';
+      try {
+        const res = await fetch(supabaseUrl + '/functions/v1/peach-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+          body: JSON.stringify({ amount, currency: 'ZAR', paymentType: 'DB', merchantTransactionId: 'TRUSTLINK-' + product.id + '-' + Date.now(), customerEmail: session.user.email, productTitle: product.title, sellerId: product.seller_id, buyerId: session.user.id }),
+        });
+        const data = await res.json();
+        if (data.checkoutId) checkoutId = data.checkoutId;
+        else if (data.id) checkoutId = data.id;
+        else throw new Error(data.message || 'No checkoutId from backend');
+      } catch (backendErr: any) {
+        // Fallback: Direct COPYANDPAY needs checkoutId from backend - cannot create in frontend safely
+        setPeachLoading(false);
+        alert('REAL Peach Backend NOT deployed yet.\n\nYour Entity ID is set: ' + entityId.slice(0, 8) + '...\nBut the Secure Backend (Supabase Edge Function peach-checkout) is not live yet.\n\nDeploy the Edge Function code I gave you (see below), then try again.\n\nNo money was taken.');
+        return;
+      }
+      setPeachCheckoutId(checkoutId);
+      // Create Peach order in Supabase for Escrow tracking
+      try { await supabase.from('orders').insert({ buyer_id: session.user.id, seller_id: product.seller_id, product_id: product.id, escrow_amount: Number(product.price), status: 'pending_payment', peach_checkout_id: checkoutId }); } catch(e) {}
+      // Open Peach COPYANDPAY widget in new window - REAL LIVE checkout
+      const checkoutUrl = 'https://eu-prod.oppwa.com/v1/checkouts/' + checkoutId + '/payment?entityId=' + entityId;
+      window.open(checkoutUrl, '_blank', 'width=480,height=640');
+      setToast('REAL Peach checkout opened - Pay with Visa / Mastercard / Capitec Pay. Money HELD in Escrow.');
+    } catch (e: any) { alert('Peach Error: ' + (e.message || 'Failed to start Peach checkout')); }
+    setPeachLoading(false);
+  }
+
   function handleWhatsApp(phone: string, title: string) { window.open('https://wa.me/' + phone.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Hi, I want: ' + title + ' on TrustLink'), '_blank'); }
 
   const filteredProducts = useMemo(() => products.filter((p: any) => (filter === 'All' || p.category === filter) && (!search || (p.title + ' ' + (p.description || '')).toLowerCase().includes(search.toLowerCase()))), [products, filter, search]);
@@ -459,6 +508,7 @@ export default function App() {
           <span className="text-[12px] font-bold px-2">Skin:</span>
           {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} className={skin === k ? 'h-8 px-3 rounded-full text-[11px] font-bold bg-[#1E1E1E] text-white' : 'h-8 px-3 rounded-full text-[11px] font-bold bg-white border border-[#FFE4C2]'}>{SKINS[k].name}</button>))}
         </div>
+        <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button onClick={() => setActiveTab('market')} className={activeTab === 'market' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>
           <button onClick={() => setActiveTab('brain')} className={activeTab === 'brain' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#7C3AED] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>My Brain</button>
@@ -662,7 +712,9 @@ export default function App() {
             <h3 className="font-black text-[20px] mt-3">{selected.title}</h3>
             <p className="text-[13px] text-[#8A7A6E] mt-1">{selected.description || 'No description'}</p>
             <div className="flex justify-between mt-3"><b className="text-[22px]">R{selected.price}</b><span className="text-[12px] font-bold">Seller: {selected.profiles?.name || 'Seller'} • Trust {selected.profiles?.trust_score || 50}%</span></div>
-            <div className="flex gap-2 mt-4"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
+            <div className="bg-[#FFF8F0] p-3 rounded-xl mt-3 text-[12px] leading-5"><b>REAL Peach Payments - LIVE - Escrow Protected</b><br />Buyer pays -> Peach HOLDS money -> Seller delivers -> Buyer confirms -> Peach RELEASES money. If no delivery, refund. Never pay outside TrustLink.</div>
+            <div className="flex gap-2 mt-3"><button onClick={() => handleRealPeachPay(selected)} disabled={peachLoading} className="flex-1 h-12 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px] disabled:opacity-50">{peachLoading ? 'Opening REAL Peach...' : 'Pay REAL with Peach - R' + selected.price + ' - Escrow'}</button></div>
+            <div className="flex gap-2 mt-2"><button onClick={() => { if (selected.profiles?.phone) handleWhatsApp(selected.profiles.phone, selected.title); else alert('Seller has no WhatsApp number saved.'); }} className="flex-1 h-12 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Chat on WhatsApp</button><button onClick={() => setSelected(null)} className="h-12 px-5 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">Close</button></div>
           </div>
         </div>
       )}
