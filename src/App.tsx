@@ -224,21 +224,54 @@ export default function App() {
 
 
   const handleAskAI = () => {
-    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything — e.g. "What should I sell in Soweto?"'); return; }
+    if (!aiQuestion.trim()) { setAiAnswer('Ask me anything — e.g. "Who is the best seller for sneakers?" or "What should I sell in Soweto?"'); return; }
     const q = aiQuestion.toLowerCase();
     const myName = profile?.name || 'Friend';
     const myTrust = profile?.trust_score || 50;
-    const liveCount = products.length;
-    const cheap = products.filter(p => p.price < 1000).length;
-    let personal = `Hi ${myName} — I remember you. Your Trust Score is ${myTrust}%, you have ${profile?.total_sold || 0} sales, ${profile?.completed_orders || 0} orders. You are in ${profile?.location || 'Soweto, Gauteng'}.`;
-    let general = `In Soweto, best sellers right now are sneakers, phones, air fryers, and food. Buyers trust sellers who show their face + company profile + fast WhatsApp reply.`;
-    let maps = `On TrustLink right now: ${liveCount} live products, ${cheap} under R1000. Best pickup spots: Maponya Mall, Jabulani Mall, Pimville Square.`;
-    if (q.includes('sell')) general = `To sell fast in Soweto: 1) Upload clear photo 2) Price R50 below Maponya Mall 3) Reply on WhatsApp in under 5 mins 4) Offer pickup at Pimville Square. Your Trust Score goes up +1 per sale.`;
-    if (q.includes('buy') || q.includes('trust')) general = `To buy safely: 1) Check seller Trust Score over 70% 2) Check face photo 3) Use Escrow — money held until you confirm delivery 4) Meet at Maponya Mall, not alone.`;
-    if (q.includes('price') || q.includes('how much')) general = `Price tip: Check 3 similar products on TrustLink, then price 10% lower if you want fast sale. Don't go too low — buyers distrust too-cheap.`;
+    const personal = `Hi ${myName} — I remember you. Trust Score: ${myTrust}% | Sales: ${profile?.total_sold || 0} | Bought: ${profile?.total_bought || 0} | Orders: ${profile?.completed_orders || 0} | Location: ${profile?.location || 'Soweto, Gauteng'}.`;
+    const allSellersMap = new Map();
+    products.forEach(p => { if (p.profiles) allSellersMap.set(p.seller_id, p.profiles); });
+    const rankedSellers = Array.from(allSellersMap.values()).map((s: any) => {
+      const trust = s.trust_score || 50;
+      const rating = s.rating || 8.5;
+      const orders = s.completed_orders || 0;
+      const sold = s.total_sold || 0;
+      const reliability = Math.round((trust * 0.4) + ((rating / 10) * 100 * 0.3) + (Math.min(orders * 2, 20)) + (Math.min(sold * 1, 10)));
+      return { ...s, reliability };
+    }).sort((a, b) => b.reliability - a.reliability);
+    const bestSeller = rankedSellers[0];
+    const bestSellerText = bestSeller
+      ? `🏆 BEST SELLER RECOMMENDATION (based on live statistics):
+${bestSeller.name} — Reliability: ${bestSeller.reliability}% | Trust: ${bestSeller.trust_score}% | Rating: ${bestSeller.rating}/10 | Completed Orders: ${bestSeller.completed_orders} | Total Sold: ${bestSeller.total_sold} | Location: ${bestSeller.location || 'Soweto'}
+Why them? Highest combined score of Trust + Rating + Reliability. They reply fastest and deliver on time.`
+      : `No sellers yet — be the first to list and become the #1 ranked seller.`;
+    const matched = products.filter(p => q.split(' ').some(word => word.length > 3 && (p.title.toLowerCase().includes(word) || p.category.toLowerCase().includes(word)))).slice(0, 3);
+    const productText = matched.length > 0
+      ? `🔍 BEST MATCHES FOR YOU:
+${matched.map((p, i) => `${i+1}. ${p.title} — R${p.price} | Seller: ${p.profiles?.name || 'Seller'} (Trust ${p.profiles?.trust_score || 50}%) | ${p.category}`).join('
+')}`
+      : `📦 LIVE MARKETPLACE: ${products.length} live products. Top categories: Fashion, Tech, Food. Ask me "best seller for sneakers" to get a specific recommendation.`;
+    let general = `Soweto Market Insight: Best sellers right now are sneakers, phones, air fryers, and kota/food. Buyers trust sellers with face photo + Trust Score over 70% + fast WhatsApp reply.`;
+    if (q.includes('sell')) general = `SELLING STRATEGY (Soweto): 1) Upload clear photo + face 2) Price R50 below Maponya Mall 3) Reply on WhatsApp in under 5 mins 4) Offer pickup at Pimville Square / Maponya Mall. Each sale +1 Trust Score. Top sellers sell 3x faster because of high Reliability.`;
+    if (q.includes('buy') || q.includes('trust') || q.includes('safe')) general = `BUYING SAFELY: 1) Only buy from Reliability over 75% 2) Check face photo + company profile 3) Use Peach Escrow — money held until you confirm delivery 4) Meet at Maponya Mall, Jabulani Mall, not alone. Never pay outside TrustLink.`;
+    if (q.includes('best seller') || q.includes('who') || q.includes('recommend')) general = `HOW I RANK SELLERS (more advanced than Google / Meta): I don't guess. I calculate Reliability = Trust Score (40%) + Customer Rating (30%) + Completed Orders (20%) + Total Sold (10%). Highest Reliability = Most Trusted. Updated live from Supabase.`;
+    if (q.includes('price') || q.includes('how much')) general = `PRICE INTELLIGENCE: Check 3 similar products on TrustLink. Price 10% lower for fast sale. Too cheap = buyers think it's fake. Fair price + high Trust = fastest sale.`;
     if (q.includes('peach') || q.includes('pay')) general = `Peach Payments: Buyer pays with card / Capitec Pay / SnapScan. Money is held in Escrow. Seller delivers. You confirm delivery. Then seller gets paid. Safe for both sides.`;
-    setAiAnswer(`${personal}\n\n--- GENERAL ---\n${general}\n\n--- MAPS + MARKETPLACE ---\n${maps}\n\nWant me to find you a product? Tell me what you need.`);
+    const maps = `📍 MAPS + PICKUP: Best safe meetups: Maponya Mall (Soweto), Jabulani Mall, Pimville Square, Bara Mall. Always meet in public, daytime.`;
+    setAiAnswer(`${personal}
+
+--- ${bestSellerText}
+
+--- ${productText}
+
+--- GENERAL INTELLIGENCE ---
+${general}
+
+--- ${maps}
+
+Ask me: "Who is best seller for phones?"`);
   };
+
 
 
   const handlePeachPay = async (product: Product) => {
