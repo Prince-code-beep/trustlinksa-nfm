@@ -441,6 +441,7 @@ const handleAskAI = () => {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button onClick={()=>handleBuy(selected)} className="h-12 rounded-full bg-[#1E1E1E] text-white font-bold">Buy — Escrow R{selected.price}</button>
+                <button onClick={()=>notify('Peach Payments coming next — for now use Escrow + WhatsApp. Your money will be held until delivery.')} className="mt-2 w-full h-12 rounded-full bg-[#FF8A4C] text-white font-bold">💳 Pay Securely with Peach Payments</button>
                 <button onClick={()=>handleWhatsApp(selected)} className="h-12 rounded-full bg-[#25D366] text-white font-bold">💬 WhatsApp Seller</button>
               </div>
               <button onClick={()=>selected.profiles && setViewProfile(selected.profiles)} className="mt-3 w-full h-10 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]">View Seller Trust Profile</button>
