@@ -221,7 +221,29 @@ const [aiAnswer, setAiAnswer] = useState('');
       setSellLoading(false);
     }
   };
+const handleAskAI = () => {
+  if (!aiQuestion) return setAiAnswer('Ask me anything — e.g. "What should I sell in Soweto?"');
+  const q = aiQuestion.toLowerCase();
+  const myName = profile?.name || 'Friend';
+  const myTrust = profile?.trust_score || 50;
+  const liveCount = products.length;
+  const cheap = products.filter(p => p.price < 1000).length;
 
+  // PERSONAL LAYER - from your profile
+  let personal = `Hi ${myName} — I remember you. Your Trust Score is ${myTrust}%, you have ${profile?.total_sold || 0} sales, ${profile?.completed_orders || 0} orders. You are in ${profile?.location || 'Soweto, Gauteng'}.`;
+
+  // GENERAL LAYER - general knowledge
+  let general = `In Soweto, best sellers right now are sneakers, phones, air fryers, and food. Buyers trust sellers who show their face + company profile + fast 【entity-WhatsApp¦canonical_name=WhatsApp】 reply.`;
+
+  // MAPS / MARKETPLACE LAYER - from live products
+  let maps = `On TrustLink right now: ${liveCount} live products, ${cheap} under R1000. Best pickup spots: Maponya Mall, Jabulani Mall, Pimville Square.`;
+
+  if (q.includes('sell')) general = `To sell fast in Soweto: 1) Upload clear photo 2) Price R50 below Maponya Mall 3) Reply on 【entity-WhatsApp¦canonical_name=WhatsApp】 in <5 mins 4) Offer pickup at Pimville Square. Your Trust Score will go up +1 per sale.`;
+  if (q.includes('buy') || q.includes('trust')) general = `To buy safely: 1) Check seller Trust Score >70% 2) Check face photo 3) Use Escrow — money held until you confirm delivery 4) Meet at Maponya Mall, not alone.`;
+  if (q.includes('price') || q.includes('how much')) general = `Price tip: Check 3 similar products on TrustLink, then price 10% lower if you want fast sale. Don't go too low — buyers distrust too-cheap.`;
+
+  setAiAnswer(`${personal}\n\n--- GENERAL ---\n${general}\n\n--- MAPS + MARKETPLACE ---\n${maps}\n\nWant me to find you a product? Tell me what you need.`);
+};
   const handleBuy = async (product: Product) => {
     if (!session?.user) return notify('Sign in to buy');
     if (product.seller_id === session.user.id) return notify('Cannot buy your own product');
@@ -454,6 +476,20 @@ const [aiAnswer, setAiAnswer] = useState('');
           </div>
         </div>
       )}
+     {showAI && (
+  <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
+    <div className="w-full max-w- bg-white rounded-t- lg:rounded- p-6 max-h- overflow-y-auto">
+      <div className="flex justify-between items-center">
+        <h3 className="font-[900] text-">🤖 TrustLink AI Agent</h3>
+        <button onClick={()=>setShowAI(false)} className="w-8 h-8 rounded-full bg-[#FFF8F0] border">✕</button>
+      </div>
+      <p className="text- text-[#8A7A6E] mt-1">Personal Memory + General Research + Maps in ONE answer. Unlike Google / Meta AI.</p>
+      <input value={aiQuestion} onChange={e=>setAiQuestion(e.target.value)} placeholder="Ask me... What should I sell in Soweto?" className="mt-4 w-full h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-" />
+      <button onClick={handleAskAI} className="mt-3 w-full h-12 rounded-full bg-[#7C3AED] text-white font-bold">Ask TrustLink AI</button>
+      {aiAnswer && <div className="mt-4 p-4 rounded- bg-[#F5F3FF] border border-[#DDD6FE] text- leading-5 whitespace-pre-line">{aiAnswer}</div>}
+    </div>
+  </div>
+)}
       {showSell && (
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm flex items-end lg:items-center justify-center p-0 lg:p-6">
           <div className="w-full max-w-[520px] bg-white rounded-t-[28px] lg:rounded-[28px] p-6 max-h-[90vh] overflow-y-auto">
