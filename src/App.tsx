@@ -85,7 +85,7 @@ export default function App() {
   const [friends, setFriends] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_friends') || '[]'); } catch(e) { return []; } });
   const [chatWith, setChatWith] = useState<any>(null);
 
-  const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FFF8F0', accent: '#FF8A4C' }, dark: { name: 'Dark Mode', bg: '#1E1E1E', accent: '#FF8A4C' }, purple: { name: 'Brain Purple', bg: '#F5F0FF', accent: '#7C3AED' }, green: { name: 'Money Green', bg: '#F0FDF4', accent: '#16A34A' }, blue: { name: 'Ocean Blue', bg: '#EFF6FF', accent: '#0EA5E9' }, pink: { name: 'Pink Hustle', bg: '#FFF5F7', accent: '#FF5A7A' } };
+  const SKINS: any = { sunset: { name: 'Soweto Sunset', bg: '#FF6B00', accent: '#FF6B00', headerBg: '#FF6B00', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF6B00' }, dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' }, purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' }, green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' }, blue: { name: 'Ocean Blue', bg: '#0066FF', accent: '#0066FF', headerBg: '#0047B3', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0066FF' }, pink: { name: 'Pink Hustle', bg: '#FF2D78', accent: '#FF2D78', headerBg: '#C4004F', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF2D78' }, gold: { name: 'Gold Rush', bg: '#FFB800', accent: '#FFB800', headerBg: '#FF8A00', headerText: '#000000', cardBg: '#FFFFFF', buttonBg: '#FF8A00' }, red: { name: 'Fire Red', bg: '#E11D48', accent: '#E11D48', headerBg: '#9F1239', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#E11D48' } };
 
   // ANN ENGINE - 6 → 8 → 4 → 1
   const ANN: any = {
@@ -685,16 +685,17 @@ export default function App() {
     <div className="min-h-screen pb-24" style={{ background: skinStyle.bg }}>
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
         <div className="flex justify-between items-center">
-          <h1 className="font-black text-[24px]">TrustLink SA</h1>
+          <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
           <div className="flex gap-2 items-center">
             <span className="text-[12px] font-bold">{profile?.name || 'You'} • Trust {profile?.trust_score || 50}%</span>
             <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]">Log Out</button>
           </div>
         </div>
         <div className="flex gap-2 mt-4 items-center bg-white rounded-full p-2 border border-[#FFE4C2] flex-wrap">
-          <span className="text-[12px] font-bold px-2">Skin:</span>
-          {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} className={skin === k ? 'h-8 px-3 rounded-full text-[11px] font-bold bg-[#1E1E1E] text-white' : 'h-8 px-3 rounded-full text-[11px] font-bold bg-white border border-[#FFE4C2]'}>{SKINS[k].name}</button>))}
+          <span className="text-[12px] font-black px-2">SKIN - Tap to change WHOLE app colour:</span>
+          {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} style={{ background: SKINS[k].bg, color: SKINS[k].headerText, border: skin === k ? '3px solid #000' : '2px solid #fff' }} className="h-10 px-4 rounded-full text-[12px] font-black shadow-lg">{skin === k ? '✓ ' + SKINS[k].name : SKINS[k].name}</button>))}
         </div>
+        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 TRUSTLINK REELS - NEW! Watch + Sell With Video</b><div className="text-white text-[12px] opacity-90">Sellers: Post video of your product - Buyers: Post review video of what you bought - Every Reel has a BUY button</div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
         <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button onClick={() => setActiveTab('market')} className={activeTab === 'market' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>
