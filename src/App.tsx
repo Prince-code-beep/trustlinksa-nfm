@@ -42,6 +42,7 @@ export default function App() {
   const [sellImage, setSellImage] = useState('');
   const [sellLoading, setSellLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('market');
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as any }); }, [activeTab]);
   const [skin, setSkin] = useState(() => { try { return localStorage.getItem('trustlink_skin') || 'corporate'; } catch(e) { return 'corporate'; } });
   const [rainTick, setRainTick] = useState(0);
   const ANIMATED_SKINS = ['rain', 'aurora', 'ocean', 'forest', 'sunset', 'lavender', 'sunset'];
@@ -1040,7 +1041,7 @@ export default function App() {
           {aiHistory.length > 0 && (<div className="mt-3"><div className="text-[12px] font-bold">Recent Research ({aiHistory.length})</div>{aiHistory.slice(-3).map((h: any, i: number) => (<div key={i} className="text-[12px] text-[#8A7A6E] mt-1">• {h.q} - {h.time}</div>))}</div>)}
         </div>
 
-        {(showAll || activeTab === 'brain') && (
+        {(activeTab === 'brain') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">MY BRAIN</h2>
             <p className="text-center text-[13px] font-bold text-[#7C3AED] mt-1">Signed in as: {profile?.name || 'You'} - This is YOUR Brain only</p>
@@ -1076,7 +1077,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'recruiter') && (
+        {(activeTab === 'recruiter') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Recruiter Link - For Signed-In User Only</h2>
             <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA Compliant COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
@@ -1085,7 +1086,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'talent') && (
+        {(activeTab === 'talent') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">DISCOVER TALENT - Sellers Selling THEMSELVES</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
@@ -1101,7 +1102,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'investors') && (
+        {(activeTab === 'investors') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">INVESTORS - Pitch Yourself</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
@@ -1119,7 +1120,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'chat') && (
+        {(activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - End-to-End Encrypted</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1"></p>
@@ -1133,7 +1134,7 @@ export default function App() {
         )}
 
 
-        {(showAll || activeTab === 'chat') && (
+        {(activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">WhatsApp Chat, Inside TrustLink</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1"></p>
@@ -1162,7 +1163,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'reels') && (
+        {(activeTab === 'reels') && (
           <div className="mt-4">
             <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
@@ -1269,7 +1270,7 @@ export default function App() {
                 </div>
               </div>
             )}
-        {(showAll || activeTab === 'invite') && (
+        {(activeTab === 'invite') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Invite Friends - Grow TrustLink, Earn Trust</h2>
             <p className="text-[13px] text-[#8A7A6E] mt-1"></p>
@@ -1483,7 +1484,7 @@ export default function App() {
         </div>
         )}
 
-        {(showAll || activeTab === 'market') && (
+        {(activeTab === 'market') && (
           <div>
             <div className="flex justify-between items-center mt-6"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
             <div className="mt-4 flex gap-2"><div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2"><span>Search</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search real products..." className="flex-1 outline-none text-[14px] bg-transparent" /></div></div>
