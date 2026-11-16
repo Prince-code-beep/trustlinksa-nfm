@@ -1123,7 +1123,7 @@ export default function App() {
 
         {(activeTab === 'talent') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
-            <h2 className="text-center font-black text-[20px]">DISCOVER TALENT - Sellers Selling THEMSELVES</h2>
+            <h2 className="text-center font-black text-[20px]">Talent Promotion</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
             <div className="mt-4 bg-[#F0F9FF] p-4 rounded-xl">
               <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={sellMyself} onChange={(e) => setSellMyself(e.target.checked)} /> I want to SELL MYSELF - Discoverable by Recruiters / HR</label>
