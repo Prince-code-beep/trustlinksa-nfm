@@ -52,7 +52,7 @@ export default function App() {
   const [alertQuery, setAlertQuery] = useState('');
   const [alertMaxPrice, setAlertMaxPrice] = useState('');
   const [nearMeKm, setNearMeKm] = useState('10');
-  const [showAll, setShowAll] = useState(true); // NOTHING HIDDEN - Show everything on one page
+  const [showAll, setShowAll] = useState(false); // ONE HEADER - One click = One section only, no long scroll
   const [userLat, setUserLat] = useState<number | null>(() => { try { const v = localStorage.getItem('trustlink_lat'); return v ? parseFloat(v) : null; } catch(e) { return null; } });
   const [userLng, setUserLng] = useState<number | null>(() => { try { const v = localStorage.getItem('trustlink_lng'); return v ? parseFloat(v) : null; } catch(e) { return null; } });
   const [gpsStatus, setGpsStatus] = useState('Not set - Tap Use My GPS');
@@ -233,7 +233,7 @@ export default function App() {
   const [contactSyncStatus, setContactSyncStatus] = useState('Contacts not synced yet - Tap Sync Contacts');
   async function syncPhoneContacts() {
     try {
-      // @ts-ignore - Contacts Picker API (Chrome Android) - asks permission, POPIA compliant
+      // @ts-ignore - Contacts Picker API (Chrome Android) - asks permission, POPIA Compliant compliant
       if (!navigator.contacts || !navigator.contacts.select) {
         setContactSyncStatus('Your browser does not support auto contact sync. Type their phone number below to add them manually - they must be registered on TrustLink with that number.');
         const phone = prompt('Enter their phone number (e.g. 0821234567) to add them as contact:');
@@ -299,7 +299,7 @@ export default function App() {
       const r = ANN.forward([userTrust / 100, userSkill / 100, skillGap, 0.5, 0.8, locMatch]);
       return Math.round(r.output * 100);
     },
-    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) → 8 Hidden (ReLU) → 4 Hidden (ReLU) → 1 Output (Sigmoid 0-100%). Every sale/review updates weights. It learns YOU, the signed-in user.',
+    explain: () => 'ANN: 6 Inputs (Trust, Skill, Orders, Sales, Rating, Location) → 8 Hidden (ReLU) → 4 Hidden (ReLU) → 1 Output (Sigmoid 0-100%). ',
   };
 
   useEffect(() => {
@@ -480,7 +480,7 @@ export default function App() {
       } else if (q.includes('escrow')) {
         localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays → Peach holds → Seller delivers → Buyer confirms → Peach releases. If no delivery, refund.';
       } else if (q.includes('trustlink')) {
-        localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Soweto. Private, POPIA compliant.';
+        localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Soweto. Private, POPIA Compliant compliant.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^what is /i, '').replace(/^what are /i, '').trim(); }
     } else if (isWho) {
       needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^who is /i, '').replace(/^who was /i, '').trim();
@@ -879,7 +879,7 @@ export default function App() {
           </div>
           {authMode === 'signup' && (
             <div className="pt-3 border-t border-[#FFF0E0] space-y-2 mt-4">
-              <div className="text-[12px] font-bold text-[#7C3AED]">🧠 YOUR BRAIN - Only you see this when signed in (POPIA Protected)</div>
+              <div className="text-[12px] font-bold text-[#7C3AED]">🧠 YOUR BRAIN - Only you see this when signed in (POPIA Compliant Protected)</div>
               <input value={brainEducation} onChange={(e) => setBrainEducation(e.target.value)} placeholder="Your education e.g. BCom Information Management - UJ" className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
               <div className="flex gap-2">
                 <input value={brainTopSkill} onChange={(e) => setBrainTopSkill(e.target.value)} placeholder="Your top skill e.g. Machine Learning" className="flex-1 h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
@@ -896,7 +896,7 @@ export default function App() {
             <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none" />
             <button onClick={handleAuth} disabled={authLoading} className="w-full h-12 rounded-full bg-[#FF8A4C] text-white font-bold text-[14px] disabled:opacity-50">{authLoading ? 'Please wait...' : authMode === 'signup' ? 'Create Real Account' : 'Sign In'}</button>
           </div>
-          <p className="text-center text-[11px] text-[#8A7A6E] mt-3">By signing up you agree to POPIA. Your Brain is private to YOU.</p>
+          <p className="text-center text-[11px] text-[#8A7A6E] mt-3">By signing up you agree to POPIA Compliant. Your Brain is private to YOU.</p>
           <div className="mt-4 bg-[#FFF8F0] p-3 rounded-xl">
             <div className="text-[12px] font-bold">Try TrustLink AI - No login needed</div>
             <div className="flex gap-2 mt-2"><input value={aiQuestion} onChange={(e) => setAiQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAskAI(); }} placeholder="What is inflation? How do I sell faster?" className="flex-1 h-10 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[12px]" /><button onClick={handleAskAI} className="h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">Ask AI</button></div>
@@ -989,21 +989,12 @@ export default function App() {
           <span className="text-[12px] font-black px-2">SKIN - Tap to change WHOLE app colour:</span>
           {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} style={{ background: SKINS[k].bg, color: SKINS[k].headerText, border: skin === k ? '3px solid #000' : '2px solid #fff' }} className="h-10 px-4 rounded-full text-[12px] font-black shadow-lg">{skin === k ? '✓ ' + SKINS[k].name : SKINS[k].name}</button>))}
         </div>
-        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
+        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
         <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
-        <div className="flex gap-2 mt-3 flex-wrap">
-          <button onClick={() => setActiveTab('market')} className={(showAll || activeTab === 'market') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>           <button onClick={() => setActiveTab('reels')} className={(showAll || activeTab === 'reels') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg'}>Reels - NEW</button>
-          <button onClick={() => setActiveTab('brain')} className={(showAll || activeTab === 'brain') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#7C3AED] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>My Brain</button>
-          <button onClick={() => setActiveTab('recruiter')} className={(showAll || activeTab === 'recruiter') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#16A34A] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Recruiter Link</button>
-          <button onClick={() => setActiveTab('talent')} className={(showAll || activeTab === 'talent') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#0EA5E9] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Discover Talent</button>
-          <button onClick={() => setActiveTab('investors')} className={(showAll || activeTab === 'investors') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#F59E0B] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Investors</button>
-          <button onClick={() => setActiveTab('chat')} className={(showAll || activeTab === 'chat') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#25D366] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Chat E2E</button>
-          <button onClick={() => setActiveTab('invite')} className={(showAll || activeTab === 'invite') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#EC4899] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Invite</button>
-        </div>
 
         <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
           <div className="flex justify-between items-center"><h3 className="font-black text-[16px]">TrustLink AI Agent - ANN Powered</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">LIVE - WHAT / HOW / WHERE / WHEN / WHO / WHY</span></div>
-          <p className="text-[12px] text-[#8A7A6E] mt-1">Like Meta AI + Grok + Google, but improved + ANN: Neural Network (6 → 8 → 4 → 1) that LEARNS from YOUR sales, reviews, searches.</p>
+          <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
           <div className="flex gap-2 mt-2 flex-wrap">
             <button onClick={() => setAiQuestion('What is inflation?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">What is inflation?</button>
             <button onClick={() => setAiQuestion('How do I sell faster?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">How do I sell faster?</button>
@@ -1021,8 +1012,8 @@ export default function App() {
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">MY BRAIN</h2>
             <p className="text-center text-[13px] font-bold text-[#7C3AED] mt-1">Signed in as: {profile?.name || 'You'} - This is YOUR Brain only</p>
-            <p className="text-center text-[11px] text-[#8A7A6E]">ML learns YOU - the signed-in user. NOT a fixed name. If you log out and another person logs in, they see THEIR Brain, not yours.</p>
-            <div className="bg-[#F3E8FF] p-3 rounded-xl text-[12px] leading-5 mt-3"><b>Privacy Proof:</b> Name = <b>{profile?.name || 'Not set'}</b> - This comes from YOUR signup / YOUR profile in Supabase. It is NOT hardcoded. No other user sees this.</div>
+            <p className="text-center text-[11px] text-[#8A7A6E]"></p>
+            <div className="bg-[#F3E8FF] p-3 rounded-xl text-[12px] leading-5 mt-3"><b>Privacy Proof:</b> Name = <b>{profile?.name || 'Not set'}</b> - </div>
             <h3 className="font-bold mt-4">THE SOUL - YOUR Data Only</h3>
             {soul && soul.facts.map((f: any, i: number) => (<div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{f.label}</b><br /><span className="text-[12px] text-[#8A7A6E]">{f.detail}</span></div><span className="bg-[#FFF0E6] px-3 py-1 rounded-full font-bold text-[12px] text-[#FF8A4C]">{f.score}</span></div>))}
             <h3 className="font-bold mt-4">THE GRAPH</h3>
@@ -1035,7 +1026,7 @@ export default function App() {
               <div><b>Your ANN Prediction:</b> ANN Trust = {annInfo.annTrust}% | ANN Talent Match = {annInfo.annMatch}% | Your Skill = {annInfo.skill}% | Your Trust = {annInfo.trust}%</div>
               <div><b>Explainable AI:</b> {ANN.explain()}</div>
             </div>
-            <h3 className="font-bold mt-4">THE VAULT - Sealed - POPIA</h3>
+            <h3 className="font-bold mt-4">THE VAULT - Sealed - POPIA Compliant</h3>
             {soul && soul.vault.map((v: any, i: number) => (<div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{vaultUnlocked ? v.name + ' - UNLOCKED BY YOU' : 'Locked ' + v.name}</b><br /><span className="text-[11px] text-[#8A7A6E]">{v.hash}</span></div><span className="text-[11px] font-bold text-[#16A34A]">{v.status}</span></div>))}
             <button onClick={() => setVaultUnlocked(!vaultUnlocked)} className="mt-3 h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">{vaultUnlocked ? 'Lock Vault' : 'Unlock Vault With My Key'}</button>
             <h3 className="font-bold mt-5">Edit YOUR Brain Data (Only You)</h3>
@@ -1056,7 +1047,7 @@ export default function App() {
         {(showAll || activeTab === 'recruiter') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Recruiter Link - For Signed-In User Only</h2>
-            <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
+            <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA Compliant COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
             {soul && soul.allowRecruiter ? (<div className="text-left bg-[#F0FDF4] p-4 rounded-xl mt-3 text-[13px] leading-6"><b>Recruiter sees for YOU (signed-in user):</b><br />Education: {soul.education || 'Not provided'}<br />Top Skill: {soul.topSkill || 'Not provided'} {soul.topScore ? '(' + soul.topScore + '%)' : ''}<br />Second Skill: {soul.secondSkill || 'Not provided'}<br />Career Goal: {soul.careerGoal || 'Not provided'}<br />Trust: {profile?.trust_score || 50}% | Location: {soul.location}<br /><br /><b>Recruiter CANNOT see:</b> ID photo, ID number, phone, full PDF - SEALED.</div>) : (<div className="text-left bg-[#FEF3C7] p-4 rounded-xl mt-3 text-[13px]"><b>Recruiter View LOCKED</b><br />{!session ? 'Sign in to see YOUR Recruiter Link.' : 'You turned OFF Allow Recruiters.'}</div>)}
             <button onClick={() => { navigator.clipboard?.writeText('https://trustlinksa-nfm.onrender.com/recruiter/' + (profile?.id || 'you')); alert('YOUR Recruiter Link Copied'); }} className="mt-4 h-12 px-6 rounded-full bg-[#16A34A] text-white font-bold text-[13px]">Copy MY Recruiter Link</button>
           </div>
@@ -1065,7 +1056,7 @@ export default function App() {
         {(showAll || activeTab === 'talent') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">DISCOVER TALENT - Sellers Selling THEMSELVES</h2>
-            <p className="text-center text-[13px] text-[#8A7A6E] mt-1">Sell PRODUCTS + Sell YOURSELF. Recruiters discover you by skill, score, location - POPIA safe.</p>
+            <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
             <div className="mt-4 bg-[#F0F9FF] p-4 rounded-xl">
               <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={sellMyself} onChange={(e) => setSellMyself(e.target.checked)} /> I want to SELL MYSELF - Discoverable by Recruiters / HR</label>
               <label className="flex items-center gap-2 text-[12px] mt-2"><input type="checkbox" checked={allowRecruiter} onChange={(e) => setAllowRecruiter(e.target.checked)} /> Allow Recruiters to see my Soul</label>
@@ -1073,7 +1064,7 @@ export default function App() {
             <div className="flex gap-2 mt-4 flex-wrap"><input value={talentSearch} onChange={(e) => setTalentSearch(e.target.value)} placeholder="Search skill e.g. Machine Learning, SEO, Sales..." className="flex-1 min-w-[200px] h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" /><input value={talentMinScore} onChange={(e) => setTalentMinScore(e.target.value)} placeholder="Min Score % e.g. 85" type="number" className="w-[130px] h-11 px-3 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" /></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-4">
               {talentList.length === 0 && (<div className="col-span-full text-center py-8"><div className="text-4xl">Talent</div><div className="font-bold mt-2">No talent matches yet</div><div className="text-[12px] text-[#8A7A6E]">Be first to SELL YOURSELF - Add Brain data + turn ON Sell Myself.</div></div>)}
-              {talentList.map((x: any) => (<div key={x.id} className="p-4 rounded-[18px] border border-[#FFE4C2] bg-[#FFF8F0]"><div className="flex justify-between"><b>{x.name} {x.isYou ? '(You)' : ''}</b><span className="text-[10px] px-2 py-1 rounded-full bg-[#1E1E1E] text-white font-bold">TRUST {x.trust}%</span></div><div className="text-[12px] mt-1 leading-5">Education: {x.education}<br />Top Skill: {x.topSkill} {x.topScore ? '(' + x.topScore + '%)' : ''}<br />Second: {x.secondSkill}<br />Goal: {x.careerGoal}<br />Location: {x.location} | Rating {x.rating}/10 | Sold {x.sold}</div><div className="mt-3 flex gap-2 items-center"><button onClick={() => alert('Recruiter View: ' + x.name + ' - Soul Only. No ID / phone (POPIA).')} className="h-9 px-4 rounded-full bg-[#0EA5E9] text-white font-bold text-[12px]">View Soul (POPIA Safe)</button><span className="text-[11px] font-bold text-[#0EA5E9]">ANN Match: {ANN.predictMatch(parseInt(x.topScore || '50') || 50, 85, x.trust, 15)}%</span></div></div>))}
+              {talentList.map((x: any) => (<div key={x.id} className="p-4 rounded-[18px] border border-[#FFE4C2] bg-[#FFF8F0]"><div className="flex justify-between"><b>{x.name} {x.isYou ? '(You)' : ''}</b><span className="text-[10px] px-2 py-1 rounded-full bg-[#1E1E1E] text-white font-bold">TRUST {x.trust}%</span></div><div className="text-[12px] mt-1 leading-5">Education: {x.education}<br />Top Skill: {x.topSkill} {x.topScore ? '(' + x.topScore + '%)' : ''}<br />Second: {x.secondSkill}<br />Goal: {x.careerGoal}<br />Location: {x.location} | Rating {x.rating}/10 | Sold {x.sold}</div><div className="mt-3 flex gap-2 items-center"><button onClick={() => alert('Recruiter View: ' + x.name + ' - Soul Only. No ID / phone (POPIA Compliant).')} className="h-9 px-4 rounded-full bg-[#0EA5E9] text-white font-bold text-[12px]">View Soul (POPIA Compliant Safe)</button><span className="text-[11px] font-bold text-[#0EA5E9]">ANN Match: {ANN.predictMatch(parseInt(x.topScore || '50') || 50, 85, x.trust, 15)}%</span></div></div>))}
             </div>
           </div>
         )}
@@ -1081,7 +1072,7 @@ export default function App() {
         {(showAll || activeTab === 'investors') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">INVESTORS - Pitch Yourself</h2>
-            <p className="text-center text-[13px] text-[#8A7A6E] mt-1">Buyers + Sellers can ALSO pitch themselves. Investors discover YOU by idea + funding ask + Trust.</p>
+            <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
             <div className="mt-4 bg-[#FFFBEB] p-4 rounded-xl">
               <input value={businessIdea} onChange={(e) => setBusinessIdea(e.target.value)} placeholder="Your business idea e.g. TrustLink - Brain app for Soweto youth" className="w-full h-11 px-4 rounded-full border border-[#FDE68A] bg-white text-[13px] outline-none mt-2" />
               <input value={fundingAsk} onChange={(e) => setFundingAsk(e.target.value)} placeholder="Funding ask e.g. R50k for 10%" className="w-full h-11 px-4 rounded-full border border-[#FDE68A] bg-white text-[13px] outline-none mt-2" />
@@ -1099,7 +1090,7 @@ export default function App() {
         {(showAll || activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - End-to-End Encrypted</h2>
-            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Only you + receiver can read.</p>
+            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1"></p>
             <div className="flex gap-2 mt-4"><input value={chatTo} onChange={(e) => setChatTo(e.target.value)} placeholder="Chat to who? e.g. Seller / Recruiter / Investor" className="flex-1 h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" /><span className="h-11 px-4 rounded-full bg-[#E9FBF0] border border-[#BBF7D0] text-[#16A34A] font-bold text-[12px] flex items-center">E2E</span></div>
             <div className="mt-3 bg-[#FFF8F0] rounded-xl p-3 min-h-[180px] max-h-[300px] overflow-y-auto">
               {chatMessages.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] py-10">No chats yet. Start one below - E2E encrypted.</div>)}
@@ -1113,11 +1104,11 @@ export default function App() {
         {(showAll || activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - Like WhatsApp, Inside TrustLink</h2>
-            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Search by Username OR Phone Number - Send Request - Chat 1-to-1</p>
+            <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1"></p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
               <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
                 <h3 className="font-bold text-[14px]">1. Find Someone You Know</h3>
-                <p className="text-[12px] text-[#8A7A6E] mt-1">Type their TrustLink username OR their phone number (like WhatsApp).</p>
+                <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
                 <div className="flex gap-2 mt-2"><input value={friendSearch} onChange={(e) => setFriendSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSearchFriends(); }} placeholder="Search username or phone e.g. Thabo / 0821234567" className="flex-1 h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px]" /><button onClick={handleSearchFriends} disabled={friendSearching} className="h-11 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">{friendSearching ? 'Searching...' : 'Search'}</button></div>
                 {friendResults.length > 0 && (<div className="mt-3 space-y-2">{friendResults.map((u: any) => (<div key={u.id} className="bg-white p-3 rounded-xl border border-[#FFE4C2] flex justify-between items-center"><div><div className="font-bold text-[13px]">{u.name}</div><div className="text-[11px] text-[#8A7A6E]">{u.phone || 'No phone'} • {u.location || ''} • Trust {u.trust_score || 50}%</div></div><button onClick={() => handleSendRequest(u)} className="h-9 px-3 rounded-full bg-[#FF8A4C] text-white font-bold text-[11px]">+ Send Request</button></div>))}</div>)}
                 {friendSearch && friendResults.length === 0 && !friendSearching && (<div className="mt-3 text-[12px] text-[#8A7A6E]">No results yet. Press Search. If they are not on TrustLink, invite them with your Invite Link.</div>)}
@@ -1131,9 +1122,9 @@ export default function App() {
               </div>
               <div className="lg:col-span-2 bg-[#FFF8F0] rounded-xl border border-[#FFE4C2] p-4">
                 <div className="flex justify-between items-center"><h3 className="font-bold text-[14px]">Chat {chatWith ? 'with ' + chatWith.name : '— Select a Friend to Chat'}</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">E2E ENCRYPTED</span></div>
-                {!chatWith && (<div className="text-center py-10 text-[13px] text-[#8A7A6E]">Search a username / phone number on the left, send a request, they accept, then chat here like WhatsApp.<br />Your chats are E2E encrypted - only you + them can read.</div>)}
+                {!chatWith && (<div className="text-center py-10 text-[13px] text-[#8A7A6E]">Search a username / phone number on the left, send a request, they accept, then chat here like WhatsApp.<br /></div>)}
                 {chatWith && (<div><div className="text-[12px] text-[#8A7A6E] mt-1">Chatting with {chatWith.name} • {chatWith.phone || 'No phone'} • E2E Encrypted</div><div className="mt-3 bg-white rounded-xl p-3 min-h-[220px] max-h-[320px] overflow-y-auto">{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).length === 0 && (<div className="text-center text-[12px] text-[#8A7A6E] py-8">No messages yet with {chatWith.name}. Say hi!</div>)}{chatMessages.filter((m: any) => m.to === chatWith.name || m.from === chatWith.name).map((m: any) => (<div key={m.id} className="mb-2 bg-[#FFF8F0] p-3 rounded-xl border border-[#FFE4C2]"><div className="flex justify-between"><b className="text-[12px]">{m.from} to {m.to}</b><span className="text-[10px] text-[#16A34A] font-bold">E2E • {m.time}</span></div><div className="text-[13px] mt-1">{m.text}</div></div>))}</div><div className="flex gap-2 mt-3"><input value={chatMsg} onChange={(e) => setChatMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleSendChat(); }} placeholder={'Message ' + chatWith.name + '...'} className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-white outline-none text-[14px]" /><button onClick={handleSendChat} className="h-12 px-6 rounded-full bg-[#25D366] text-white font-bold text-[13px]">Send</button></div></div>)}
-                <div className="mt-4 bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5"><b>How it works (WhatsApp-style):</b><br />1) Search username OR phone number<br />2) Send Request<br />3) They Accept in Chat - Requests<br />4) You become Friends<br />5) Chat 1-to-1, E2E encrypted<br />No phone = still works with username. Phone = faster to find them.</div>
+                <div className="mt-4 bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5"><b></b><br /><br /><br /><br /><br /><br /></div>
               </div>
             </div>
           </div>
@@ -1143,7 +1134,7 @@ export default function App() {
           <div className="mt-4">
             <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
-              <p className="text-center text-[13px] text-[#E11D48] font-bold mt-1">Like TikTok / Instagram / Facebook / YouTube Reels - But Every Reel Has A BUY Button</p>
+              <p className="text-center text-[13px] text-[#E11D48] font-bold mt-1"></p>
               <div className="flex gap-2 justify-center mt-3 flex-wrap">
                 <button onClick={() => setReelFilter('For You')} className={reelFilter === 'For You' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>For You</button>
                 <button onClick={() => setReelFilter('Following')} className={reelFilter === 'Following' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Following</button>
@@ -1155,7 +1146,7 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
                 <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
                   <h3 className="font-bold text-[14px]">Post Your Reel - Sell Faster</h3>
-                  <p className="text-[12px] text-[#8A7A6E] mt-1">Show your product in action. 15-60 sec video sells 3x faster than photos.</p>
+                  <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
                   <div className="flex gap-2 mt-2"><button onClick={() => setReelType('sell')} className={reelType === 'sell' ? 'flex-1 h-11 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell - I am Selling</button><button onClick={() => setReelType('review')} className={reelType === 'review' ? 'flex-1 h-11 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Review - I Bought It</button></div>
                   {reelType === 'review' && (<div className="bg-[#E9FBF0] p-3 rounded-xl border border-[#BBF7D0] mt-2"><div className="font-bold text-[12px]">Buyer Review Reel - Show What You Bought</div><div className="text-[11px] text-[#8A7A6E] mt-1">Film yourself with the product. Show it working. Be honest - good or bad.</div><input value={reelBoughtFrom} onChange={(e) => setReelBoughtFrom(e.target.value)} placeholder="Who did you buy from? - Seller name e.g. Thabo" className="w-full h-11 px-3 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><div className="flex gap-1 mt-2 items-center"><span className="text-[12px] font-bold">Your Rating:</span>{[1,2,3,4,5].map((s: number) => (<button key={s} onClick={() => setReelRating(s)} className="text-[22px]">{s <= reelRating ? '⭐' : '☆'}</button>))}<span className="text-[12px] font-bold ml-1">{reelRating}/5</span></div><textarea value={reelReviewText} onChange={(e) => setReelReviewText(e.target.value)} placeholder="Your honest review - e.g. I bought this tablet from Thabo in Pimville. Delivery was fast, tablet works perfect, seller was honest. I recommend him!" className="w-full h-[70px] px-3 py-2 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><label className="flex gap-2 items-center mt-2 text-[12px] font-bold"><input type="checkbox" checked={reelVerifiedPurchase} onChange={(e) => setReelVerifiedPurchase(e.target.checked)} /> I really bought this - Verified Purchase</label></div>)}
                   <input value={reelTitle} onChange={(e) => setReelTitle(e.target.value)} placeholder={reelType === 'review' ? 'Review title - e.g. I bought this Tablet from Thabo - Honest Review' : 'Reel title - e.g. Brand New Samsung Tablet - R3500 - Pimville'} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
@@ -1165,7 +1156,7 @@ export default function App() {
                   <select value={reelProductId} onChange={(e) => { setReelProductId(e.target.value); const pr = products.find((x: any) => String(x.id) === e.target.value); if (pr) setReelPrice(String(pr.price)); }} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2"><option value="">Link to Product (Optional) - Choose your listing</option>{products.map((pr: any) => (<option key={pr.id} value={pr.id}>{pr.title} - R{pr.price}</option>))}</select>
                   <input value={reelPrice} onChange={(e) => setReelPrice(e.target.value)} placeholder="Price - e.g. 3500" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
                   <button onClick={handleUploadReel} className="w-full h-12 rounded-full bg-[#E11D48] text-white font-bold text-[13px] mt-3">{reelType === 'review' ? 'Post Review Reel' : 'Post Reel'}</button>
-                  <div className="bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5 mt-3"><b>How to make a Reel that sells:</b><br />1) Show product in your hands, not just photo<br />2) Say price + location in first 3 sec<br />3) Show it working - tablet on, shoes on feet<br />4) Link it to your product - BUY button appears<br />5) Share Reel link on WhatsApp / FB / IG</div>
+                  <div className="bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5 mt-3"><b></b><br /><br /><br /><br /><br /></div>
                 </div>
                 <div className="lg:col-span-2">
                   {reels.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] mb-3">No Reels yet. Be the first! Post a Reel.</div>)}
@@ -1249,7 +1240,7 @@ export default function App() {
         {(showAll || activeTab === 'invite') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Invite Friends - Grow TrustLink, Earn Trust</h2>
-            <p className="text-[13px] text-[#8A7A6E] mt-1">Invite buyers, sellers, job seekers, recruiters. When they join with YOUR link, your Trust grows.</p>
+            <p className="text-[13px] text-[#8A7A6E] mt-1"></p>
             <div className="mt-4 bg-[#FDF2F8] p-4 rounded-xl">
               <div className="font-bold text-[13px]">YOUR Invite Link (Unique To YOU)</div>
               <div className="text-[12px] bg-white p-3 rounded-full border border-[#FFE4C2] mt-2 break-all">{getInviteLink()}</div>
@@ -1268,10 +1259,10 @@ export default function App() {
 
         {/* CHAT - WhatsApp Style */}
         {activeTab === 'chat' && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
-          <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">💬 Chat</b><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
+          <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">Chat</b><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
           <div className="text-[12px] mt-2 opacity-90">{contactSyncStatus}</div>
           <div className="flex gap-2 mt-3 flex-wrap">
-            <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">📹 Video Call</button>
+            <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button>
             <button onClick={() => { const phone = prompt('Phone number?'); if (phone) setToast('Invite sent to ' + phone); }} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-bold text-[12px]">+ Add By Number</button>
           </div>
           {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Contacts ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat</button></div>))}</div></div>)}
@@ -1287,7 +1278,7 @@ export default function App() {
           </div>
           <div className="flex gap-2 mt-3 flex-wrap"><button onClick={requestGPS} className="h-11 px-5 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">📍 Use My GPS - 100% Real Nearest</button><span className="h-11 px-4 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] flex items-center text-[12px] font-bold">{gpsStatus}</span><button onClick={() => setNearMeKm('10000')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Show All SA</button><button onClick={() => setNearMeKm('10')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Nearest 10km</button></div>
           <div className="text-[12px] mt-2 bg-[#EFF6FF] p-2 rounded-lg border border-[#BFDBFE]">🛰️ 100% GPS: {userLat !== null ? '' : ''} </div>
-          <div className="text-[12px] mt-3 bg-[#F0FDF4] p-2 rounded-lg border border-[#BBF7D0]">Showing sellers nearest to <b>{userArea}, {userCity}, {userProvince}</b> - Within {nearMeKm === '10000' ? 'All South Africa' : nearMeKm + 'km'} - {products.filter((pr: any) => getDistanceKm(pr) <= Number(nearMeKm)).length} products near you. Change Province / City above to see sellers in Durban, Cape Town, Polokwane, anywhere in SA. Delivery: Meet in person (same area) • Taxi / Courier (same city) • Paxi / PostNet / Courier Guy (nationwide).</div>
+          <div className="text-[12px] mt-3 bg-[#F0FDF4] p-2 rounded-lg border border-[#BBF7D0]">Showing sellers nearest to <b>{userArea}, {userCity}, {userProvince}</b> - Within {nearMeKm === '10000' ? 'All South Africa' : nearMeKm + 'km'} - {products.filter((pr: any) => getDistanceKm(pr) <= Number(nearMeKm)).length} products near you.  • Taxi / Courier (same city) • Paxi / PostNet / Courier Guy (nationwide).</div>
         </div>
         {/* CORPORATE + YOUTHFUL - Best Company In The World Header */}
         <div className="mt-4 bg-[#0A0A0A] text-white rounded-[24px] p-6 relative overflow-hidden">
@@ -1307,10 +1298,10 @@ export default function App() {
           </div>
         </div>
         {/* TRUST BAR - Corporate */}
-        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>POPIA</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% South Africa</span><span>✓ No Hidden Fees</span></div>
+        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>POPIA Compliant</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% South Africa</span><span>✓ No Hidden Fees</span></div>
         {/* BEST ESCROW IN THE WORLD - Money Locked Until Buyer Says YES */}
         <div className="mt-4 bg-[#0F172A] text-white rounded-[20px] p-4 border-4 border-[#FFD700]">
-          <div className="flex justify-between items-start flex-wrap gap-2"><div><h2 className="font-black text-[20px]">🛡️ TrustLink Escrow - Best In The World</h2><p className="text-[12px] opacity-80">Your money is LOCKED. Seller cannot touch it until you say: I got it, it works.</p></div><span className="bg-[#FFD700] text-black px-3 py-1 rounded-full font-bold text-[12px]">100% SAFE</span></div>
+          <div className="flex justify-between items-start flex-wrap gap-2"><div><h2 className="font-black text-[20px]">🛡️ TrustLink Escrow - Best In The World</h2><p className="text-[12px] opacity-80"></p></div><span className="bg-[#FFD700] text-black px-3 py-1 rounded-full font-bold text-[12px]">100% SAFE</span></div>
           {(() => { const s = getEscrowStats(); return (<div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
             <div className="bg-white text-black p-3 rounded-xl"><div className="text-[11px] opacity-70">🔒 LOCKED IN ESCROW</div><div className="font-black text-[18px]">R{s.holding}</div><div className="text-[11px]">Seller cannot withdraw yet</div></div>
             <div className="bg-[#DCFCE7] text-black p-3 rounded-xl"><div className="text-[11px] opacity-70">✅ RELEASED TO SELLERS</div><div className="font-black text-[18px]">R{s.released}</div><div className="text-[11px]">Buyers confirmed, sellers paid</div></div>
@@ -1318,13 +1309,13 @@ export default function App() {
             <div className="bg-[#FEF3C7] text-black p-3 rounded-xl"><div className="text-[11px] opacity-70">↩️ REFUNDED</div><div className="font-black text-[18px]">R{s.refunded}</div><div className="text-[11px]">Back to buyers</div></div>
           </div>); })()}
           <div className="bg-white text-black p-3 rounded-xl mt-3 text-[12px] leading-relaxed">
-            <b>How Best Escrow Works - 5 Steps:</b><br/>
+            <b></b><br/>
             <b>1. Buyer Pays →</b> Money goes to TrustLink Escrow, NOT to seller. Seller sees: Locked.<br/>
             <b>2. Seller Ships →</b> Seller taps Packed → On The Way. Buyer tracks live.<br/>
             <b>3. Buyer Receives →</b> Buyer checks: Is it real? Does it work? Is it as described?<br/>
             <b>4. Buyer Confirms →</b> Buyer taps <b>Confirm - Release Money</b> → Money goes to seller instantly.<br/>
             <b>5. If Problem →</b> Buyer taps <b>Dispute - Freeze Money</b> → Money FROZEN. Seller gets R0. TrustLink reviews + refunds if fake/broken.<br/>
-            <span className="text-[#16A34A] font-bold">Auto-Release: If buyer forgets to confirm for 3 days after Delivered, money auto-releases to seller. Fair for both sides.</span>
+            <span className="text-[#16A34A] font-bold"></span>
           </div>
           <div className="mt-3">
             <div className="flex gap-2 flex-wrap"><button onClick={() => setEscrowFilter('All')} className="h-9 px-4 rounded-full bg-white text-black font-bold text-[12px]">All Orders</button><button onClick={() => setEscrowFilter('Locked')} className="h-9 px-4 rounded-full bg-[#FFD700] text-black font-bold text-[12px]">Locked</button><button onClick={() => setEscrowFilter('Dispute')} className="h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Disputes</button></div>
@@ -1344,7 +1335,7 @@ export default function App() {
         {/* BEST UX HUB - Always visible on top of Marketplace */}
         <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
           <h2 className="font-black text-[18px]">Best Experience - All In One Place</h2>
-          <p className="text-[12px] text-[#8A7A6E]">Near Me • Tracking • Price Checker • 1-Tap Buy • Voice/Video • Trust Passport • Alerts</p>
+          <p className="text-[12px] text-[#8A7A6E]"></p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
             <div className="bg-[#FFF8F0] p-3 rounded-xl border border-[#FFE4C2]">
               <b className="text-[13px]">AI Price Checker - Am I Being Ripped Off?</b>
@@ -1359,7 +1350,7 @@ export default function App() {
             <div className="bg-[#DCFCE7] p-3 rounded-xl border border-[#BBF7D0]">
               <b className="text-[13px]">1-Tap Buy - Saved Address</b>
               <input value={savedAddress} onChange={(e) => { setSavedAddress(e.target.value); try { localStorage.setItem('trustlink_address', e.target.value); } catch(err) {} }} placeholder="Your delivery address - e.g. 123 Pimville, Soweto" className="w-full h-10 px-3 rounded-full border bg-white outline-none text-[12px] mt-2" />
-              <div className="text-[11px] mt-1 text-[#8A7A6E]">Saved once - never type again. 1-Tap Buy uses this + PayFast.</div>
+              <div className="text-[11px] mt-1 text-[#8A7A6E]"></div>
             </div>
             <div className="bg-[#FEF3C7] p-3 rounded-xl border border-[#FDE68A]">
               <b className="text-[13px]">Smart Alerts - Your Size Just Listed</b>
@@ -1380,7 +1371,7 @@ export default function App() {
           </div>
           <div className="bg-[#FFF1F2] p-3 rounded-xl border border-[#FECDD3] mt-3">
             <b className="text-[13px]">Voice + Video - Exactly Like WhatsApp + Teams Quality</b>
-            <div className="text-[12px] text-[#8A7A6E] mt-1">Voice: Hold to record - release to send as real voice note. No typing. Video: HD 720p, Teams grid, mute / camera / end.</div>
+            <div className="text-[12px] text-[#8A7A6E] mt-1"></div>
             <div className="flex gap-2 mt-3 flex-wrap items-center">
               {!isRecording ? (<button onClick={startVoiceRecording} className="h-12 px-5 rounded-full bg-[#25D366] text-white font-bold text-[13px]">🎤 Hold To Record Voice Note</button>) : (<div className="flex gap-2 items-center bg-white px-4 py-2 rounded-full border"><span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span><span className="font-bold text-[13px]">Recording... {recordingSecs}s</span><button onClick={stopVoiceRecording} className="h-9 px-4 rounded-full bg-[#25D366] text-white font-bold text-[12px]">Send ▶️</button><button onClick={cancelVoiceRecording} className="h-9 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete 🗑️</button></div>)}
               <button onClick={startTeamsVideoCall} className="h-12 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">📹 Start Video Call - HD Teams Style</button>
