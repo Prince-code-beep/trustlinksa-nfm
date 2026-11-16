@@ -282,7 +282,9 @@ export default function App() {
     dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' },
     purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' },
     green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' },
-    rain: { name: 'Rainy Window', bg: '#0F2233', accent: '#7DD3FC', headerBg: '#0F2233', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0EA5E9' }
+    rain: { name: 'Rainy Window', bg: '#0F2233', accent: '#7DD3FC', headerBg: '#0F2233', headerText: '#E0F2FE', cardBg: '#FFFFFF', buttonBg: '#0EA5E9' },
+    ocean: { name: 'Ocean Waves', bg: '#0369A1', accent: '#7DD3FC', headerBg: '#0C4A6E', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0284C7' },
+    sky: { name: 'Sky Clouds', bg: '#87CEEB', accent: '#FFFFFF', headerBg: '#3B82F6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#3B82F6' }
   };
 
   // ANN ENGINE - 6 → 8 → 4 → 1
@@ -923,6 +925,30 @@ export default function App() {
 
   return (
     <div className="min-h-screen pb-24 relative" style={{ background: skin === 'rain' ? '#0F2233' : skin === 'sunset' ? '#1A0A00' : skinStyle.bg }}>
+      {/* OCEAN WAVES - Real Moving Waves */}
+      {skin === 'ocean' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#0EA5E9 0%,#0284C7 40%,#0C4A6E 100%)' }}>
+        <div style={{ position: 'absolute', bottom: '0', left: '-50%', width: '200%', height: '180px', background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%)', borderRadius: '50%', transform: 'translateX(' + (Math.sin(rainTick * 0.05) * 60) + 'px)', opacity: 0.6 }} />
+        <div style={{ position: 'absolute', bottom: '20px', left: '-30%', width: '160%', height: '120px', background: 'rgba(255,255,255,0.25)', borderRadius: '50%', transform: 'translateX(' + (Math.cos(rainTick * 0.04) * 80) + 'px)' }} />
+        <div style={{ position: 'absolute', bottom: '0', left: '0', width: '100%', height: '80px', background: 'rgba(255,255,255,0.35)', borderRadius: '50% 50% 0 0', transform: 'translateX(' + (Math.sin(rainTick * 0.06 + 1) * 40) + 'px)' }} />
+        {Array.from({ length: 12 }).map((_, i) => { const x = (i * 83 + rainTick * 0.8) % 110; return (<div key={'foam'+i} style={{ position: 'absolute', left: x + '%', bottom: (10 + (i % 3) * 25) + 'px', width: (8 + (i % 3) * 6) + 'px', height: (8 + (i % 3) * 6) + 'px', background: 'rgba(255,255,255,0.9)', borderRadius: '50%', opacity: 0.8 }} />); })}
+      </div>)}
+      {/* SKY CLOUDS - Visibly Moving Real Clouds */}
+      {skin === 'sky' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#87CEEB 0%,#B0E0F0 50%,#E0F2FE 100%)' }}>
+        {Array.from({ length: 8 }).map((_, i) => { const speed = 0.3 + (i % 3) * 0.2; const x = ((i * 37 + rainTick * speed) % 120) - 10; const y = 5 + (i % 4) * 18; const scale = 0.7 + (i % 3) * 0.4; return (<div key={'cloud'+i} style={{ position: 'absolute', left: x + '%', top: y + '%', width: (140 * scale) + 'px', height: (50 * scale) + 'px', background: 'rgba(255,255,255,0.95)', borderRadius: '50px', boxShadow: '0 10px 30px rgba(255,255,255,0.6)', opacity: 0.95 }}><div style={{ position: 'absolute', top: '-20px', left: '25px', width: '60px', height: '60px', background: 'rgba(255,255,255,0.95)', borderRadius: '50%' }} /><div style={{ position: 'absolute', top: '-12px', left: '70px', width: '45px', height: '45px', background: 'rgba(255,255,255,0.95)', borderRadius: '50%' }} /></div>); })}
+        <div style={{ position: 'absolute', top: '8%', right: '12%', width: '70px', height: '70px', background: 'radial-gradient(circle,#FEF08A 0%,#FDE047 60%,transparent 70%)', borderRadius: '50%', boxShadow: '0 0 40px rgba(253,224,71,0.8)' }} />
+      </div>)}
+      {/* ONE HEADER - Professional - WhatsApp Front + Centre */}
+      <div className="sticky top-0 z-50 bg-black text-white px-3 py-2 flex gap-1 overflow-x-auto whitespace-nowrap items-center shadow-lg">
+        <b className="text-[16px] font-black px-2">TrustLink SA</b>
+        <button onClick={() => setActiveTab('market')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Market</button>
+        <button onClick={() => setActiveTab('reels')} className="h-10 px-4 rounded-full bg-[#FF0050] font-bold text-[12px]">Reels</button>
+        <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-black text-[12px]">WhatsApp</button>
+        <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Chat</button>
+        <button onClick={() => { setActiveTab('chat'); setTimeout(() => startTeamsVideoCall(), 300); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button>
+        <button onClick={() => setActiveTab('brain')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Brain</button>
+        <button onClick={() => setActiveTab('talent')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Talent</button>
+        <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">Corporate</option><option value="sunset">Soweto Sunset</option><option value="dark">Midnight</option><option value="purple">Royal Purple</option><option value="green">Money Green</option><option value="rain">Rainy Window</option><option value="ocean">Ocean Waves</option><option value="sky">Sky Clouds</option></select>
+      </div>
       {skin === 'sunset' && (
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden' }}>
           {/* REAL PHOTO - Soweto Conflagration - upload soweto-fire-background.webp to GitHub public/ as soweto-fire.jpg */}
@@ -983,11 +1009,6 @@ export default function App() {
           <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,34,51,0.8)', color: '#E0F2FE', padding: '6px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>Glass Window - Rain Outside - Droplets Dripping Down</div>
         </div>
       )}
-      {skin === 'aurora' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#1A2B3C 0%,#1E3A4A 50%,#2A4A3A 100%)' }}>{Array.from({ length: 5 }).map((_, i) => (<div key={'au' + i} style={{ position: 'absolute', top: (10 + i * 16) + '%', left: ((rainTick * (0.3 + i * 0.1)) % 120) - 10 + '%', width: '70%', height: (40 + i * 10) + 'px', background: i % 2 === 0 ? 'radial-gradient(ellipse, rgba(94,234,212,0.35) 0%, transparent 70%)' : 'radial-gradient(ellipse, rgba(196,181,253,0.3) 0%, transparent 70%)', filter: 'blur(18px)', borderRadius: '50%' }} />))}{Array.from({ length: 40 }).map((_, i) => (<div key={'st' + i} style={{ position: 'absolute', left: ((i * 37) % 100) + '%', top: ((i * 23) % 60) + '%', width: '2px', height: '2px', background: 'rgba(255,255,255,0.7)', borderRadius: '50%', opacity: 0.5 + (i % 3) * 0.2 }} />))}</div>)}
-      {skin === 'ocean' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#1E4A5A 0%,#2A6B7A 55%,#3A8A9A 100%)' }}>{Array.from({ length: 4 }).map((_, i) => (<div key={'wv' + i} style={{ position: 'absolute', bottom: (5 + i * 14) + '%', left: ((rainTick * (0.5 + i * 0.2)) % 120) - 10 + '%', width: '120%', height: '80px', background: 'radial-gradient(ellipse at center, rgba(125,211,252,0.35) 0%, transparent 70%)', filter: 'blur(12px)', borderRadius: '50%' }} />))}{Array.from({ length: 30 }).map((_, i) => { const y = ((i * 41 + rainTick * 1.2) % 110) - 5; return (<div key={'bub' + i} style={{ position: 'absolute', left: ((i * 31) % 100) + '%', top: y + '%', width: (3 + (i % 3) * 2) + 'px', height: (3 + (i % 3) * 2) + 'px', background: 'rgba(224,242,254,0.7)', borderRadius: '50%', opacity: 0.6 }} />); })}</div>)}
-      {skin === 'forest' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#2D4A3A 0%,#3A5A45 50%,#4A6B55 100%)' }}>{Array.from({ length: 5 }).map((_, i) => (<div key={'mist' + i} style={{ position: 'absolute', top: (15 + i * 18) + '%', left: ((rainTick * (0.4 + i * 0.1)) % 130) - 15 + '%', width: '80%', height: '60px', background: 'radial-gradient(ellipse, rgba(220,252,231,0.22) 0%, transparent 70%)', filter: 'blur(20px)', borderRadius: '50%' }} />))}{Array.from({ length: 25 }).map((_, i) => (<div key={'leaf' + i} style={{ position: 'absolute', left: ((i * 29) % 100) + '%', top: ((i * 47 + rainTick * 0.8) % 110) - 5 + '%', width: '6px', height: '8px', background: 'rgba(167,216,181,0.7)', borderRadius: '50%', transform: 'rotate(' + ((rainTick + i * 10) % 360) + 'deg)' }} />))}</div>)}
-      {skin === 'sunset' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#5A3A3A 0%,#7A4A3A 40%,#9A6A4A 70%,#C49A6A 100%)' }}><div style={{ position: 'absolute', top: (22 + Math.sin(rainTick * 0.02) * 3) + '%', left: '50%', transform: 'translateX(-50%)', width: '180px', height: '180px', background: 'radial-gradient(circle, rgba(255,214,170,0.9) 0%, rgba(253,186,154,0.5) 40%, transparent 70%)', borderRadius: '50%', filter: 'blur(4px)' }} />{Array.from({ length: 6 }).map((_, i) => (<div key={'sun' + i} style={{ position: 'absolute', bottom: (10 + i * 12) + '%', left: ((rainTick * 0.3 + i * 20) % 120) - 10 + '%', width: '60%', height: '30px', background: 'radial-gradient(ellipse, rgba(255,220,190,0.25) 0%, transparent 70%)', filter: 'blur(15px)', borderRadius: '50%' }} />))}</div>)}
-      {skin === 'lavender' && (<div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1, overflow: 'hidden', background: 'linear-gradient(180deg,#4A3A5A 0%,#5A4A6A 50%,#6A5A7A 100%)' }}>{Array.from({ length: 6 }).map((_, i) => (<div key={'cl' + i} style={{ position: 'absolute', top: (8 + i * 15) + '%', left: ((rainTick * (0.35 + i * 0.08)) % 130) - 15 + '%', width: '55%', height: '50px', background: 'radial-gradient(ellipse, rgba(237,233,254,0.3) 0%, transparent 70%)', filter: 'blur(18px)', borderRadius: '50%' }} />))}{Array.from({ length: 30 }).map((_, i) => (<div key={'pet' + i} style={{ position: 'absolute', left: ((i * 33) % 100) + '%', top: ((i * 41 + rainTick * 0.6) % 110) - 5 + '%', width: '5px', height: '5px', background: 'rgba(221,214,254,0.8)', borderRadius: '50%', opacity: 0.7 }} />))}</div>)}
       <div style={{ position: 'relative', zIndex: 10 }}>
        
 
@@ -998,10 +1019,6 @@ export default function App() {
             <span className="text-[12px] font-bold">{profile?.name || 'You'} • Trust {profile?.trust_score || 50}%</span>
             <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]">Log Out</button>
           </div>
-        </div>
-        <div className="flex gap-2 mt-4 items-center bg-white rounded-full p-2 border border-[#FFE4C2] flex-wrap">
-          <span className="text-[12px] font-black px-2">SKIN - Tap to change WHOLE app colour:</span>
-          {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} style={{ background: SKINS[k].bg, color: SKINS[k].headerText, border: skin === k ? '3px solid #000' : '2px solid #fff' }} className="h-10 px-4 rounded-full text-[12px] font-black shadow-lg">{skin === k ? '✓ ' + SKINS[k].name : SKINS[k].name}</button>))}
         </div>
         <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
         <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
@@ -1117,7 +1134,7 @@ export default function App() {
 
         {(showAll || activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
-            <h2 className="text-center font-black text-[20px]">TrustLink Chat - Like WhatsApp, Inside TrustLink</h2>
+            <h2 className="text-center font-black text-[20px]">WhatsApp Chat, Inside TrustLink</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1"></p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
               <div className="bg-[#FFF8F0] p-4 rounded-xl border border-[#FFE4C2]">
@@ -1276,7 +1293,7 @@ export default function App() {
           <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">Chat</b><button onClick={syncMutualContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
           <div className="text-[12px] mt-2 opacity-90">{contactSyncStatus}</div>
           <div className="flex gap-2 mt-3 flex-wrap">
-            <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button>
+            <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button><button onClick={() => { setToast("Audio Call - Like WhatsApp voice call - Talk now, no video."); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Voice Call</button>
             <button onClick={() => { const phone = prompt('Phone number?'); if (phone) setToast('Invite sent to ' + phone); }} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-bold text-[12px]">+ Add By Number</button>
           </div>
           {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Contacts ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat</button></div>))}</div></div>)}
@@ -1432,6 +1449,8 @@ export default function App() {
           </div>
           <label className="mt-3 inline-block h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px] leading-10 cursor-pointer">{avatarUploading ? 'Uploading...' : 'Upload Pic'}<input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" /></label>
         </div>
+        {/* FLOATING WHATSAPP - Always Visible - One Tap To Chat / Voice / Call / Video */}
+        <button onClick={() => setActiveTab('chat')} className="fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full bg-[#25D366] text-white text-[24px] shadow-2xl flex items-center justify-center border-4 border-white" title="WhatsApp Chat - Messages + Voice + Calls + Video">💬</button>
         {toast && (<div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#1E1E1E] text-white px-5 py-3 rounded-full text-[13px] font-bold z-50">{toast}</div>)}
       </div>
 
