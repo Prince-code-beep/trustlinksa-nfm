@@ -167,6 +167,14 @@ export default function App() {
     for (const k in saCities) { if (String(loc).toLowerCase().includes(k.toLowerCase())) { for (const u in saCities) { if (String(userLoc).toLowerCase().includes(u.toLowerCase())) { return Math.abs(saCities[k] - saCities[u]) + 1.2; } } return saCities[k] > 100 ? saCities[k] : 2.5; } }
     return 5.0;
   }
+  function stopVoiceRecording() {
+    try {
+      const rec: any = mediaRecorderRef;
+      if (rec && rec.state !== 'inactive') { clearInterval(rec._timer); rec.stop(); }
+      setIsRecording(false);
+      setToast('Voice note sent!');
+    } catch(e) { setIsRecording(false); }
+  }
   function cancelVoiceRecording() {
     if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
     setIsRecording(false); setToast('Voice note deleted - not sent.');
@@ -299,7 +307,7 @@ export default function App() {
   async function buyWithEFT(product: any) { buyWithCash(product); }
   const SKINS: any = {
     sunset: { name: 'Soweto Sunset', bg: '#FF6B00', accent: '#FF6B00', headerBg: '#FF6B00', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#FF6B00' },
-    corporate: { name: 'Corporate - Elon / Mark Approved', bg: '#FFFFFF', accent: '#0A66FF', headerBg: '#0A0A0A', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0A66FF' },
+    corporate: { name: 'Corporate', bg: '#FFFFFF', accent: '#0A66FF', headerBg: '#0A0A0A', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#0A66FF' },
     dark: { name: 'Midnight Black', bg: '#111111', accent: '#FFD700', headerBg: '#000000', headerText: '#FFD700', cardBg: '#1E1E1E', buttonBg: '#FFD700' },
     purple: { name: 'Royal Purple', bg: '#7C3AED', accent: '#7C3AED', headerBg: '#5B21B6', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#7C3AED' },
     green: { name: 'Money Green', bg: '#00A651', accent: '#00A651', headerBg: '#006B33', headerText: '#FFFFFF', cardBg: '#FFFFFF', buttonBg: '#00A651' },
@@ -612,11 +620,32 @@ export default function App() {
   // ===== TRUSTLINK REELS - Sellers market products in video - Like IG/FB/YT Reels + BUY button =====
 
   function handlePreviewReel(url: string, title: string) { setReelPreviewUrl(url); setReelPreviewTitle(title); setReelPreviewOpen(true); }
-  function handleDeleteReel(id: number) {
+  // REAL DELETE - removes Reel from Supabase table + video file from Storage + local list.
+  // Owner-delete AND technical-team delete both go through this same backend delete,
+  // so a deleted Reel does not come back on refresh.
+  function getStoragePathFromUrl(url: string) {
+    if (!url || url.startsWith('blob:') || url.includes('youtube.com') || url.includes('youtu.be')) return null;
+    try {
+      const marker = '/product-images/';
+      const i = url.indexOf(marker);
+      if (i === -1) return null;
+      return decodeURIComponent(url.slice(i + marker.length).split('?')[0]);
+    } catch(e) { return null; }
+  }
+  async function deleteReelFromBackend(reel: any) {
+    if (!reel) return;
+    try { await supabase.from('reels').delete().eq('id', reel.id); } catch(e) {}
+    const path = getStoragePathFromUrl(reel.videoUrl || reel.video_url || '');
+    if (path) { try { await supabase.storage.from('product-images').remove([path]); } catch(e) {} }
+  }
+  async function handleDeleteReel(id: number) {
     if (!confirm('Delete this Reel? You can re-upload a better one after.')) return;
+    const reel = reels.find((r: any) => r.id === id);
     const next = reels.filter((r: any) => r.id !== id);
-    const save = next; setReels(save); try { localStorage.setItem('trustlink_reels', JSON.stringify(save)); } catch(e) {}
-    setToast('Reel deleted. Upload a better one!');
+    setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {}
+    setToast('Deleting Reel...');
+    await deleteReelFromBackend(reel);
+    setToast('Reel deleted from TrustLinkSA + Storage. Upload a better one!');
   }
   function handleReuploadReel(reel: any) {
     // Load this reel back into the Post box so user can fix it and re-post
@@ -628,9 +657,10 @@ export default function App() {
     setReelRating(reel.rating || 5);
     setReelReviewText(reel.reviewText || '');
     setReelBoughtFrom(reel.boughtFrom || '');
-    // Delete old one so they can post fixed version
+    // Delete old one from Supabase + Storage too, so the fixed version replaces it (no duplicate)
     const next = reels.filter((r: any) => r.id !== reel.id);
     setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {}
+    deleteReelFromBackend(reel);
     setToast('Loaded your Reel back into Post box. Fix it, Preview it, then Post again.');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1330,6 +1360,7 @@ export default function App() {
           <div className="mt-4">
             <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
+              <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-[16px] p-3 mt-2 text-[12px] leading-5 text-center"><b>Videos live here forever.</b> Videos posted by sellers / buyers / users on TrustLinkSA live inside the TrustLinkSA website forever, unless the TrustLinkSA technical team removes it themselves should it violate any of the app policies.</div>
               <p className="text-center text-[13px] text-[#E11D48] font-bold mt-1"></p>
               <div className="flex gap-2 justify-center mt-3 flex-wrap">
                 <button onClick={() => setReelFilter('For You')} className={reelFilter === 'For You' ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>For You</button>
@@ -1360,11 +1391,12 @@ export default function App() {
                     <div className="bg-white p-4 rounded-[20px] border border-[#FFE4C2] mb-4">
                       <h3 className="font-black text-[16px]">My Reels History - All Videos You Posted In The Past</h3>
                       <p className="text-[12px] text-[#8A7A6E] mt-1">Every Reel you ever posted, newest to oldest. Nothing is hidden. Search, watch, fix, delete, re-upload.</p>
+                      <p className="text-[12px] text-[#92400E] bg-[#FFFBEB] border border-[#FDE68A] rounded-[12px] p-2 mt-2">Videos posted by sellers / buyers / users live inside TrustLinkSA forever, unless the technical team removes it themselves should it violate any of the app policies.</p>
                       <div className="flex gap-2 mt-3 flex-wrap">
                         <input value={myReelsSearch} onChange={(e) => setMyReelsSearch(e.target.value)} placeholder="Search my past Reels - e.g. Tablet, Sneakers..." className="flex-1 h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px] min-w-[200px]" />
                         <select value={myReelsSort} onChange={(e) => setMyReelsSort(e.target.value)} className="h-11 px-3 rounded-full border border-[#FFE4C2] bg-white outline-none text-[13px]"><option value="newest">Newest First</option><option value="oldest">Oldest First</option><option value="mostViews">Most Views</option><option value="mostLikes">Most Likes</option></select>
                         <button onClick={() => { setMyReelsOnly(false); setReelFilter('For You'); }} className="h-11 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[12px]">Show All Reels</button>
-                        <button onClick={() => { const broken = reels.filter((r: any) => r.videoUrl && r.videoUrl.startsWith('blob:')); if (broken.length === 0) return alert('No broken Reels! All your Reels are good Supabase / YouTube links.'); if (!confirm('Delete ' + broken.length + ' EXPIRED blob Reels that can never play again? Your good Reels will stay.')) return; const next = reels.filter((r: any) => !(r.videoUrl && r.videoUrl.startsWith('blob:'))); saveReels(next); setToast(broken.length + ' broken Reels deleted. Re-upload them now - they will play.'); }} className="h-11 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete All EXPIRED (blob) Reels</button>
+                        <button onClick={() => { const broken = reels.filter((r: any) => r.videoUrl && r.videoUrl.startsWith('blob:')); if (broken.length === 0) return alert('No broken Reels! All your Reels are good Supabase / YouTube links.'); if (!confirm('Delete ' + broken.length + ' EXPIRED blob Reels that can never play again? Your good Reels will stay.')) return; const doomed = reels.filter((r: any) => r.videoUrl && r.videoUrl.startsWith('blob:')); doomed.forEach((r: any) => deleteReelFromBackend(r)); const next = reels.filter((r: any) => !(r.videoUrl && r.videoUrl.startsWith('blob:'))); saveReels(next); setToast(broken.length + ' broken Reels deleted. Re-upload them now - they will play.'); }} className="h-11 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete All EXPIRED (blob) Reels</button>
                       </div>
                       {(() => {
                         const my = reels.filter((r: any) => r.sellerId === profile?.id || r.sellerId === session?.user?.id || r.reviewerName === profile?.name);
