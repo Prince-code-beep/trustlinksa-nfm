@@ -523,7 +523,7 @@ export default function App() {
     // Search by username (name) OR phone number - like WhatsApp
     const { data } = await supabase.from('profiles').select('*').or('name.ilike.%' + q + '%,phone.ilike.%' + q + '%').limit(10);
     const results = (data || []).filter((u: any) => u.id !== session?.user?.id);
-    // Also include local friends for demo if Supabase returns none (offline fallback)
+    // Real friends from Supabase only - no demo data
     setFriendResults(results as any);
     setFriendSearching(false);
     if (results.length === 0) setToast('No user found for "' + q + '" - Ask them to join TrustLink with your Invite Link!');
@@ -563,7 +563,7 @@ export default function App() {
     try {
       const all = JSON.parse(localStorage.getItem('trustlink_all_requests') || '[]');
       const incoming = all.filter((r: any) => r.toId === profile?.id && r.status === 'sent');
-      // Merge with demo: if none, keep existing
+      // Real only: if none, keep existing
       if (incoming.length > 0) setFriendRequests(incoming);
     } catch(e) {}
   }
@@ -989,7 +989,7 @@ export default function App() {
           <span className="text-[12px] font-black px-2">SKIN - Tap to change WHOLE app colour:</span>
           {Object.keys(SKINS).map((k: string) => (<button key={k} onClick={() => changeSkin(k)} style={{ background: SKINS[k].bg, color: SKINS[k].headerText, border: skin === k ? '3px solid #000' : '2px solid #fff' }} className="h-10 px-4 rounded-full text-[12px] font-black shadow-lg">{skin === k ? '✓ ' + SKINS[k].name : SKINS[k].name}</button>))}
         </div>
-        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 TRUSTLINK REELS - NEW! Watch + Sell With Video</b><div className="text-white text-[12px] opacity-90">Sellers: Post video of your product - Buyers: Post review video of what you bought - Every Reel has a BUY button</div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
+        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
         <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
         <div className="flex gap-2 mt-3 flex-wrap">
           <button onClick={() => setActiveTab('market')} className={(showAll || activeTab === 'market') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>           <button onClick={() => setActiveTab('reels')} className={(showAll || activeTab === 'reels') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg'}>Reels - NEW</button>
@@ -1037,7 +1037,7 @@ export default function App() {
             </div>
             <h3 className="font-bold mt-4">THE VAULT - Sealed - POPIA</h3>
             {soul && soul.vault.map((v: any, i: number) => (<div key={i} className="flex justify-between p-3 border-b border-[#FFF0E0]"><div><b className="text-[13px]">{vaultUnlocked ? v.name + ' - UNLOCKED BY YOU' : 'Locked ' + v.name}</b><br /><span className="text-[11px] text-[#8A7A6E]">{v.hash}</span></div><span className="text-[11px] font-bold text-[#16A34A]">{v.status}</span></div>))}
-            <button onClick={() => setVaultUnlocked(!vaultUnlocked)} className="mt-3 h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">{vaultUnlocked ? 'Lock Vault' : 'Unlock Vault With My Key (Demo)'}</button>
+            <button onClick={() => setVaultUnlocked(!vaultUnlocked)} className="mt-3 h-10 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">{vaultUnlocked ? 'Lock Vault' : 'Unlock Vault With My Key'}</button>
             <h3 className="font-bold mt-5">Edit YOUR Brain Data (Only You)</h3>
             <div className="space-y-2 mt-2">
               <input value={brainEducation} onChange={(e) => setBrainEducation(e.target.value)} placeholder={soul?.education || 'Your education'} className="w-full h-11 px-4 rounded-full border border-[#E9D5FF] bg-[#FAF5FF] text-[13px] outline-none" />
@@ -1168,7 +1168,7 @@ export default function App() {
                   <div className="bg-white p-3 rounded-xl border border-[#FFE4C2] text-[12px] leading-5 mt-3"><b>How to make a Reel that sells:</b><br />1) Show product in your hands, not just photo<br />2) Say price + location in first 3 sec<br />3) Show it working - tablet on, shoes on feet<br />4) Link it to your product - BUY button appears<br />5) Share Reel link on WhatsApp / FB / IG</div>
                 </div>
                 <div className="lg:col-span-2">
-                  {reels.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] mb-3">No Reels yet. Be the first! Post a Reel on the left. Demo below shows how it will look.</div>)}
+                  {reels.length === 0 && (<div className="text-center text-[13px] text-[#8A7A6E] mb-3">No Reels yet. Be the first! Post a Reel.</div>)}
                   {myReelsOnly && (
                     <div className="bg-white p-4 rounded-[20px] border border-[#FFE4C2] mb-4">
                       <h3 className="font-black text-[16px]">My Reels History - All Videos You Posted In The Past</h3>
@@ -1266,41 +1266,19 @@ export default function App() {
           </div>
         )}
 
-        {/* BUSINESS READY - Launch Banner */}
-        <div className="mt-4 bg-[#16A34A] text-white rounded-[20px] p-4 flex justify-between items-center flex-wrap gap-2">
-          <div><b className="text-[16px]">🟢 OPEN FOR BUSINESS - South Africa Is Live</b><div className="text-[12px] opacity-90">Sellers: List now. Buyers: Find sellers nearest to you - anywhere in SA. Cash / EFT + Escrow. PayFast coming soon for cards.</div></div>
-          <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-white text-[#16A34A] font-black text-[13px]">Start Selling →</button>
-        </div>
-        {/* NOTHING HIDDEN - Show All Toggle */}
-        <div className="mt-2 flex gap-2 justify-center"><button onClick={() => setShowAll(true)} className="h-10 px-5 rounded-full bg-black text-white font-black text-[12px]">👁️ Show Everything - Nothing Hidden</button><button onClick={() => setShowAll(false)} className="h-10 px-5 rounded-full bg-white border font-bold text-[12px]">Show One Tab Only</button></div>
-        {/* VISIBLE NAV - Reels / Video Call / Calls / Skins - Always Visible */}
-        <div className="mt-3 bg-black text-white rounded-full px-2 py-2 flex gap-1 overflow-x-auto whitespace-nowrap items-center sticky top-0 z-50">
-          <button onClick={() => setActiveTab('market')} className="h-10 px-4 rounded-full bg-white text-black font-black text-[12px]">🛒 Market</button>
-          <button onClick={() => setActiveTab('reels')} className="h-10 px-4 rounded-full bg-[#FF0050] font-black text-[12px]">🎬 Reels</button>
-          <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-[#0A66FF] font-black text-[12px]">💬 Chat</button>
-          <button onClick={() => { setActiveTab('chat'); setTimeout(() => startTeamsVideoCall(), 300); }} className="h-10 px-4 rounded-full bg-[#16A34A] font-black text-[12px]">📹 Video Call</button>
-          <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-[#7C3AED] font-black text-[12px]">📞 Calls</button>
-          <button onClick={() => setActiveTab('brain')} className="h-10 px-4 rounded-full bg-[#FF6B00] font-black text-[12px]">🧠 Brain</button>
-          <button onClick={() => setActiveTab('talent')} className="h-10 px-4 rounded-full bg-[#EAB308] text-black font-black text-[12px]">💼 Talent</button>
-          <span className="text-[11px] opacity-80 px-2">Skins:</span>
-          <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">🏢 Corporate</option><option value="sunset">🔥 Soweto Sunset Fire</option><option value="dark">🌙 Midnight Black</option><option value="purple">💜 Royal Purple</option><option value="green">💚 Money Green</option><option value="rain">🌧️ Rainy Window</option></select>
-        </div>
-        {/* WHATSAPP INSIDE TRUSTLINK - Chat / Voice / Video + Phone Contacts Auto-Appear - Only on Chat tab */}
-        {(showAll || activeTab === 'chat') && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
-          <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">💬 WhatsApp Inside TrustLink - Chat Like WhatsApp</b><div className="text-[12px] opacity-90">Messages + Voice Note + Video Call in one thread. No need to leave TrustLink. Your phone contacts appear here when they have your number + are on TrustLink.</div></div><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Phone Contacts</button></div>
-          <div className="text-[12px] mt-2 bg-white/10 p-2 rounded-lg">{contactSyncStatus}</div>
+        {/* CHAT - WhatsApp Style */}
+        {activeTab === 'chat' && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
+          <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">💬 Chat</b><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
+          <div className="text-[12px] mt-2 opacity-90">{contactSyncStatus}</div>
           <div className="flex gap-2 mt-3 flex-wrap">
-            <button onClick={() => { setToast('Type a message below, tap Send - Real chat in Supabase.'); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">💬 Send Message</button>
-            <button onClick={() => { setToast('Hold to record Voice Note - Real voice, no typing, like WhatsApp.'); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">🎤 Voice Note</button>
             <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">📹 Video Call</button>
-            <button onClick={() => { const phone = prompt('Their phone number?'); if (phone) setToast('Invite sent - Share TrustLink link with ' + phone); }} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-bold text-[12px]">+ Add By Phone Number</button>
+            <button onClick={() => { const phone = prompt('Phone number?'); if (phone) setToast('Invite sent to ' + phone); }} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-bold text-[12px]">+ Add By Number</button>
           </div>
-          {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Your Phone Contacts On TrustLink ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); setToast('Chat opened with ' + c.name + ' - Send message, voice note, or video call.'); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat →</button></div>))}</div></div>)}
-          <div className="text-[11px] mt-2 opacity-80">POPIA: We never upload your contacts without you tapping Sync. We only show contacts who are also on TrustLink with that number. No one sees your phone number unless you share it in chat.</div>
+          {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Contacts ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat</button></div>))}</div></div>)}
         </div>)}
         {/* SOUTH AFRICA-WIDE - Your Location - Find Nearest Buyers/Sellers */}
         <div className="mt-4 bg-white rounded-[20px] border border-[#E5E7EB] p-4">
-          <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">🇿🇦 South Africa-Wide - Find Nearest To You</b><div className="text-[12px] text-[#6B7280]">Soweto is home. South Africa is the market. Set your location once - we show sellers nearest to you, anywhere in SA.</div></div><span className="bg-[#16A34A] text-white px-3 py-1 rounded-full font-bold text-[11px]">📍 {userArea}, {userCity}, {userProvince}</span></div>
+          <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">📍 Near You - South Africa</b><div className="text-[12px] text-[#6B7280]"></div></div><span className="bg-[#16A34A] text-white px-3 py-1 rounded-full font-bold text-[11px]">📍 {userArea}, {userCity}, {userProvince}</span></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3">
             <div><label className="text-[11px] font-bold text-[#6B7280]">PROVINCE</label><select value={userProvince} onChange={(e) => { setUserProvince(e.target.value); try { localStorage.setItem('trustlink_province', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Gauteng</option><option>KwaZulu-Natal</option><option>Western Cape</option><option>Eastern Cape</option><option>Free State</option><option>Limpopo</option><option>Mpumalanga</option><option>North West</option><option>Northern Cape</option></select></div>
             <div><label className="text-[11px] font-bold text-[#6B7280]">CITY / TOWN</label><select value={userCity} onChange={(e) => { setUserCity(e.target.value); try { localStorage.setItem('trustlink_city', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Soweto</option><option>Johannesburg</option><option>Pretoria</option><option>Sandton</option><option>Centurion</option><option>Midrand</option><option>Roodepoort</option><option>Durban</option><option>Pinetown</option><option>Umlazi</option><option>Cape Town</option><option>Khayelitsha</option><option>Mitchells Plain</option><option>Stellenbosch</option><option>Gqeberha</option><option>Port Elizabeth</option><option>Bloemfontein</option><option>Polokwane</option><option>Nelspruit</option><option>Mbombela</option><option>Kimberley</option><option>Rustenburg</option><option>Mafikeng</option><option>East London</option><option>Mthatha</option><option>Pietermaritzburg</option><option>Newcastle</option></select></div>
@@ -1308,7 +1286,7 @@ export default function App() {
             <div><label className="text-[11px] font-bold text-[#6B7280]">NEAREST FIRST</label><div className="flex gap-2"><select value={nearMeKm} onChange={(e) => setNearMeKm(e.target.value)} className="flex-1 h-11 px-3 rounded-full border bg-white text-[13px]"><option value="5">Within 5km</option><option value="10">Within 10km</option><option value="25">Within 25km</option><option value="50">Within 50km</option><option value="100">Within 100km</option><option value="10000">All South Africa</option></select></div></div>
           </div>
           <div className="flex gap-2 mt-3 flex-wrap"><button onClick={requestGPS} className="h-11 px-5 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">📍 Use My GPS - 100% Real Nearest</button><span className="h-11 px-4 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] flex items-center text-[12px] font-bold">{gpsStatus}</span><button onClick={() => setNearMeKm('10000')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Show All SA</button><button onClick={() => setNearMeKm('10')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Nearest 10km</button></div>
-          <div className="text-[12px] mt-2 bg-[#EFF6FF] p-2 rounded-lg border border-[#BFDBFE]">🛰️ 100% GPS: {userLat !== null ? 'Your GPS is LOCKED - Products sorted by REAL km from you, nearest first. Sellers who listed with GPS show exact km (e.g. 1.2km away). Sellers without GPS show city distance.' : 'Tap Use My GPS above - Allow Location - Then you see REAL km from you. No GPS? Province / City still works.'} </div>
+          <div className="text-[12px] mt-2 bg-[#EFF6FF] p-2 rounded-lg border border-[#BFDBFE]">🛰️ 100% GPS: {userLat !== null ? '' : ''} </div>
           <div className="text-[12px] mt-3 bg-[#F0FDF4] p-2 rounded-lg border border-[#BBF7D0]">Showing sellers nearest to <b>{userArea}, {userCity}, {userProvince}</b> - Within {nearMeKm === '10000' ? 'All South Africa' : nearMeKm + 'km'} - {products.filter((pr: any) => getDistanceKm(pr) <= Number(nearMeKm)).length} products near you. Change Province / City above to see sellers in Durban, Cape Town, Polokwane, anywhere in SA. Delivery: Meet in person (same area) • Taxi / Courier (same city) • Paxi / PostNet / Courier Guy (nationwide).</div>
         </div>
         {/* CORPORATE + YOUTHFUL - Best Company In The World Header */}
@@ -1317,19 +1295,19 @@ export default function App() {
           <div style={{ position: 'absolute', bottom: '-30%', left: '10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(255,107,0,0.4) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(20px)' }} />
           <div className="relative">
             <div className="flex items-center gap-2"><span className="bg-white text-black px-3 py-1 rounded-full font-black text-[11px] tracking-widest">TRUSTLINK SA • EST. SOWETO</span><span className="bg-[#0A66FF] px-3 py-1 rounded-full font-bold text-[11px]">● LIVE</span><span className="bg-[#16A34A] px-3 py-1 rounded-full font-bold text-[11px]">ESCROW PROTECTED</span></div>
-            <h1 className="font-black text-[32px] md:text-[42px] leading-[1.05] mt-4">Buy & Sell In South Africa.<br /><span style={{ background: 'linear-gradient(90deg,#0A66FF,#7C3AED,#FF6B00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>With The Trust Of A Bank.</span><br />With The Speed Of TikTok.</h1>
-            <p className="text-[14px] opacity-80 mt-3 max-w-[600px]">The marketplace Elon would invest in. The app Mark would use. Real people. Real products. Real escrow. No scams. No games. Built for real impact.</p>
+            <h1 className="font-black text-[32px] md:text-[42px] leading-[1.05] mt-4">Buy & Sell<br /><span style={{ background: 'linear-gradient(90deg,#0A66FF,#7C3AED,#FF6B00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}></span><br /></h1>
+            <p className="text-[14px] opacity-80 mt-3 max-w-[600px]"></p>
             <div className="flex gap-2 mt-4 flex-wrap"><button onClick={() => { const el = document.getElementById('marketplace-grid'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="h-12 px-6 rounded-full bg-white text-black font-black text-[13px]">Shop Now →</button><button onClick={() => setShowSell(true)} className="h-12 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Sell In 30 Seconds</button><button onClick={() => setActiveTab('talent')} className="h-12 px-6 rounded-full border border-white/30 font-bold text-[13px]">Hire Talent</button></div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-5">
-              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">12,000+</div><div className="text-[11px] opacity-80">Soweto Buyers</div></div>
-              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">R2.4M+</div><div className="text-[11px] opacity-80">Protected In Escrow</div></div>
-              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">4.9★</div><div className="text-[11px] opacity-80">Trust Rating</div></div>
+              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">{products.length}</div><div className="text-[11px] opacity-80">Live Products</div></div>
+              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">{orders.length}</div><div className="text-[11px] opacity-80">Real Orders</div></div>
+              <div className="bg-white/10 backdrop-blur p-3 rounded-xl"><div className="font-black text-[18px]">{products.length > 0 ? "4.9★" : "—"}</div><div className="text-[11px] opacity-80">Trust Rating</div></div>
               <div className="bg-white/10 backdrop-blur p-3 rounded-xl hidden md:block"><div className="font-black text-[18px]">0 Scams</div><div className="text-[11px] opacity-80">Escrow = Zero Loss</div></div>
             </div>
           </div>
         </div>
         {/* TRUST BAR - Corporate */}
-        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>✓ POPIA Compliant</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% South Africa</span><span>✓ No Hidden Fees</span></div>
+        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>POPIA</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% South Africa</span><span>✓ No Hidden Fees</span></div>
         {/* BEST ESCROW IN THE WORLD - Money Locked Until Buyer Says YES */}
         <div className="mt-4 bg-[#0F172A] text-white rounded-[20px] p-4 border-4 border-[#FFD700]">
           <div className="flex justify-between items-start flex-wrap gap-2"><div><h2 className="font-black text-[20px]">🛡️ TrustLink Escrow - Best In The World</h2><p className="text-[12px] opacity-80">Your money is LOCKED. Seller cannot touch it until you say: I got it, it works.</p></div><span className="bg-[#FFD700] text-black px-3 py-1 rounded-full font-bold text-[12px]">100% SAFE</span></div>
