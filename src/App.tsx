@@ -992,13 +992,13 @@ export default function App() {
         <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">🎬 TRUSTLINK REELS - NEW! Watch + Sell With Video</b><div className="text-white text-[12px] opacity-90">Sellers: Post video of your product - Buyers: Post review video of what you bought - Every Reel has a BUY button</div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
         <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
         <div className="flex gap-2 mt-3 flex-wrap">
-          <button onClick={() => setActiveTab('market')} className={(showAll || activeTab === 'market' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>           <button onClick={() => setActiveTab('reels')} className={(showAll || activeTab === 'reels' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg'}>Reels - NEW</button>
-          <button onClick={() => setActiveTab('brain')} className={(showAll || activeTab === 'brain' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#7C3AED] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>My Brain</button>
-          <button onClick={() => setActiveTab('recruiter')} className={(showAll || activeTab === 'recruiter' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#16A34A] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Recruiter Link</button>
-          <button onClick={() => setActiveTab('talent')} className={(showAll || activeTab === 'talent' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#0EA5E9] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Discover Talent</button>
-          <button onClick={() => setActiveTab('investors')} className={(showAll || activeTab === 'investors' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#F59E0B] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Investors</button>
-          <button onClick={() => setActiveTab('chat')} className={(showAll || activeTab === 'chat' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#25D366] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Chat E2E</button>
-          <button onClick={() => setActiveTab('invite')} className={(showAll || activeTab === 'invite' ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#EC4899] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Invite</button>
+          <button onClick={() => setActiveTab('market')} className={(showAll || activeTab === 'market') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#FF8A4C] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Marketplace</button>           <button onClick={() => setActiveTab('reels')} className={(showAll || activeTab === 'reels') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#E11D48] text-white shadow-lg'}>Reels - NEW</button>
+          <button onClick={() => setActiveTab('brain')} className={(showAll || activeTab === 'brain') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#7C3AED] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>My Brain</button>
+          <button onClick={() => setActiveTab('recruiter')} className={(showAll || activeTab === 'recruiter') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#16A34A] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Recruiter Link</button>
+          <button onClick={() => setActiveTab('talent')} className={(showAll || activeTab === 'talent') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#0EA5E9] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Discover Talent</button>
+          <button onClick={() => setActiveTab('investors')} className={(showAll || activeTab === 'investors') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#F59E0B] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Investors</button>
+          <button onClick={() => setActiveTab('chat')} className={(showAll || activeTab === 'chat') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#25D366] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Chat E2E</button>
+          <button onClick={() => setActiveTab('invite')} className={(showAll || activeTab === 'invite') ? 'h-10 px-4 rounded-full text-[13px] font-bold bg-[#EC4899] text-white' : 'h-10 px-4 rounded-full text-[13px] font-bold bg-white border border-[#FFE4C2]'}>Invite</button>
         </div>
 
         <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
@@ -1017,7 +1017,7 @@ export default function App() {
           {aiHistory.length > 0 && (<div className="mt-3"><div className="text-[12px] font-bold">Recent Research ({aiHistory.length})</div>{aiHistory.slice(-3).map((h: any, i: number) => (<div key={i} className="text-[12px] text-[#8A7A6E] mt-1">• {h.q} - {h.time}</div>))}</div>)}
         </div>
 
-        {(showAll || activeTab === 'brain' && (
+        {(showAll || activeTab === 'brain') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">MY BRAIN</h2>
             <p className="text-center text-[13px] font-bold text-[#7C3AED] mt-1">Signed in as: {profile?.name || 'You'} - This is YOUR Brain only</p>
@@ -1053,7 +1053,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'recruiter' && (
+        {(showAll || activeTab === 'recruiter') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Recruiter Link - For Signed-In User Only</h2>
             <p className="text-[#16A34A] font-bold text-[13px] mt-1">POPIA COMPLIANT - Soul Only - No Raw ID, No Raw PDF - Per-User</p>
@@ -1062,7 +1062,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'talent' && (
+        {(showAll || activeTab === 'talent') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">DISCOVER TALENT - Sellers Selling THEMSELVES</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1">Sell PRODUCTS + Sell YOURSELF. Recruiters discover you by skill, score, location - POPIA safe.</p>
@@ -1078,7 +1078,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'investors' && (
+        {(showAll || activeTab === 'investors') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">INVESTORS - Pitch Yourself</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1">Buyers + Sellers can ALSO pitch themselves. Investors discover YOU by idea + funding ask + Trust.</p>
@@ -1096,7 +1096,7 @@ export default function App() {
           </div>
         )}
 
-        {false && (showAll || activeTab === 'chat' && (
+        {(showAll || activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - End-to-End Encrypted</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Only you + receiver can read.</p>
@@ -1110,7 +1110,7 @@ export default function App() {
         )}
 
 
-        {(showAll || activeTab === 'chat' && (
+        {(showAll || activeTab === 'chat') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
             <h2 className="text-center font-black text-[20px]">TrustLink Chat - Like WhatsApp, Inside TrustLink</h2>
             <p className="text-center text-[13px] text-[#16A34A] font-bold mt-1">E2E ENCRYPTED - Search by Username OR Phone Number - Send Request - Chat 1-to-1</p>
@@ -1139,7 +1139,7 @@ export default function App() {
           </div>
         )}
 
-        {(showAll || activeTab === 'reels' && (
+        {(showAll || activeTab === 'reels') && (
           <div className="mt-4">
             <div className="bg-white rounded-[20px] border border-[#FFE4C2] p-5">
               <h2 className="text-center font-black text-[20px]">TrustLink Reels - Sell With Video</h2>
@@ -1246,7 +1246,7 @@ export default function App() {
                 </div>
               </div>
             )}
-        {(showAll || activeTab === 'invite' && (
+        {(showAll || activeTab === 'invite') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5 text-center">
             <h2 className="font-black text-[20px]">Invite Friends - Grow TrustLink, Earn Trust</h2>
             <p className="text-[13px] text-[#8A7A6E] mt-1">Invite buyers, sellers, job seekers, recruiters. When they join with YOUR link, your Trust grows.</p>
@@ -1286,7 +1286,7 @@ export default function App() {
           <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">🏢 Corporate</option><option value="sunset">🔥 Soweto Sunset Fire</option><option value="dark">🌙 Midnight Black</option><option value="purple">💜 Royal Purple</option><option value="green">💚 Money Green</option><option value="rain">🌧️ Rainy Window</option></select>
         </div>
         {/* WHATSAPP INSIDE TRUSTLINK - Chat / Voice / Video + Phone Contacts Auto-Appear - Only on Chat tab */}
-        {(showAll || activeTab === 'chat' && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
+        {(showAll || activeTab === 'chat') && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
           <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">💬 WhatsApp Inside TrustLink - Chat Like WhatsApp</b><div className="text-[12px] opacity-90">Messages + Voice Note + Video Call in one thread. No need to leave TrustLink. Your phone contacts appear here when they have your number + are on TrustLink.</div></div><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Phone Contacts</button></div>
           <div className="text-[12px] mt-2 bg-white/10 p-2 rounded-lg">{contactSyncStatus}</div>
           <div className="flex gap-2 mt-3 flex-wrap">
@@ -1424,7 +1424,7 @@ export default function App() {
             </div>
           </div>
         </div>
-        {(showAll || activeTab === 'market' && (
+        {(showAll || activeTab === 'market') && (
           <div>
             <div className="flex justify-between items-center mt-6"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
             <div className="mt-4 flex gap-2"><div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2"><span>Search</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search real products..." className="flex-1 outline-none text-[14px] bg-transparent" /></div></div>
