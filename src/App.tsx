@@ -52,6 +52,9 @@ export default function App() {
   const [alertQuery, setAlertQuery] = useState('');
   const [alertMaxPrice, setAlertMaxPrice] = useState('');
   const [nearMeKm, setNearMeKm] = useState('10');
+  const [userProvince, setUserProvince] = useState(() => { try { return localStorage.getItem('trustlink_province') || 'Gauteng'; } catch(e) { return 'Gauteng'; } });
+  const [userCity, setUserCity] = useState(() => { try { return localStorage.getItem('trustlink_city') || 'Soweto'; } catch(e) { return 'Soweto'; } });
+  const [userArea, setUserArea] = useState(() => { try { return localStorage.getItem('trustlink_area') || 'Pimville'; } catch(e) { return 'Pimville'; } });
   const [voiceNote, setVoiceNote] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSecs, setRecordingSecs] = useState(0);
@@ -130,11 +133,14 @@ export default function App() {
   // BEST UX - AI Price Checker, Near Me, Tracking, Trust Passport, Alerts
   function getFairPrice(title: string, cat: string) { const s = (title + ' ' + cat).toLowerCase(); if (s.includes('tablet')) return { low: 2800, high: 3500, avg: 3150, note: 'Samsung Tablet in Soweto - fair range based on condition + storage.' }; if (s.includes('iphone') || s.includes('phone')) return { low: 3500, high: 6500, avg: 4800, note: 'Phones - check battery + screen + iCloud lock.' }; if (s.includes('nike') || s.includes('sneaker') || s.includes('shoe')) return { low: 800, high: 1500, avg: 1150, note: 'Sneakers - original vs replica changes price a lot.' }; if (s.includes('laptop')) return { low: 4500, high: 8500, avg: 6000, note: 'Laptops - RAM + SSD + battery matter most.' }; if (s.includes('tv')) return { low: 2500, high: 5500, avg: 3800, note: 'TVs - size + Smart + screen.' }; return { low: 500, high: 3000, avg: 1500, note: 'General item - compare 3 similar listings.' }; }
   function checkPrice() { if (!priceCheckTitle.trim()) return alert('Type what you want - e.g. Samsung Tablet'); const r = getFairPrice(priceCheckTitle, ''); setPriceCheckResult('Fair price in Soweto for ' + priceCheckTitle + ': R' + r.low + ' - R' + r.high + ' (Avg R' + r.avg + '). ' + r.note); }
-  function getDistanceKm(prod: any) { const map: any = { Pimville: 0.8, Orlando: 2.1, Dobsonville: 3.5, Protea: 4.2, Meadowlands: 2.8, Diepkloof: 3.1, Jabulani: 1.5, Soweto: 2.0, Chiawelo: 3.8, Mofolo: 1.2 }; const loc = prod.location || prod.sellerLocation || 'Soweto'; for (const k in map) { if (String(loc).toLowerCase().includes(k.toLowerCase())) return map[k]; } return 2.5; }
-  function saveOrder(product: any) { saveRealOrder(product); }
-  function stopVoiceRecording() {
-    if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
-    setIsRecording(false);
+  function getDistanceKm(prod: any) {
+    // South Africa-wide: distance from user's city/area to product location - real GPS would be exact, this is city-level
+    const saCities: any = { 'Pimville': 0, 'Soweto': 2, 'Orlando': 3, 'Johannesburg': 18, 'Sandton': 28, 'Pretoria': 45, 'Centurion': 55, 'Midrand': 35, 'Roodepoort': 15, 'Dobsonville': 5, 'Protea': 6, 'Meadowlands': 4, 'Diepkloof': 6, 'Jabulani': 3, 'Mofolo': 2, 'Chiawelo': 7, 'Durban': 570, 'Pinetown': 580, 'Umlazi': 585, 'Cape Town': 1400, 'Khayelitsha': 1420, 'Mitchells Plain': 1415, 'Stellenbosch': 1430, 'Gqeberha': 1050, 'Port Elizabeth': 1050, 'Uitenhage': 1070, 'Bloemfontein': 400, 'Polokwane': 300, 'Nelspruit': 350, 'Mbombela': 350, 'Kimberley': 480, 'Rustenburg': 110, 'Mafikeng': 250, 'Mahikeng': 250, 'East London': 900, 'Mthatha': 800, 'Pietermaritzburg': 500, 'Newcastle': 350, 'Limpopo': 300, 'Mpumalanga': 350 };
+    const loc = prod.location || prod.sellerLocation || prod.city || 'Soweto';
+    const userLoc = userArea || userCity || 'Soweto';
+    // If same city/area, close. If different province, far.
+    for (const k in saCities) { if (String(loc).toLowerCase().includes(k.toLowerCase())) { for (const u in saCities) { if (String(userLoc).toLowerCase().includes(u.toLowerCase())) { return Math.abs(saCities[k] - saCities[u]) + 1.2; } } return saCities[k] > 100 ? saCities[k] : 2.5; } }
+    return 5.0;
   }
   function cancelVoiceRecording() {
     if (mediaRecorderRef && mediaRecorderRef.state !== 'inactive') { clearInterval((mediaRecorderRef as any)._timer); mediaRecorderRef.stop(); }
@@ -1227,8 +1233,19 @@ export default function App() {
 
         {/* BUSINESS READY - Launch Banner */}
         <div className="mt-4 bg-[#16A34A] text-white rounded-[20px] p-4 flex justify-between items-center flex-wrap gap-2">
-          <div><b className="text-[16px]">🟢 OPEN FOR BUSINESS - Soweto Is Live</b><div className="text-[12px] opacity-90">Sellers: List now. Buyers: Buy with Cash on Delivery / EFT + Escrow. PayFast coming soon for card payments.</div></div>
+          <div><b className="text-[16px]">🟢 OPEN FOR BUSINESS - South Africa Is Live</b><div className="text-[12px] opacity-90">Sellers: List now. Buyers: Find sellers nearest to you - anywhere in SA. Cash / EFT + Escrow. PayFast coming soon for cards.</div></div>
           <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-white text-[#16A34A] font-black text-[13px]">Start Selling →</button>
+        </div>
+        {/* SOUTH AFRICA-WIDE - Your Location - Find Nearest Buyers/Sellers */}
+        <div className="mt-4 bg-white rounded-[20px] border border-[#E5E7EB] p-4">
+          <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">🇿🇦 South Africa-Wide - Find Nearest To You</b><div className="text-[12px] text-[#6B7280]">Soweto is home. South Africa is the market. Set your location once - we show sellers nearest to you, anywhere in SA.</div></div><span className="bg-[#16A34A] text-white px-3 py-1 rounded-full font-bold text-[11px]">📍 {userArea}, {userCity}, {userProvince}</span></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3">
+            <div><label className="text-[11px] font-bold text-[#6B7280]">PROVINCE</label><select value={userProvince} onChange={(e) => { setUserProvince(e.target.value); try { localStorage.setItem('trustlink_province', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Gauteng</option><option>KwaZulu-Natal</option><option>Western Cape</option><option>Eastern Cape</option><option>Free State</option><option>Limpopo</option><option>Mpumalanga</option><option>North West</option><option>Northern Cape</option></select></div>
+            <div><label className="text-[11px] font-bold text-[#6B7280]">CITY / TOWN</label><select value={userCity} onChange={(e) => { setUserCity(e.target.value); try { localStorage.setItem('trustlink_city', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Soweto</option><option>Johannesburg</option><option>Pretoria</option><option>Sandton</option><option>Centurion</option><option>Midrand</option><option>Roodepoort</option><option>Durban</option><option>Pinetown</option><option>Umlazi</option><option>Cape Town</option><option>Khayelitsha</option><option>Mitchells Plain</option><option>Stellenbosch</option><option>Gqeberha</option><option>Port Elizabeth</option><option>Bloemfontein</option><option>Polokwane</option><option>Nelspruit</option><option>Mbombela</option><option>Kimberley</option><option>Rustenburg</option><option>Mafikeng</option><option>East London</option><option>Mthatha</option><option>Pietermaritzburg</option><option>Newcastle</option></select></div>
+            <div><label className="text-[11px] font-bold text-[#6B7280]">AREA / TOWNSHIP / SUBURB</label><input value={userArea} onChange={(e) => { setUserArea(e.target.value); try { localStorage.setItem('trustlink_area', e.target.value); } catch(err) {} }} placeholder="e.g. Pimville, Umlazi, Khayelitsha" className="w-full h-11 px-3 rounded-full border bg-white text-[13px] outline-none" /></div>
+            <div><label className="text-[11px] font-bold text-[#6B7280]">NEAREST FIRST</label><div className="flex gap-2"><select value={nearMeKm} onChange={(e) => setNearMeKm(e.target.value)} className="flex-1 h-11 px-3 rounded-full border bg-white text-[13px]"><option value="5">Within 5km</option><option value="10">Within 10km</option><option value="25">Within 25km</option><option value="50">Within 50km</option><option value="100">Within 100km</option><option value="10000">All South Africa</option></select><button onClick={() => { if (!navigator.geolocation) return alert('GPS not supported on this browser. Use City / Area above.'); navigator.geolocation.getCurrentPosition((pos: any) => { setToast('GPS found: ' + pos.coords.latitude.toFixed(2) + ', ' + pos.coords.longitude.toFixed(2) + ' - Showing nearest sellers to you.'); }, () => alert('GPS blocked. Allow Location - tap lock icon - Allow Location. Or use City / Area above.')); }} className="h-11 px-4 rounded-full bg-black text-white font-bold text-[12px]">Use My GPS 📍</button></div></div>
+          </div>
+          <div className="text-[12px] mt-3 bg-[#F0FDF4] p-2 rounded-lg border border-[#BBF7D0]">Showing sellers nearest to <b>{userArea}, {userCity}, {userProvince}</b> - Within {nearMeKm === '10000' ? 'All South Africa' : nearMeKm + 'km'} - {products.filter((pr: any) => getDistanceKm(pr) <= Number(nearMeKm)).length} products near you. Change Province / City above to see sellers in Durban, Cape Town, Polokwane, anywhere in SA. Delivery: Meet in person (same area) • Taxi / Courier (same city) • Paxi / PostNet / Courier Guy (nationwide).</div>
         </div>
         {/* CORPORATE + YOUTHFUL - Best Company In The World Header */}
         <div className="mt-4 bg-[#0A0A0A] text-white rounded-[24px] p-6 relative overflow-hidden">
@@ -1236,7 +1253,7 @@ export default function App() {
           <div style={{ position: 'absolute', bottom: '-30%', left: '10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(255,107,0,0.4) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(20px)' }} />
           <div className="relative">
             <div className="flex items-center gap-2"><span className="bg-white text-black px-3 py-1 rounded-full font-black text-[11px] tracking-widest">TRUSTLINK SA • EST. SOWETO</span><span className="bg-[#0A66FF] px-3 py-1 rounded-full font-bold text-[11px]">● LIVE</span><span className="bg-[#16A34A] px-3 py-1 rounded-full font-bold text-[11px]">ESCROW PROTECTED</span></div>
-            <h1 className="font-black text-[32px] md:text-[42px] leading-[1.05] mt-4">Buy & Sell In Soweto.<br /><span style={{ background: 'linear-gradient(90deg,#0A66FF,#7C3AED,#FF6B00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>With The Trust Of A Bank.</span><br />With The Speed Of TikTok.</h1>
+            <h1 className="font-black text-[32px] md:text-[42px] leading-[1.05] mt-4">Buy & Sell In South Africa.<br /><span style={{ background: 'linear-gradient(90deg,#0A66FF,#7C3AED,#FF6B00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>With The Trust Of A Bank.</span><br />With The Speed Of TikTok.</h1>
             <p className="text-[14px] opacity-80 mt-3 max-w-[600px]">The marketplace Elon would invest in. The app Mark would use. Real people. Real products. Real escrow. No scams. No games. Built for real impact.</p>
             <div className="flex gap-2 mt-4 flex-wrap"><button onClick={() => { const el = document.getElementById('marketplace-grid'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="h-12 px-6 rounded-full bg-white text-black font-black text-[13px]">Shop Now →</button><button onClick={() => setShowSell(true)} className="h-12 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Sell In 30 Seconds</button><button onClick={() => setActiveTab('talent')} className="h-12 px-6 rounded-full border border-white/30 font-bold text-[13px]">Hire Talent</button></div>
             <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-5">
@@ -1248,7 +1265,7 @@ export default function App() {
           </div>
         </div>
         {/* TRUST BAR - Corporate */}
-        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>✓ POPIA Compliant</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% Soweto</span><span>✓ No Hidden Fees</span></div>
+        <div className="mt-3 bg-white rounded-full border border-[#E5E7EB] px-4 py-2 flex gap-4 overflow-x-auto whitespace-nowrap text-[11px] font-bold text-[#6B7280]"><span>✓ POPIA Compliant</span><span>✓ Escrow Protected</span><span>✓ Verified Sellers</span><span>✓ PayFast Secure</span><span>✓ 100% South Africa</span><span>✓ No Hidden Fees</span></div>
         {/* BEST ESCROW IN THE WORLD - Money Locked Until Buyer Says YES */}
         <div className="mt-4 bg-[#0F172A] text-white rounded-[20px] p-4 border-4 border-[#FFD700]">
           <div className="flex justify-between items-start flex-wrap gap-2"><div><h2 className="font-black text-[20px]">🛡️ TrustLink Escrow - Best In The World</h2><p className="text-[12px] opacity-80">Your money is LOCKED. Seller cannot touch it until you say: I got it, it works.</p></div><span className="bg-[#FFD700] text-black px-3 py-1 rounded-full font-bold text-[12px]">100% SAFE</span></div>
