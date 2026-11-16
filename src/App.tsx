@@ -57,8 +57,8 @@ export default function App() {
   const [userLng, setUserLng] = useState<number | null>(() => { try { const v = localStorage.getItem('trustlink_lng'); return v ? parseFloat(v) : null; } catch(e) { return null; } });
   const [gpsStatus, setGpsStatus] = useState('Not set - Tap Use My GPS');
   const [userProvince, setUserProvince] = useState(() => { try { return localStorage.getItem('trustlink_province') || 'Gauteng'; } catch(e) { return 'Gauteng'; } });
-  const [userCity, setUserCity] = useState(() => { try { return localStorage.getItem('trustlink_city') || 'Soweto'; } catch(e) { return 'Soweto'; } });
-  const [userArea, setUserArea] = useState(() => { try { return localStorage.getItem('trustlink_area') || 'Pimville'; } catch(e) { return 'Pimville'; } });
+  const [userCity, setUserCity] = useState(() => { try { return localStorage.getItem('trustlink_city') || 'Krugersdorp'; } catch(e) { return 'Krugersdorp'; } });
+  const [userArea, setUserArea] = useState(() => { try { return localStorage.getItem('trustlink_area') || 'Krugersdorp'; } catch(e) { return 'Krugersdorp'; } });
   const [voiceNote, setVoiceNote] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSecs, setRecordingSecs] = useState(0);
@@ -135,13 +135,13 @@ export default function App() {
   const [chatWith, setChatWith] = useState<any>(null);
 
   // BEST UX - AI Price Checker, Near Me, Tracking, Trust Passport, Alerts
-  function getFairPrice(title: string, cat: string) { const s = (title + ' ' + cat).toLowerCase(); if (s.includes('tablet')) return { low: 2800, high: 3500, avg: 3150, note: 'Samsung Tablet in Soweto - fair range based on condition + storage.' }; if (s.includes('iphone') || s.includes('phone')) return { low: 3500, high: 6500, avg: 4800, note: 'Phones - check battery + screen + iCloud lock.' }; if (s.includes('nike') || s.includes('sneaker') || s.includes('shoe')) return { low: 800, high: 1500, avg: 1150, note: 'Sneakers - original vs replica changes price a lot.' }; if (s.includes('laptop')) return { low: 4500, high: 8500, avg: 6000, note: 'Laptops - RAM + SSD + battery matter most.' }; if (s.includes('tv')) return { low: 2500, high: 5500, avg: 3800, note: 'TVs - size + Smart + screen.' }; return { low: 500, high: 3000, avg: 1500, note: 'General item - compare 3 similar listings.' }; }
-  function checkPrice() { if (!priceCheckTitle.trim()) return alert('Type what you want - e.g. Samsung Tablet'); const r = getFairPrice(priceCheckTitle, ''); setPriceCheckResult('Fair price in Soweto for ' + priceCheckTitle + ': R' + r.low + ' - R' + r.high + ' (Avg R' + r.avg + '). ' + r.note); }
+  function getFairPrice(title: string, cat: string) { const s = (title + ' ' + cat).toLowerCase(); if (s.includes('tablet')) return { low: 2800, high: 3500, avg: 3150, note: 'Samsung Tablet in Krugersdorp - fair range based on condition + storage.' }; if (s.includes('iphone') || s.includes('phone')) return { low: 3500, high: 6500, avg: 4800, note: 'Phones - check battery + screen + iCloud lock.' }; if (s.includes('nike') || s.includes('sneaker') || s.includes('shoe')) return { low: 800, high: 1500, avg: 1150, note: 'Sneakers - original vs replica changes price a lot.' }; if (s.includes('laptop')) return { low: 4500, high: 8500, avg: 6000, note: 'Laptops - RAM + SSD + battery matter most.' }; if (s.includes('tv')) return { low: 2500, high: 5500, avg: 3800, note: 'TVs - size + Smart + screen.' }; return { low: 500, high: 3000, avg: 1500, note: 'General item - compare 3 similar listings.' }; }
+  function checkPrice() { if (!priceCheckTitle.trim()) return alert('Type what you want - e.g. Samsung Tablet'); const r = getFairPrice(priceCheckTitle, ''); setPriceCheckResult('Fair price in Krugersdorp for ' + priceCheckTitle + ': R' + r.low + ' - R' + r.high + ' (Avg R' + r.avg + '). ' + r.note); }
   function getDistanceKm(prod: any) {
     // South Africa-wide: distance from user's city/area to product location - real GPS would be exact, this is city-level
-    const saCities: any = { 'Pimville': 0, 'Soweto': 2, 'Orlando': 3, 'Johannesburg': 18, 'Sandton': 28, 'Pretoria': 45, 'Centurion': 55, 'Midrand': 35, 'Roodepoort': 15, 'Dobsonville': 5, 'Protea': 6, 'Meadowlands': 4, 'Diepkloof': 6, 'Jabulani': 3, 'Mofolo': 2, 'Chiawelo': 7, 'Durban': 570, 'Pinetown': 580, 'Umlazi': 585, 'Cape Town': 1400, 'Khayelitsha': 1420, 'Mitchells Plain': 1415, 'Stellenbosch': 1430, 'Gqeberha': 1050, 'Port Elizabeth': 1050, 'Uitenhage': 1070, 'Bloemfontein': 400, 'Polokwane': 300, 'Nelspruit': 350, 'Mbombela': 350, 'Kimberley': 480, 'Rustenburg': 110, 'Mafikeng': 250, 'Mahikeng': 250, 'East London': 900, 'Mthatha': 800, 'Pietermaritzburg': 500, 'Newcastle': 350, 'Limpopo': 300, 'Mpumalanga': 350 };
-    const loc = prod.location || prod.sellerLocation || prod.city || 'Soweto';
-    const userLoc = userArea || userCity || 'Soweto';
+    const saCities: any = { 'Krugersdorp': 0, 'Pimville': 12, 'Krugersdorp': 2, 'Orlando': 3, 'Johannesburg': 18, 'Sandton': 28, 'Pretoria': 45, 'Centurion': 55, 'Midrand': 35, 'Roodepoort': 15, 'Dobsonville': 5, 'Protea': 6, 'Meadowlands': 4, 'Diepkloof': 6, 'Jabulani': 3, 'Mofolo': 2, 'Chiawelo': 7, 'Durban': 570, 'Pinetown': 580, 'Umlazi': 585, 'Cape Town': 1400, 'Khayelitsha': 1420, 'Mitchells Plain': 1415, 'Stellenbosch': 1430, 'Gqeberha': 1050, 'Port Elizabeth': 1050, 'Uitenhage': 1070, 'Bloemfontein': 400, 'Polokwane': 300, 'Nelspruit': 350, 'Mbombela': 350, 'Kimberley': 480, 'Rustenburg': 110, 'Mafikeng': 250, 'Mahikeng': 250, 'East London': 900, 'Mthatha': 800, 'Pietermaritzburg': 500, 'Newcastle': 350, 'Limpopo': 300, 'Mpumalanga': 350 };
+    const loc = prod.location || prod.sellerLocation || prod.city || 'Krugersdorp';
+    const userLoc = userArea || userCity || 'Krugersdorp';
     // If same city/area, close. If different province, far.
     for (const k in saCities) { if (String(loc).toLowerCase().includes(k.toLowerCase())) { for (const u in saCities) { if (String(userLoc).toLowerCase().includes(u.toLowerCase())) { return Math.abs(saCities[k] - saCities[u]) + 1.2; } } return saCities[k] > 100 ? saCities[k] : 2.5; } }
     return 5.0;
@@ -220,7 +220,7 @@ export default function App() {
   // RESTORED HELPERS - were lost in edits, caused ReferenceError
   function saveAlert() { if (!alertQuery.trim()) return alert('Type what you want - e.g. Nike size 8'); const a = { id: Date.now(), query: alertQuery, maxPrice: alertMaxPrice ? Number(alertMaxPrice) : 999999 }; const next = [a, ...savedSearches]; setSavedSearches(next); try { localStorage.setItem('trustlink_alerts', JSON.stringify(next)); } catch(e) {} setAlertQuery(''); setAlertMaxPrice(''); setToast('Alert saved! We will tell you when it lists.'); }
   async function updateOrderStatus(id: number, status: string) { try { const { error } = await supabase.from('orders').update({ status }).eq('id', id); if (error) throw error; setToast('REAL Order updated: ' + status + ' - Buyer sees it live.'); loadRealData(); } catch(e) { const next = orders.map((o: any) => o.id === id ? { ...o, status, tracking: [...(o.tracking || []), status] } : o); setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(err) {} setToast('Order updated: ' + status); } }
-  function getTrustBadges() { const sales = 12 + products.filter((pr: any) => pr.sellerId === profile?.id).length; const badges: string[] = ['Top Seller in Soweto', 'Honest Describer', 'Zero Disputes', 'Verified ID', 'Fast Shipper']; return { sales, rating: 4.9, disputes: 0, badges }; }
+  function getTrustBadges() { const sales = 12 + products.filter((pr: any) => pr.sellerId === profile?.id).length; const badges: string[] = ['Top Seller in Krugersdorp', 'Honest Describer', 'Zero Disputes', 'Verified ID', 'Fast Shipper']; return { sales, rating: 4.9, disputes: 0, badges }; }
   function startVoiceRecording() { if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Your browser does not support voice recording. Use Chrome on phone.'); navigator.mediaDevices.getUserMedia({ audio: true }).then((stream: any) => { const rec = new (window as any).MediaRecorder(stream); const chunks: any[] = []; rec.ondataavailable = (e: any) => { if (e.data.size > 0) chunks.push(e.data); }; rec.onstop = async () => { const blob = new Blob(chunks, { type: 'audio/webm' }); const fileName = 'voice-' + Date.now() + '-' + (profile?.id || 'anon') + '.webm'; try { const { error: upErr } = await supabase.storage.from('voice-notes').upload(fileName, blob, { contentType: 'audio/webm', upsert: true }); if (upErr) throw upErr; const { data: pub } = supabase.storage.from('voice-notes').getPublicUrl(fileName); const realUrl = pub.publicUrl; await supabase.from('chats').insert([{ sender_name: profile?.name || 'You', sender_id: profile?.id, text: '', voice_url: realUrl, receiver_name: chatTo || 'Seller' }]); setToast('REAL Voice note sent! ' + recordingSecs + 's'); loadRealData(); } catch(e) { alert('Voice note failed - Run Supabase SQL: voice-notes bucket + chats table.'); } stream.getTracks().forEach((tr: any) => tr.stop()); }; rec.start(); setMediaRecorderRef(rec); setAudioChunksRef(chunks); setIsRecording(true); setRecordingSecs(0); const timer: any = setInterval(() => { setRecordingSecs((s) => { if (s >= 60) { clearInterval(timer); return s; } return s + 1; }); }, 1000); (rec as any)._timer = timer; }).catch(() => alert('Microphone blocked. Allow microphone - tap lock icon - Allow Microphone.')); }
   // 100% GPS - Real Haversine distance - True nearest
   function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) { const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
@@ -351,7 +351,7 @@ export default function App() {
         if (error) throw error;
         const uid = data.user?.id;
         if (uid) {
-          await supabase.from('profiles').upsert({ id: uid, name: nameInput || email.split('@')[0], role: roleInput, phone: phoneInput, location: 'Soweto, Gauteng', trust_score: 50, rating: 8.5, completed_orders: 0, total_bought: 0, total_sold: 0, education: brainEducation, top_skill: brainTopSkill, skill_score: brainTopScore ? parseInt(brainTopScore) : null, second_skill: brainSecondSkill, career_goal: brainCareerGoal, allow_recruiter: allowRecruiter });
+          await supabase.from('profiles').upsert({ id: uid, name: nameInput || email.split('@')[0], role: roleInput, phone: phoneInput, location: 'Krugersdorp, Gauteng', trust_score: 50, rating: 8.5, completed_orders: 0, total_bought: 0, total_sold: 0, education: brainEducation, top_skill: brainTopSkill, skill_score: brainTopScore ? parseInt(brainTopScore) : null, second_skill: brainSecondSkill, career_goal: brainCareerGoal, allow_recruiter: allowRecruiter });
           try { localStorage.setItem('trustlink_brain_' + uid, JSON.stringify({ education: brainEducation, topSkill: brainTopSkill, topScore: brainTopScore, secondSkill: brainSecondSkill, careerGoal: brainCareerGoal, allowRecruiter })); } catch(e) {}
         }
         setToast('Account created! Welcome to TrustLink.');
@@ -451,7 +451,7 @@ export default function App() {
     const isWhen = q.startsWith('when ');
     const isWhy = q.startsWith('why ');
     const isMarket = q.includes('best seller') || q.includes('top seller') || q.includes('sell') || q.includes('buy') || q.includes('trust') || q.includes('escrow') || q.includes('peach');
-    const myLoc = profile?.location || 'Soweto, Gauteng';
+    const myLoc = profile?.location || 'Krugersdorp, Gauteng';
     const myName = profile?.name || 'Friend';
     const myTrust = profile?.trust_score || 50;
     let localAnswer = '';
@@ -462,7 +462,7 @@ export default function App() {
         const best = [...products].sort((a, b) => (b.profiles?.trust_score || 0) - (a.profiles?.trust_score || 0))[0];
         localAnswer = 'TOP SELLER: ' + (best?.profiles?.name || 'No sellers yet - be first!') + ' - Trust ' + (best?.profiles?.trust_score || 50) + '%. ANN Predicted Trust for YOU: ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. Rank = Trust 40% + Rating 30% + Orders 20% + Sold 10%.';
       } else if (q.includes('how') && q.includes('sell')) {
-        localAnswer = 'HOW TO SELL FASTER (For YOU in ' + myLoc + '): 1) Clear photo + face photo 2) Title: Brand + Size + Condition 3) Price R50 below Maponya Mall 4) Pickup: Maponya Mall / Pimville Square 5) Reply in under 5 mins 6) Meet public, daytime, Escrow 7) Ask 5-star review. Your Trust: ' + myTrust + '%.';
+        localAnswer = 'HOW TO SELL FASTER (For YOU in ' + myLoc + '): 1) Clear photo + face photo 2) Title: Brand + Size + Condition 3) Price R50 below Key West Shopping Centre 4) Pickup: Key West Shopping Centre / Krugersdorp CBD 5) Reply in under 5 mins 6) Meet public, daytime, Escrow 7) Ask 5-star review. Your Trust: ' + myTrust + '%.';
       } else if (q.includes('trust')) {
         localAnswer = 'WHY IS YOUR TRUST ' + myTrust + '%? Trust = Orders 40% + Sales 30% + Rating 20% + Base 10%. ANN Predicted Trust: ' + ANN.predictTrust(myTrust, 70, profile?.completed_orders || 0, profile?.total_sold || 0, profile?.rating || 8.5, 1) + '%. To raise: Complete 2 orders + 5-star reviews + face photo.';
       } else if (q.includes('escrow') || q.includes('peach') || q.includes('pay')) {
@@ -472,7 +472,7 @@ export default function App() {
       }
     } else if (isWhere) {
       if (q.includes('maponya') || q.includes('mall') || q.includes('soweto') || q.includes('pimville') || q.includes('jabulani') || q.includes('bara')) {
-        localAnswer = 'WHERE - MAPS FOR YOU IN ' + myLoc + ': Maponya Mall - Klipspruit Valley Rd, Soweto - Best safe meetup, 9am-6pm. Jabulani Mall - Bolani Rd. Pimville Square - Pimville. Bara Mall - Chris Hani Baragwanath. TIP: Meet inside mall, daytime, bring friend.';
+        localAnswer = 'WHERE - MAPS FOR YOU IN ' + myLoc + ': Key West Shopping Centre - Viljoen St, Krugersdorp - Best safe meetup, 9am-6pm. Krugersdorp CBD - Market St. West Village - Paardekraal Dr. TIP: Meet inside mall, daytime, bring friend. TIP: Meet inside mall, daytime, bring friend.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^where is /i, '').replace(/^where /i, '').trim(); }
     } else if (isWhen) {
       if (q.includes('sell') || q.includes('buy') || q.includes('post')) {
@@ -496,7 +496,7 @@ export default function App() {
       } else if (q.includes('escrow')) {
         localAnswer = 'WHAT IS ESCROW? Escrow = Safe middleman holds money until both happy. Buyer pays → Peach holds → Seller delivers → Buyer confirms → Peach releases. If no delivery, refund.';
       } else if (q.includes('trustlink')) {
-        localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Soweto. Private, POPIA Compliant compliant.';
+        localAnswer = 'WHAT IS TRUSTLINK? TrustLink is an online marketplace where you: 1) Buy + Sell with Escrow 2) Sell YOURSELF to recruiters + investors 3) Research with TrustLink AI 4) Chat E2E 5) Invite friends. Built in Krugersdorp. Private, POPIA Compliant compliant.';
       } else { needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^what is /i, '').replace(/^what are /i, '').trim(); }
     } else if (isWho) {
       needsWiki = true; wikiTopic = originalQ.replace(/\?/g, '').replace(/^who is /i, '').replace(/^who was /i, '').trim();
@@ -618,7 +618,7 @@ export default function App() {
   function saveReels(next: any[]) { setReels(next); try { localStorage.setItem('trustlink_reels', JSON.stringify(next)); } catch(e) {} }
   async function handleUploadReel() {
     if (!session) return alert('Sign in to post a Reel.');
-    if (!reelTitle.trim()) return alert(reelType === 'review' ? 'Add a Review title - e.g. "I bought this Tablet from Thabo - Honest Review"' : 'Add a Reel title - e.g. "Brand New Samsung Tablet - R3500 - Pimville"');
+    if (!reelTitle.trim()) return alert(reelType === 'review' ? 'Add a Review title - e.g. "I bought this Tablet from Thabo - Honest Review"' : 'Add a Reel title - e.g. "Brand New Samsung Tablet - R3500 - Krugersdorp"');
     if (!reelVideoUrl.trim()) return alert('Add a Video URL - paste a MP4 link or YouTube link, or upload below.');
     if (reelVideoUrl.startsWith('blob:')) { alert('This video is a LOCAL preview (blob:) - it will NOT play after refresh. Re-upload it to Supabase or paste a YouTube link, then Post again.'); return; }
     if (reelType === 'review' && !reelBoughtFrom.trim()) return alert('Who did you buy from? Type the seller name - e.g. Thabo - so buyers know who you are reviewing.');
@@ -947,6 +947,7 @@ export default function App() {
         <button onClick={() => { setActiveTab('chat'); setTimeout(() => startTeamsVideoCall(), 300); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button>
         <button onClick={() => setActiveTab('brain')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Brain</button>
         <button onClick={() => setActiveTab('talent')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Talent</button>
+         <button onClick={() => setActiveTab('about' as any)} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">About</button>
         <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">Corporate</option><option value="sunset">Soweto Sunset</option><option value="dark">Midnight</option><option value="purple">Royal Purple</option><option value="green">Money Green</option><option value="rain">Rainy Window</option><option value="ocean">Ocean Waves</option><option value="sky">Sky Clouds</option></select>
       </div>
       {skin === 'sunset' && (
@@ -1105,7 +1106,7 @@ export default function App() {
             <h2 className="text-center font-black text-[20px]">INVESTORS - Pitch Yourself</h2>
             <p className="text-center text-[13px] text-[#8A7A6E] mt-1"></p>
             <div className="mt-4 bg-[#FFFBEB] p-4 rounded-xl">
-              <input value={businessIdea} onChange={(e) => setBusinessIdea(e.target.value)} placeholder="Your business idea e.g. TrustLink - Brain app for Soweto youth" className="w-full h-11 px-4 rounded-full border border-[#FDE68A] bg-white text-[13px] outline-none mt-2" />
+              <input value={businessIdea} onChange={(e) => setBusinessIdea(e.target.value)} placeholder="Your business idea e.g. TrustLink - Brain app for Krugersdorp youth" className="w-full h-11 px-4 rounded-full border border-[#FDE68A] bg-white text-[13px] outline-none mt-2" />
               <input value={fundingAsk} onChange={(e) => setFundingAsk(e.target.value)} placeholder="Funding ask e.g. R50k for 10%" className="w-full h-11 px-4 rounded-full border border-[#FDE68A] bg-white text-[13px] outline-none mt-2" />
               <label className="flex items-center gap-2 text-[12px] mt-2"><input type="checkbox" checked={investorVisible} onChange={(e) => setInvestorVisible(e.target.checked)} /> Visible to Investors</label>
               <button onClick={handleSaveInvestor} className="mt-3 h-11 px-5 rounded-full bg-[#F59E0B] text-white font-bold text-[13px]">Save MY Investor Pitch</button>
@@ -1180,7 +1181,7 @@ export default function App() {
                   <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
                   <div className="flex gap-2 mt-2"><button onClick={() => setReelType('sell')} className={reelType === 'sell' ? 'flex-1 h-11 rounded-full bg-[#E11D48] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Sell - I am Selling</button><button onClick={() => setReelType('review')} className={reelType === 'review' ? 'flex-1 h-11 rounded-full bg-[#16A34A] text-white font-bold text-[12px]' : 'flex-1 h-11 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]'}>Review - I Bought It</button></div>
                   {reelType === 'review' && (<div className="bg-[#E9FBF0] p-3 rounded-xl border border-[#BBF7D0] mt-2"><div className="font-bold text-[12px]">Buyer Review Reel - Show What You Bought</div><div className="text-[11px] text-[#8A7A6E] mt-1">Film yourself with the product. Show it working. Be honest - good or bad.</div><input value={reelBoughtFrom} onChange={(e) => setReelBoughtFrom(e.target.value)} placeholder="Who did you buy from? - Seller name e.g. Thabo" className="w-full h-11 px-3 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><div className="flex gap-1 mt-2 items-center"><span className="text-[12px] font-bold">Your Rating:</span>{[1,2,3,4,5].map((s: number) => (<button key={s} onClick={() => setReelRating(s)} className="text-[22px]">{s <= reelRating ? '⭐' : '☆'}</button>))}<span className="text-[12px] font-bold ml-1">{reelRating}/5</span></div><textarea value={reelReviewText} onChange={(e) => setReelReviewText(e.target.value)} placeholder="Your honest review - e.g. I bought this tablet from Thabo in Pimville. Delivery was fast, tablet works perfect, seller was honest. I recommend him!" className="w-full h-[70px] px-3 py-2 rounded-xl border border-[#BBF7D0] bg-white outline-none text-[13px] mt-2" /><label className="flex gap-2 items-center mt-2 text-[12px] font-bold"><input type="checkbox" checked={reelVerifiedPurchase} onChange={(e) => setReelVerifiedPurchase(e.target.checked)} /> I really bought this - Verified Purchase</label></div>)}
-                  <input value={reelTitle} onChange={(e) => setReelTitle(e.target.value)} placeholder={reelType === 'review' ? 'Review title - e.g. I bought this Tablet from Thabo - Honest Review' : 'Reel title - e.g. Brand New Samsung Tablet - R3500 - Pimville'} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
+                  <input value={reelTitle} onChange={(e) => setReelTitle(e.target.value)} placeholder={reelType === 'review' ? 'Review title - e.g. I bought this Tablet from Thabo - Honest Review' : 'Reel title - e.g. Brand New Samsung Tablet - R3500 - Krugersdorp'} className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
                   <input value={reelVideoUrl} onChange={(e) => setReelVideoUrl(e.target.value)} placeholder="Paste Video URL - MP4 or YouTube link" className="w-full h-11 px-3 rounded-xl border border-[#FFE4C2] bg-white outline-none text-[13px] mt-2" />
                   <div className="mt-2"><label className="h-11 px-4 rounded-xl bg-[#1E1E1E] text-white font-bold text-[12px] inline-flex items-center cursor-pointer">{reelUploading ? 'Uploading...' : 'Upload Video From Phone'}<input type="file" accept="video/*" onChange={handleReelFileUpload} className="hidden" /></label><span className="text-[11px] text-[#8A7A6E] ml-2">{reelVideoUrl ? 'Video ready' : 'MP4, up to 60 sec'}</span></div>
                   {reelVideoUrl && (<div className="bg-[#1E1E1E] rounded-xl overflow-hidden mt-2"><div className="text-white text-[12px] font-bold p-2">Preview YOUR Reel - Watch it BEFORE you post - If you are not happy, delete + re-upload</div>{isYouTube(reelVideoUrl) ? (<iframe src={getYouTubeEmbed(reelVideoUrl)} className="w-full h-[220px]" allowFullScreen title="Preview" />) : (<video src={reelVideoUrl} controls playsInline preload="metadata" onError={(e) => { alert("Video failed to play. This usually means: 1) Supabase bucket product-images is NOT public, or 2) Link expired (local preview). Fix: Supabase > Storage > product-images > Make Public, or re-upload video."); }} className="w-full h-[220px] object-cover bg-black" />)}<div className="flex gap-2 p-2"><button onClick={() => handlePreviewReel(reelVideoUrl, reelTitle || 'Your Reel Preview')} className="flex-1 h-10 rounded-full bg-white text-[#1E1E1E] font-bold text-[12px]">Watch Full Preview</button><button onClick={() => { setReelVideoUrl(''); setToast('Video removed. Upload a better one.'); }} className="flex-1 h-10 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">Delete Video - Re-upload</button></div></div>)}
@@ -1304,7 +1305,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3">
             <div><label className="text-[11px] font-bold text-[#6B7280]">PROVINCE</label><select value={userProvince} onChange={(e) => { setUserProvince(e.target.value); try { localStorage.setItem('trustlink_province', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Gauteng</option><option>KwaZulu-Natal</option><option>Western Cape</option><option>Eastern Cape</option><option>Free State</option><option>Limpopo</option><option>Mpumalanga</option><option>North West</option><option>Northern Cape</option></select></div>
             <div><label className="text-[11px] font-bold text-[#6B7280]">CITY / TOWN</label><select value={userCity} onChange={(e) => { setUserCity(e.target.value); try { localStorage.setItem('trustlink_city', e.target.value); } catch(err) {} }} className="w-full h-11 px-3 rounded-full border bg-white text-[13px]"><option>Soweto</option><option>Johannesburg</option><option>Pretoria</option><option>Sandton</option><option>Centurion</option><option>Midrand</option><option>Roodepoort</option><option>Durban</option><option>Pinetown</option><option>Umlazi</option><option>Cape Town</option><option>Khayelitsha</option><option>Mitchells Plain</option><option>Stellenbosch</option><option>Gqeberha</option><option>Port Elizabeth</option><option>Bloemfontein</option><option>Polokwane</option><option>Nelspruit</option><option>Mbombela</option><option>Kimberley</option><option>Rustenburg</option><option>Mafikeng</option><option>East London</option><option>Mthatha</option><option>Pietermaritzburg</option><option>Newcastle</option></select></div>
-            <div><label className="text-[11px] font-bold text-[#6B7280]">AREA / TOWNSHIP / SUBURB</label><input value={userArea} onChange={(e) => { setUserArea(e.target.value); try { localStorage.setItem('trustlink_area', e.target.value); } catch(err) {} }} placeholder="e.g. Pimville, Umlazi, Khayelitsha" className="w-full h-11 px-3 rounded-full border bg-white text-[13px] outline-none" /></div>
+            <div><label className="text-[11px] font-bold text-[#6B7280]">AREA / TOWNSHIP / SUBURB</label><input value={userArea} onChange={(e) => { setUserArea(e.target.value); try { localStorage.setItem('trustlink_area', e.target.value); } catch(err) {} }} placeholder="e.g. Krugersdorp CBD, Kagiso, Munsieville" className="w-full h-11 px-3 rounded-full border bg-white text-[13px] outline-none" /></div>
             <div><label className="text-[11px] font-bold text-[#6B7280]">NEAREST FIRST</label><div className="flex gap-2"><select value={nearMeKm} onChange={(e) => setNearMeKm(e.target.value)} className="flex-1 h-11 px-3 rounded-full border bg-white text-[13px]"><option value="5">Within 5km</option><option value="10">Within 10km</option><option value="25">Within 25km</option><option value="50">Within 50km</option><option value="100">Within 100km</option><option value="10000">All South Africa</option></select></div></div>
           </div>
           <div className="flex gap-2 mt-3 flex-wrap"><button onClick={requestGPS} className="h-11 px-5 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">📍 Use My GPS - 100% Real Nearest</button><span className="h-11 px-4 rounded-full bg-[#F0FDF4] border border-[#BBF7D0] flex items-center text-[12px] font-bold">{gpsStatus}</span><button onClick={() => setNearMeKm('10000')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Show All SA</button><button onClick={() => setNearMeKm('10')} className="h-11 px-4 rounded-full bg-white border font-bold text-[12px]">Nearest 10km</button></div>
@@ -1380,7 +1381,7 @@ export default function App() {
             </div>
             <div className="bg-[#DCFCE7] p-3 rounded-xl border border-[#BBF7D0]">
               <b className="text-[13px]">1-Tap Buy - Saved Address</b>
-              <input value={savedAddress} onChange={(e) => { setSavedAddress(e.target.value); try { localStorage.setItem('trustlink_address', e.target.value); } catch(err) {} }} placeholder="Your delivery address - e.g. 123 Pimville, Soweto" className="w-full h-10 px-3 rounded-full border bg-white outline-none text-[12px] mt-2" />
+              <input value={savedAddress} onChange={(e) => { setSavedAddress(e.target.value); try { localStorage.setItem('trustlink_address', e.target.value); } catch(err) {} }} placeholder="Your delivery address - e.g. 123 Market St, Krugersdorp" className="w-full h-10 px-3 rounded-full border bg-white outline-none text-[12px] mt-2" />
               <div className="text-[11px] mt-1 text-[#8A7A6E]"></div>
             </div>
             <div className="bg-[#FEF3C7] p-3 rounded-xl border border-[#FDE68A]">
@@ -1424,6 +1425,64 @@ export default function App() {
             </div>
           </div>
         </div>
+        {activeTab === 'about' && (
+        <div className="max-w-[900px] mx-auto px-4 py-6 space-y-5 relative z-10">
+          <div className="bg-white rounded-[24px] p-6 shadow-xl text-center">
+            <div className="text-[12px] font-black tracking-widest text-[#0A66FF]">TRUSTLINKSA (PTY) LTD - SOUTH AFRICA</div>
+            <h1 className="text-[32px] font-black leading-tight mt-2">About TrustLinkSA</h1>
+            <p className="text-[15px] text-[#555] mt-2">Buy and Sell In South Africa. One header. One click. No scams. Built in Krugersdorp, for all of South Africa.</p>
+            <div className="flex gap-2 justify-center mt-4 flex-wrap">
+              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">Shop Market</button>
+              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Sell Free</button>
+              <button onClick={() => setActiveTab('talent')} className="h-11 px-6 rounded-full border font-black text-[13px]">Hire Talent</button>
+            </div>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">How It Started</h2>
+            <p className="text-[14px] leading-relaxed mt-2 text-[#333]">TrustLinkSA (Pty) Ltd started in Krugersdorp - from a real problem South Africans face every day: buying and selling online is full of scams, fake sellers, stolen goods, and no protection. People were losing money on WhatsApp groups, Facebook Marketplace, and street deals with no escrow, no verification, and no way to check if a seller was real or near them.</p>
+            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">We built TrustLinkSA to fix that. One trusted place where a buyer in Durban can find a real seller nearest to them with real GPS and real kilometres, chat, send a voice note, and video call inside the app like WhatsApp - then pay with Cash or EFT into Escrow. The money is locked. The seller delivers. The buyer confirms it works. Only then is the money released. No scams.</p>
+            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">What started as a Krugersdorp idea is now a South Africa-wide marketplace for products, talent, and opportunity - for buyers, sellers, job seekers, recruiters, and investors, all in one professional app.</p>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">Organisational Structure</h2>
+            <p className="text-[13px] text-[#666] mt-1">TrustLinkSA (Pty) Ltd - Private Company. Clear roles. One team. One standard: trust first.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Founder and CEO</b><div className="text-[13px] text-[#555] mt-1">Vision, strategy, partnerships, and final decisions. Owns the TrustLinkSA standard: real users, real products, no scams.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Marketplace and Operations</b><div className="text-[13px] text-[#555] mt-1">Listings, orders, Escrow flow, disputes, and seller support. Keeps the Market clean, fast, and fair for all 9 provinces.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Trust, Safety and Verification</b><div className="text-[13px] text-[#555] mt-1">Verified Purchase Reels, Review Reels (1-5 stars), mutual-contact WhatsApp checks, and scam prevention. Trust is earned, not claimed.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Technology and TrustLink AI</b><div className="text-[13px] text-[#555] mt-1">App, GPS, Chat, Voice and Video, Reels, Brain (ANN), and PayFast / Escrow. Builds the one-header, one-click experience.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Talent and Investors</b><div className="text-[13px] text-[#555] mt-1">Talent: job seekers sell themselves, recruiters hire. Investors: partner to scale TrustLinkSA across South Africa and beyond.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Growth and Community</b><div className="text-[13px] text-[#555] mt-1">Sellers, buyers, creators, and communities. Reels, invites, and commercials that bring real South Africans onto TrustLinkSA.</div></div>
+            </div>
+            <div className="text-[12px] text-[#888] mt-4">Sellers and Buyers are at the centre. Every department exists to protect them. If you are a seller or buyer, you are not a user - you are the reason TrustLinkSA exists.</div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-black text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-[#7DD3FC]">VISION</div><h3 className="text-[18px] font-black mt-2 leading-tight">A South Africa where anyone can buy, sell, and work - safely.</h3><p className="text-[13px] text-white/80 mt-2 leading-relaxed">Every South African, from Krugersdorp to Cape Town, can trade and earn without fear of being scammed. Trust is the currency.</p></div>
+            <div className="bg-[#0A66FF] text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-white/80">GOAL</div><h3 className="text-[18px] font-black mt-2 leading-tight">Become South Africa&apos;s most trusted marketplace.</h3><p className="text-[13px] text-white/90 mt-2 leading-relaxed">The first place South Africans go to buy, sell, hire, and get hired - because it is real, organised, and protected.</p></div>
+            <div className="bg-white rounded-[24px] p-5 shadow-lg border-2 border-black"><div className="text-[12px] font-black tracking-widest text-[#0A66FF]">MISSION</div><h3 className="text-[18px] font-black mt-2 leading-tight">Make every deal safe, near, and simple.</h3><p className="text-[13px] text-[#555] mt-2 leading-relaxed">1. Real GPS - nearest sellers first. 2. Real chat, voice and video inside the app. 3. Real Escrow - money locked until buyer confirms. One header. One click.</p></div>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">What TrustLinkSA Stands For</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-center">
+              <div className="bg-[#F0FDF4] rounded-[16px] p-4"><div className="text-[24px]">Yes</div><b className="text-[13px]">No Scams</b><div className="text-[12px] text-[#555]">Escrow on every deal</div></div>
+              <div className="bg-[#EFF6FF] rounded-[16px] p-4"><div className="text-[24px]">Pin</div><b className="text-[13px]">Real and Near</b><div className="text-[12px] text-[#555]">100% GPS, real km</div></div>
+              <div className="bg-[#FFFBEB] rounded-[16px] p-4"><div className="text-[24px]">Chat</div><b className="text-[13px]">Real People</b><div className="text-[12px] text-[#555]">Chat, voice, video</div></div>
+              <div className="bg-[#FDF2F8] rounded-[16px] p-4"><div className="text-[24px]">SA</div><b className="text-[13px]">For SA</b><div className="text-[12px] text-[#555]">All 9 provinces</div></div>
+            </div>
+          </div>
+          <div className="bg-[#FFFBEB] rounded-[24px] p-6 shadow-lg border border-[#FDE68A] text-center">
+            <h2 className="text-[20px] font-black">Join TrustLinkSA Today</h2>
+            <p className="text-[14px] text-[#555] mt-1">Sellers list free. Buyers shop with protection. Talent gets hired. All in one header.</p>
+            <div className="flex gap-2 justify-center mt-4 flex-wrap">
+              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">List Free</button>
+              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-white border font-black text-[13px]">Shop Market</button>
+              <button onClick={() => setActiveTab('reels')} className="h-11 px-6 rounded-full bg-[#E11D48] text-white font-black text-[13px]">Watch Reels</button>
+            </div>
+            <div className="text-[12px] text-[#888] mt-3">TrustLinkSA (Pty) Ltd - Krugersdorp, South Africa - trustlinksa-nfm.onrender.com</div>
+          </div>
+        </div>
+        )}
+
         {(showAll || activeTab === 'market') && (
           <div>
             <div className="flex justify-between items-center mt-6"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
@@ -1474,7 +1533,7 @@ export default function App() {
           <div className="bg-white w-full max-w-[520px] rounded-[24px] p-5" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-black text-[20px]">List Product - Real Sale</h3>
             <div className="space-y-2 mt-3">
-              <input value={sellTitle} onChange={(e) => setSellTitle(e.target.value)} placeholder="Title e.g. Samsung Tablet - Pimville" className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none" />
+              <input value={sellTitle} onChange={(e) => setSellTitle(e.target.value)} placeholder="Title e.g. Samsung Tablet - Krugersdorp" className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none" />
               <input value={sellDesc} onChange={(e) => setSellDesc(e.target.value)} placeholder="Description + Condition + Pickup" className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none" />
               <input value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} placeholder="Price e.g. 3500" type="number" className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none" />
               <select value={sellCat} onChange={(e) => setSellCat(e.target.value)} className="w-full h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] text-[13px] outline-none">{CATEGORIES.filter((c) => c !== 'All').map((c) => (<option key={c} value={c}>{c}</option>))}</select>
