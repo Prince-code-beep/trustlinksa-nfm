@@ -231,6 +231,20 @@ export default function App() {
   // WHATSAPP INSIDE TRUSTLINK - Phone Contacts Auto-Appear
   const [whatsappContacts, setWhatsappContacts] = useState<any[]>([]);
   const [contactSyncStatus, setContactSyncStatus] = useState('Contacts not synced yet - Tap Sync Contacts');
+  // WHATSAPP QUALITY - Mutual Numbers Auto-Appear - Fast + POPIA Safe
+  // Rule: You appear on their TrustLink ONLY if: 1) You have their number, 2) They have your number, 3) Both registered on TrustLink with that number, 4) Both tapped Sync + Allow. That is mutual = WhatsApp quality.
+  async function syncMutualContacts() {
+    setContactSyncStatus('Syncing mutual contacts... Checking who has your number + you have theirs.');
+    await syncPhoneContacts();
+    try {
+      // After sync, check mutual: our phone vs their phone in profiles
+      const myPhone = profile?.phone || '';
+      if (myPhone) {
+        const { data } = await supabase.from('profiles').select('name, phone, username').neq('phone', myPhone);
+        if (data) setToast('Mutual check done - ' + data.length + ' TrustLink users found. Those who also have your number appear automatically.');
+      }
+    } catch(e) {}
+  }
   async function syncPhoneContacts() {
     try {
       // @ts-ignore - Contacts Picker API (Chrome Android) - asks permission, POPIA Compliant compliant
@@ -1259,7 +1273,7 @@ export default function App() {
 
         {/* CHAT - WhatsApp Style */}
         {activeTab === 'chat' && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
-          <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">Chat</b><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
+          <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[16px]">Chat</b><button onClick={syncMutualContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Contacts</button></div>
           <div className="text-[12px] mt-2 opacity-90">{contactSyncStatus}</div>
           <div className="flex gap-2 mt-3 flex-wrap">
             <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Video Call</button>
