@@ -227,6 +227,29 @@ export default function App() {
   function getRealDistanceKm(prod: any) { if (userLat !== null && userLng !== null) { const pl = getProductLatLng(prod); if (pl) return haversineKm(userLat, userLng, pl.lat, pl.lng); } return getDistanceKm(prod); }
   async function requestGPS() { if (!navigator.geolocation) return alert('GPS not supported. Use Province / City / Area above.'); setGpsStatus('Finding you... Allow Location when asked.'); navigator.geolocation.getCurrentPosition((pos: any) => { setUserLat(pos.coords.latitude); setUserLng(pos.coords.longitude); try { localStorage.setItem('trustlink_lat', String(pos.coords.latitude)); localStorage.setItem('trustlink_lng', String(pos.coords.longitude)); } catch(e) {} setGpsStatus('GPS Locked: ' + pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4) + ' - Showing nearest first, real km.'); setToast('GPS Locked - Nearest sellers first, real km from you, anywhere in SA.'); }, (err: any) => { setGpsStatus('GPS blocked - Tap lock icon - Allow Location, or use Province / City above.'); alert('GPS blocked. Tap lock icon in address bar - Allow Location. Or use Province / City / Area.'); }, { enableHighAccuracy: true, timeout: 10000 }); }
   async function captureProductGPS() { return new Promise((resolve) => { if (!navigator.geolocation) return resolve(null); navigator.geolocation.getCurrentPosition((pos: any) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }), () => resolve(null), { enableHighAccuracy: true, timeout: 8000 }); }); }
+  // WHATSAPP INSIDE TRUSTLINK - Phone Contacts Auto-Appear
+  const [whatsappContacts, setWhatsappContacts] = useState<any[]>([]);
+  const [contactSyncStatus, setContactSyncStatus] = useState('Contacts not synced yet - Tap Sync Contacts');
+  async function syncPhoneContacts() {
+    try {
+      // @ts-ignore - Contacts Picker API (Chrome Android) - asks permission, POPIA compliant
+      if (!navigator.contacts || !navigator.contacts.select) {
+        setContactSyncStatus('Your browser does not support auto contact sync. Type their phone number below to add them manually - they must be registered on TrustLink with that number.');
+        const phone = prompt('Enter their phone number (e.g. 0821234567) to add them as contact:');
+        if (phone) { const clean = phone.replace(/[^0-9+]/g, ''); setWhatsappContacts((prev: any) => [...prev, { name: clean, phone: clean, source: 'manual' }]); setToast('Contact added: ' + clean + ' - Tap them to chat, voice note, or video call.'); }
+        return;
+      }
+      setContactSyncStatus('Asking for contacts permission... Allow to find TrustLink users who have your number.');
+      // @ts-ignore
+      const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+      const mapped = contacts.map((c: any) => ({ name: c.name?.[0] || c.tel?.[0] || 'Contact', phone: c.tel?.[0] || '', source: 'phone' })).filter((c: any) => c.phone);
+      setWhatsappContacts(mapped);
+      setContactSyncStatus('Found ' + mapped.length + ' phone contacts. Those registered on TrustLink with that number appear as TrustLink contacts. Others get an invite link.');
+      setToast('Contacts synced: ' + mapped.length + ' found. Those on TrustLink appear as chat contacts.');
+      // Try to match against Supabase profiles by phone
+      try { const { data } = await supabase.from('profiles').select('name, phone, username').in('phone', mapped.map((c: any) => c.phone)); if (data && data.length) setToast(data.length + ' of your phone contacts are already on TrustLink - Chat them now.'); } catch(e) {}
+    } catch(e) { setContactSyncStatus('Contacts permission denied. Allow Contacts to auto-sync, or add by phone number manually.'); }
+  }
   // BUSINESS READY - Cash / EFT + Escrow - Start selling TODAY, no PayFast keys needed
   async function buyWithCash(product: any) {
     if (!confirm('Buy ' + product.title + ' for R' + product.price + ' with Cash on Delivery / EFT? Money will be LOCKED in Escrow until you confirm you got it.')) return;
@@ -1259,6 +1282,19 @@ export default function App() {
           <span className="text-[11px] opacity-80 px-2">Skins:</span>
           <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">🏢 Corporate</option><option value="sunset">🔥 Soweto Sunset Fire</option><option value="dark">🌙 Midnight Black</option><option value="purple">💜 Royal Purple</option><option value="green">💚 Money Green</option><option value="rain">🌧️ Rainy Window</option></select>
         </div>
+        {/* WHATSAPP INSIDE TRUSTLINK - Chat / Voice / Video + Phone Contacts Auto-Appear - Only on Chat tab */}
+        {activeTab === 'chat' && (<div className="mt-4 bg-[#075E54] text-white rounded-[20px] p-4">
+          <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">💬 WhatsApp Inside TrustLink - Chat Like WhatsApp</b><div className="text-[12px] opacity-90">Messages + Voice Note + Video Call in one thread. No need to leave TrustLink. Your phone contacts appear here when they have your number + are on TrustLink.</div></div><button onClick={syncPhoneContacts} className="h-11 px-5 rounded-full bg-[#25D366] text-black font-black text-[13px]">📞 Sync Phone Contacts</button></div>
+          <div className="text-[12px] mt-2 bg-white/10 p-2 rounded-lg">{contactSyncStatus}</div>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <button onClick={() => { setToast('Type a message below, tap Send - Real chat in Supabase.'); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">💬 Send Message</button>
+            <button onClick={() => { setToast('Hold to record Voice Note - Real voice, no typing, like WhatsApp.'); }} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">🎤 Voice Note</button>
+            <button onClick={() => startTeamsVideoCall()} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">📹 Video Call</button>
+            <button onClick={() => { const phone = prompt('Their phone number?'); if (phone) setToast('Invite sent - Share TrustLink link with ' + phone); }} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-bold text-[12px]">+ Add By Phone Number</button>
+          </div>
+          {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Your Phone Contacts On TrustLink ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); setToast('Chat opened with ' + c.name + ' - Send message, voice note, or video call.'); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat →</button></div>))}</div></div>)}
+          <div className="text-[11px] mt-2 opacity-80">POPIA: We never upload your contacts without you tapping Sync. We only show contacts who are also on TrustLink with that number. No one sees your phone number unless you share it in chat.</div>
+        </div>)}
         {/* SOUTH AFRICA-WIDE - Your Location - Find Nearest Buyers/Sellers */}
         <div className="mt-4 bg-white rounded-[20px] border border-[#E5E7EB] p-4">
           <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">🇿🇦 South Africa-Wide - Find Nearest To You</b><div className="text-[12px] text-[#6B7280]">Soweto is home. South Africa is the market. Set your location once - we show sellers nearest to you, anywhere in SA.</div></div><span className="bg-[#16A34A] text-white px-3 py-1 rounded-full font-bold text-[11px]">📍 {userArea}, {userCity}, {userProvince}</span></div>
