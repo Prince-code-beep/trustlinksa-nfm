@@ -42,7 +42,7 @@ export default function App() {
   const [sellImage, setSellImage] = useState('');
   const [sellLoading, setSellLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('market');
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as any }); }, [activeTab]);
+  useEffect(() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; setTimeout(() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; const el = document.getElementById('tag-top'); if (el) el.scrollIntoView({ behavior: 'instant' as any, block: 'start' }); }, 50); }, [activeTab]);
   const [skin, setSkin] = useState(() => { try { return localStorage.getItem('trustlink_skin') || 'corporate'; } catch(e) { return 'corporate'; } });
   const [rainTick, setRainTick] = useState(0);
   const ANIMATED_SKINS = ['rain', 'aurora', 'ocean', 'forest', 'sunset', 'lavender', 'sunset'];
@@ -1011,7 +1011,67 @@ export default function App() {
           <div style={{ position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15,34,51,0.8)', color: '#E0F2FE', padding: '6px 14px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>Glass Window - Rain Outside - Droplets Dripping Down</div>
         </div>
       )}
-      <div style={{ position: 'relative', zIndex: 10 }}>
+      <div id="tag-top" style={{ position: 'relative', zIndex: 10, scrollMarginTop: '0px' }}>
+        {/* ABOUT - DIRECTLY UNDER HEADER - NO SCROLL */}
+{activeTab === 'about' && (
+        <div className="max-w-[900px] mx-auto px-4 py-6 space-y-5 relative z-10">
+          <div className="bg-white rounded-[24px] p-6 shadow-xl text-center">
+            <div className="text-[12px] font-black tracking-widest text-[#0A66FF]">TRUSTLINKSA (PTY) LTD - SOUTH AFRICA</div>
+            <h1 className="text-[32px] font-black leading-tight mt-2">About TrustLinkSA</h1>
+            <p className="text-[15px] text-[#555] mt-2">Buy and Sell In South Africa. One header. One click. No scams. Built in Krugersdorp, for all of South Africa.</p>
+            <div className="flex gap-2 justify-center mt-4 flex-wrap">
+              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">Shop Market</button>
+              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Sell Free</button>
+              <button onClick={() => setActiveTab('talent')} className="h-11 px-6 rounded-full border font-black text-[13px]">Hire Talent</button>
+            </div>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">How It Started</h2>
+            <p className="text-[14px] leading-relaxed mt-2 text-[#333]">TrustLinkSA (Pty) Ltd started in Krugersdorp - from a real problem South Africans face every day: buying and selling online is full of scams, fake sellers, stolen goods, and no protection. People were losing money on WhatsApp groups, Facebook Marketplace, and street deals with no escrow, no verification, and no way to check if a seller was real or near them.</p>
+            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">We built TrustLinkSA to fix that. One trusted place where a buyer in Durban can find a real seller nearest to them with real GPS and real kilometres, chat, send a voice note, and video call inside the app like WhatsApp - then pay with Cash or EFT into Escrow. The money is locked. The seller delivers. The buyer confirms it works. Only then is the money released. No scams.</p>
+            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">What started as a Krugersdorp idea is now a South Africa-wide marketplace for products, talent, and opportunity - for buyers, sellers, job seekers, recruiters, and investors, all in one professional app.</p>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">Organisational Structure</h2>
+            <p className="text-[13px] text-[#666] mt-1">TrustLinkSA (Pty) Ltd - Private Company. Clear roles. One team. One standard: trust first.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Founder and CEO</b><div className="text-[13px] text-[#555] mt-1">Vision, strategy, partnerships, and final decisions. Owns the TrustLinkSA standard: real users, real products, no scams.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Marketplace and Operations</b><div className="text-[13px] text-[#555] mt-1">Listings, orders, Escrow flow, disputes, and seller support. Keeps the Market clean, fast, and fair for all 9 provinces.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Trust, Safety and Verification</b><div className="text-[13px] text-[#555] mt-1">Verified Purchase Reels, Review Reels (1-5 stars), mutual-contact WhatsApp checks, and scam prevention. Trust is earned, not claimed.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Technology and TrustLink AI</b><div className="text-[13px] text-[#555] mt-1">App, GPS, Chat, Voice and Video, Reels, Brain (ANN), and PayFast / Escrow. Builds the one-header, one-click experience.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Talent and Investors</b><div className="text-[13px] text-[#555] mt-1">Talent: job seekers sell themselves, recruiters hire. Investors: partner to scale TrustLinkSA across South Africa and beyond.</div></div>
+              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Growth and Community</b><div className="text-[13px] text-[#555] mt-1">Sellers, buyers, creators, and communities. Reels, invites, and commercials that bring real South Africans onto TrustLinkSA.</div></div>
+            </div>
+            <div className="text-[12px] text-[#888] mt-4">Sellers and Buyers are at the centre. Every department exists to protect them. If you are a seller or buyer, you are not a user - you are the reason TrustLinkSA exists.</div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-black text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-[#7DD3FC]">VISION</div><h3 className="text-[18px] font-black mt-2 leading-tight">A South Africa where anyone can buy, sell, and work - safely.</h3><p className="text-[13px] text-white/80 mt-2 leading-relaxed">Every South African, from Krugersdorp to Cape Town, can trade and earn without fear of being scammed. Trust is the currency.</p></div>
+            <div className="bg-[#0A66FF] text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-white/80">GOAL</div><h3 className="text-[18px] font-black mt-2 leading-tight">Become South Africa&apos;s most trusted marketplace.</h3><p className="text-[13px] text-white/90 mt-2 leading-relaxed">The first place South Africans go to buy, sell, hire, and get hired - because it is real, organised, and protected.</p></div>
+            <div className="bg-white rounded-[24px] p-5 shadow-lg border-2 border-black"><div className="text-[12px] font-black tracking-widest text-[#0A66FF]">MISSION</div><h3 className="text-[18px] font-black mt-2 leading-tight">Make every deal safe, near, and simple.</h3><p className="text-[13px] text-[#555] mt-2 leading-relaxed">1. Real GPS - nearest sellers first. 2. Real chat, voice and video inside the app. 3. Real Escrow - money locked until buyer confirms. One header. One click.</p></div>
+          </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-lg">
+            <h2 className="text-[20px] font-black">What TrustLinkSA Stands For</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-center">
+              <div className="bg-[#F0FDF4] rounded-[16px] p-4"><div className="text-[24px]">Yes</div><b className="text-[13px]">No Scams</b><div className="text-[12px] text-[#555]">Escrow on every deal</div></div>
+              <div className="bg-[#EFF6FF] rounded-[16px] p-4"><div className="text-[24px]">Pin</div><b className="text-[13px]">Real and Near</b><div className="text-[12px] text-[#555]">100% GPS, real km</div></div>
+              <div className="bg-[#FFFBEB] rounded-[16px] p-4"><div className="text-[24px]">Chat</div><b className="text-[13px]">Real People</b><div className="text-[12px] text-[#555]">Chat, voice, video</div></div>
+              <div className="bg-[#FDF2F8] rounded-[16px] p-4"><div className="text-[24px]">SA</div><b className="text-[13px]">For SA</b><div className="text-[12px] text-[#555]">All 9 provinces</div></div>
+            </div>
+          </div>
+          <div className="bg-[#FFFBEB] rounded-[24px] p-6 shadow-lg border border-[#FDE68A] text-center">
+            <h2 className="text-[20px] font-black">Join TrustLinkSA Today</h2>
+            <p className="text-[14px] text-[#555] mt-1">Sellers list free. Buyers shop with protection. Talent gets hired. All in one header.</p>
+            <div className="flex gap-2 justify-center mt-4 flex-wrap">
+              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">List Free</button>
+              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-white border font-black text-[13px]">Shop Market</button>
+              <button onClick={() => setActiveTab('reels')} className="h-11 px-6 rounded-full bg-[#E11D48] text-white font-black text-[13px]">Watch Reels</button>
+            </div>
+            <div className="text-[12px] text-[#888] mt-3">TrustLinkSA (Pty) Ltd - Krugersdorp, South Africa - trustlinksa-nfm.onrender.com</div>
+          </div>
+        </div>
+        )}
+
+        
        
 
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
@@ -1428,64 +1488,6 @@ export default function App() {
             </div>
           </div>
         </div>
-        {activeTab === 'about' && (
-        <div className="max-w-[900px] mx-auto px-4 py-6 space-y-5 relative z-10">
-          <div className="bg-white rounded-[24px] p-6 shadow-xl text-center">
-            <div className="text-[12px] font-black tracking-widest text-[#0A66FF]">TRUSTLINKSA (PTY) LTD - SOUTH AFRICA</div>
-            <h1 className="text-[32px] font-black leading-tight mt-2">About TrustLinkSA</h1>
-            <p className="text-[15px] text-[#555] mt-2">Buy and Sell In South Africa. One header. One click. No scams. Built in Krugersdorp, for all of South Africa.</p>
-            <div className="flex gap-2 justify-center mt-4 flex-wrap">
-              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">Shop Market</button>
-              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Sell Free</button>
-              <button onClick={() => setActiveTab('talent')} className="h-11 px-6 rounded-full border font-black text-[13px]">Hire Talent</button>
-            </div>
-          </div>
-          <div className="bg-white rounded-[24px] p-6 shadow-lg">
-            <h2 className="text-[20px] font-black">How It Started</h2>
-            <p className="text-[14px] leading-relaxed mt-2 text-[#333]">TrustLinkSA (Pty) Ltd started in Krugersdorp - from a real problem South Africans face every day: buying and selling online is full of scams, fake sellers, stolen goods, and no protection. People were losing money on WhatsApp groups, Facebook Marketplace, and street deals with no escrow, no verification, and no way to check if a seller was real or near them.</p>
-            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">We built TrustLinkSA to fix that. One trusted place where a buyer in Durban can find a real seller nearest to them with real GPS and real kilometres, chat, send a voice note, and video call inside the app like WhatsApp - then pay with Cash or EFT into Escrow. The money is locked. The seller delivers. The buyer confirms it works. Only then is the money released. No scams.</p>
-            <p className="text-[14px] leading-relaxed mt-3 text-[#333]">What started as a Krugersdorp idea is now a South Africa-wide marketplace for products, talent, and opportunity - for buyers, sellers, job seekers, recruiters, and investors, all in one professional app.</p>
-          </div>
-          <div className="bg-white rounded-[24px] p-6 shadow-lg">
-            <h2 className="text-[20px] font-black">Organisational Structure</h2>
-            <p className="text-[13px] text-[#666] mt-1">TrustLinkSA (Pty) Ltd - Private Company. Clear roles. One team. One standard: trust first.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Founder and CEO</b><div className="text-[13px] text-[#555] mt-1">Vision, strategy, partnerships, and final decisions. Owns the TrustLinkSA standard: real users, real products, no scams.</div></div>
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Marketplace and Operations</b><div className="text-[13px] text-[#555] mt-1">Listings, orders, Escrow flow, disputes, and seller support. Keeps the Market clean, fast, and fair for all 9 provinces.</div></div>
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Trust, Safety and Verification</b><div className="text-[13px] text-[#555] mt-1">Verified Purchase Reels, Review Reels (1-5 stars), mutual-contact WhatsApp checks, and scam prevention. Trust is earned, not claimed.</div></div>
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Technology and TrustLink AI</b><div className="text-[13px] text-[#555] mt-1">App, GPS, Chat, Voice and Video, Reels, Brain (ANN), and PayFast / Escrow. Builds the one-header, one-click experience.</div></div>
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Talent and Investors</b><div className="text-[13px] text-[#555] mt-1">Talent: job seekers sell themselves, recruiters hire. Investors: partner to scale TrustLinkSA across South Africa and beyond.</div></div>
-              <div className="bg-[#F8FAFC] rounded-[16px] p-4 border"><b className="text-[14px]">Growth and Community</b><div className="text-[13px] text-[#555] mt-1">Sellers, buyers, creators, and communities. Reels, invites, and commercials that bring real South Africans onto TrustLinkSA.</div></div>
-            </div>
-            <div className="text-[12px] text-[#888] mt-4">Sellers and Buyers are at the centre. Every department exists to protect them. If you are a seller or buyer, you are not a user - you are the reason TrustLinkSA exists.</div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-black text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-[#7DD3FC]">VISION</div><h3 className="text-[18px] font-black mt-2 leading-tight">A South Africa where anyone can buy, sell, and work - safely.</h3><p className="text-[13px] text-white/80 mt-2 leading-relaxed">Every South African, from Krugersdorp to Cape Town, can trade and earn without fear of being scammed. Trust is the currency.</p></div>
-            <div className="bg-[#0A66FF] text-white rounded-[24px] p-5 shadow-lg"><div className="text-[12px] font-black tracking-widest text-white/80">GOAL</div><h3 className="text-[18px] font-black mt-2 leading-tight">Become South Africa&apos;s most trusted marketplace.</h3><p className="text-[13px] text-white/90 mt-2 leading-relaxed">The first place South Africans go to buy, sell, hire, and get hired - because it is real, organised, and protected.</p></div>
-            <div className="bg-white rounded-[24px] p-5 shadow-lg border-2 border-black"><div className="text-[12px] font-black tracking-widest text-[#0A66FF]">MISSION</div><h3 className="text-[18px] font-black mt-2 leading-tight">Make every deal safe, near, and simple.</h3><p className="text-[13px] text-[#555] mt-2 leading-relaxed">1. Real GPS - nearest sellers first. 2. Real chat, voice and video inside the app. 3. Real Escrow - money locked until buyer confirms. One header. One click.</p></div>
-          </div>
-          <div className="bg-white rounded-[24px] p-6 shadow-lg">
-            <h2 className="text-[20px] font-black">What TrustLinkSA Stands For</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-center">
-              <div className="bg-[#F0FDF4] rounded-[16px] p-4"><div className="text-[24px]">Yes</div><b className="text-[13px]">No Scams</b><div className="text-[12px] text-[#555]">Escrow on every deal</div></div>
-              <div className="bg-[#EFF6FF] rounded-[16px] p-4"><div className="text-[24px]">Pin</div><b className="text-[13px]">Real and Near</b><div className="text-[12px] text-[#555]">100% GPS, real km</div></div>
-              <div className="bg-[#FFFBEB] rounded-[16px] p-4"><div className="text-[24px]">Chat</div><b className="text-[13px]">Real People</b><div className="text-[12px] text-[#555]">Chat, voice, video</div></div>
-              <div className="bg-[#FDF2F8] rounded-[16px] p-4"><div className="text-[24px]">SA</div><b className="text-[13px]">For SA</b><div className="text-[12px] text-[#555]">All 9 provinces</div></div>
-            </div>
-          </div>
-          <div className="bg-[#FFFBEB] rounded-[24px] p-6 shadow-lg border border-[#FDE68A] text-center">
-            <h2 className="text-[20px] font-black">Join TrustLinkSA Today</h2>
-            <p className="text-[14px] text-[#555] mt-1">Sellers list free. Buyers shop with protection. Talent gets hired. All in one header.</p>
-            <div className="flex gap-2 justify-center mt-4 flex-wrap">
-              <button onClick={() => setShowSell(true)} className="h-11 px-6 rounded-full bg-black text-white font-black text-[13px]">List Free</button>
-              <button onClick={() => setActiveTab('market')} className="h-11 px-6 rounded-full bg-white border font-black text-[13px]">Shop Market</button>
-              <button onClick={() => setActiveTab('reels')} className="h-11 px-6 rounded-full bg-[#E11D48] text-white font-black text-[13px]">Watch Reels</button>
-            </div>
-            <div className="text-[12px] text-[#888] mt-3">TrustLinkSA (Pty) Ltd - Krugersdorp, South Africa - trustlinksa-nfm.onrender.com</div>
-          </div>
-        </div>
-        )}
-
         {(activeTab === 'market') && (
           <div>
             <div className="flex justify-between items-center mt-6"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
