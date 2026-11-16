@@ -90,6 +90,9 @@ export default function App() {
   const [postFiles, setPostFiles] = useState<any[]>([]);
   const [postFilter, setPostFilter] = useState('All');
   const [followedAuthors, setFollowedAuthors] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_follows') || '[]'); } catch(e) { return []; } });
+  const [feedSignals, setFeedSignals] = useState<any>(() => { try { return JSON.parse(localStorage.getItem('trustlink_feed_signals') || '{}'); } catch(e) { return {}; } });
+  function recordFeedSignal(kind: string, key: string) { try { const next = { ...feedSignals }; next[kind] = next[kind] || {}; next[kind][key] = (next[kind][key] || 0) + 1; setFeedSignals(next); localStorage.setItem('trustlink_feed_signals', JSON.stringify(next)); } catch(e) {} }
+  function getFeedScore(post: any) { let s = (post.recommends || 0) * 20 + (post.likes || 0) * 10 + ((post.replies || []).length) * 5; if (followedAuthors.includes(post.author)) s += 100; const typeLikes = (feedSignals.likedType || {})[post.type] || 0; s += typeLikes * 25; const authorLikes = (feedSignals.likedAuthor || {})[post.author] || 0; s += authorLikes * 20; const authorViews = (feedSignals.viewedAuthor || {})[post.author] || 0; s += Math.min(30, authorViews * 5); return s; }
   const [subscribedPosts, setSubscribedPosts] = useState<number[]>(() => { try { return JSON.parse(localStorage.getItem('trustlink_subs') || '[]'); } catch(e) { return []; } });
   const [isLive, setIsLive] = useState(false);
   const [liveTitle, setLiveTitle] = useState('');
@@ -999,6 +1002,7 @@ export default function App() {
         <button onClick={() => setActiveTab('brain')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Brain</button>
         <button onClick={() => setActiveTab('talent')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Talent</button>
          <button onClick={() => setActiveTab('about' as any)} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">About</button>
+         <button onClick={() => setActiveTab('feed' as any)} className="h-10 px-4 rounded-full bg-black text-white font-bold text-[12px]">Feed</button>
          <button onClick={() => setActiveTab('posts' as any)} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Posts</button>
          <button onClick={() => setActiveTab('live' as any)} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">● Live</button>
         <select value={skin} onChange={(e) => { setSkin(e.target.value); try { localStorage.setItem('trustlink_skin', e.target.value); } catch(err) {} }} className="h-10 px-3 rounded-full bg-white text-black font-bold text-[12px] outline-none"><option value="corporate">Corporate</option><option value="sunset">Soweto Sunset</option><option value="dark">Midnight</option><option value="purple">Royal Purple</option><option value="green">Money Green</option><option value="rain">Rainy Window</option><option value="ocean">Ocean Waves</option><option value="sky">Sky Clouds</option></select>
@@ -1128,6 +1132,40 @@ export default function App() {
 
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
 
+        {/* FEED - Personalised, like Twitter / Instagram - ranked by what YOU do */}
+        {activeTab === 'feed' && (
+        <div className="max-w-[800px] mx-auto px-4 py-4 space-y-4 relative z-10">
+          <div className="bg-white rounded-[24px] p-5 shadow-lg">
+            <h1 className="text-[24px] font-black">Feed - For You</h1>
+            <p className="text-[13px] text-[#555] mt-1">Scroll relevant content based on your preferences — what you spend more time on, what you like, share, or follow. People you follow show first. Topics you like show more. Topics you skip show less.</p>
+            <div className="flex gap-2 mt-3 flex-wrap">
+              <button onClick={() => setActiveTab('posts' as any)} className="h-10 px-5 rounded-full bg-black text-white font-black text-[12px]">+ Post Something</button>
+              <button onClick={() => setActiveTab('reels' as any)} className="h-10 px-5 rounded-full bg-[#E11D48] text-white font-black text-[12px]">Watch Reels</button>
+              <button onClick={() => setActiveTab('market' as any)} className="h-10 px-5 rounded-full bg-white border font-bold text-[12px]">Shop Market</button>
+            </div>
+            <div className="text-[11px] text-[#888] mt-2">Your Feed learns privately on your phone: follows + likes + shares + time spent. No one else sees it.</div>
+          </div>
+          {[...communityPosts].sort((a: any, b: any) => getFeedScore(b) - getFeedScore(a)).length === 0 && (
+            <div className="bg-white rounded-[24px] p-6 shadow text-center"><div className="text-[32px]">Feed</div><b>No posts yet.</b><div className="text-[13px] text-[#666] mt-1">Be first: post a concern, promote a seller, review, or teach a Know How video. Then Like / Follow people you like — your Feed will start ranking for you.</div></div>
+          )}
+          {[...communityPosts].sort((a: any, b: any) => getFeedScore(b) - getFeedScore(a)).map((x: any) => (
+          <div key={x.id} className="bg-white rounded-[24px] p-5 shadow-lg" onMouseEnter={() => recordFeedSignal('viewedAuthor', x.author)}>
+            <div className="flex justify-between items-center flex-wrap gap-2"><b className="text-[14px]">{x.author}</b><span className="text-[11px] px-3 py-1 rounded-full bg-[#EFF6FF] font-bold">{x.type === 'Know How' ? 'Know How Video' : x.type} • {x.createdAt}{followedAuthors.includes(x.author) ? ' • Following ✓' : ''}</span></div>
+            <p className="text-[14px] leading-relaxed mt-2 whitespace-pre-wrap">{x.text}</p>
+            {(x.files || []).map((f: any, fi: number) => (<div key={fi} className="mt-2">{f.type === 'image' && (<img src={f.url} alt={f.name} className="w-full max-h-[320px] object-cover rounded-[16px] border" />)}{f.type === 'video' && (<video src={f.url} controls className="w-full max-h-[320px] rounded-[16px] bg-black" />)}{f.type === 'document' && (<a href={f.url} download={f.name} className="flex justify-between items-center bg-[#F8FAFC] border p-3 rounded-[12px]"><span className="text-[13px] font-bold">📄 {f.name}</span><span className="h-9 px-4 rounded-full bg-black text-white font-bold text-[12px] leading-9">Download</span></a>)}</div>))}
+            {x.videoUrl && (<a href={x.videoUrl} target="_blank" rel="noreferrer" className="inline-block mt-2 h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px] leading-10">Watch Know How Video</a>)}
+            <div className="flex gap-2 mt-3 flex-wrap">
+              <button onClick={() => { recordFeedSignal('likedType', x.type); recordFeedSignal('likedAuthor', x.author); const next = communityPosts.map((p: any) => p.id === x.id ? { ...p, likes: (p.likes || 0) + 1 } : p); setCommunityPosts(next); try { localStorage.setItem('trustlink_posts', JSON.stringify(next)); } catch(e) {} }} className="h-9 px-4 rounded-full bg-[#FFF8F0] border font-bold text-[12px]">Like ({x.likes || 0})</button>
+              <button onClick={() => { recordFeedSignal('sharedType', x.type); const next = communityPosts.map((p: any) => p.id === x.id ? { ...p, recommends: (p.recommends || 0) + 1 } : p); setCommunityPosts(next); try { localStorage.setItem('trustlink_posts', JSON.stringify(next)); } catch(e) {} setToast('Recommended - You will see more like this'); }} className="h-9 px-4 rounded-full bg-[#0A66FF] text-white font-black text-[12px]">Recommend ({x.recommends || 0})</button>
+              <button onClick={() => { const isF = followedAuthors.includes(x.author); const next = isF ? followedAuthors.filter((a: string) => a !== x.author) : [...followedAuthors, x.author]; setFollowedAuthors(next); try { localStorage.setItem('trustlink_follows', JSON.stringify(next)); } catch(e) {} if (!isF) recordFeedSignal('likedAuthor', x.author); }} className="h-9 px-4 rounded-full bg-white border font-bold text-[12px]">{followedAuthors.includes(x.author) ? 'Following ✓' : 'Follow'}</button>
+              <button onClick={() => { const c = prompt('Comment on ' + x.author + ' post:'); if (!c) return; const next = communityPosts.map((p: any) => p.id === x.id ? { ...p, replies: [...(p.replies || []), { author: profile?.name || 'You', text: c }] } : p); setCommunityPosts(next); try { localStorage.setItem('trustlink_posts', JSON.stringify(next)); } catch(e) {} }} className="h-9 px-4 rounded-full bg-white border font-bold text-[12px]">Comment ({(x.replies || []).length})</button>
+              <button onClick={() => { try { if ((navigator as any).share) (navigator as any).share({ title: 'TrustLinkSA Post', text: x.author + ': ' + x.text, url: 'https://trustlinksa-nfm.onrender.com' }); else { navigator.clipboard.writeText(x.author + ': ' + x.text); setToast('Post copied - Share it'); } } catch(e) {} recordFeedSignal('sharedType', x.type); }} className="h-9 px-4 rounded-full bg-black text-white font-bold text-[12px]">Share</button>
+              <button onClick={() => { recordFeedSignal('hiddenAuthor', x.author); setToast('Got it - You will see less from ' + x.author); }} className="h-9 px-4 rounded-full bg-white border font-bold text-[12px]">Not Interested</button>
+            </div>
+            {(x.replies || []).map((rp: any, ri: number) => (<div key={ri} className="mt-2 ml-4 bg-[#F8FAFC] p-3 rounded-[12px] text-[13px]"><b>{rp.author}:</b> {rp.text}</div>))}
+          </div>))}
+        </div>
+        )}
         {/* POSTS - Twitter/X Inside TrustLinkSA - Healthy Community - No Explicit Content */}
         {activeTab === 'posts' && (
         <div className="max-w-[800px] mx-auto px-4 py-4 space-y-4 relative z-10">
