@@ -78,6 +78,11 @@ export default function App() {
   const [priceCheckResult, setPriceCheckResult] = useState('');
   const [talentSearch, setTalentSearch] = useState('');
   const [talentMinScore, setTalentMinScore] = useState('');
+  const [recruiterJobTitle, setRecruiterJobTitle] = useState('');
+  const [recruiterSkills, setRecruiterSkills] = useState('');
+  const [recruiterQualification, setRecruiterQualification] = useState('');
+  const [recruiterLocation, setRecruiterLocation] = useState('');
+  const [recruiterShowMatches, setRecruiterShowMatches] = useState(false);
   const [sellMyself, setSellMyself] = useState(true);
   const [investorSearch, setInvestorSearch] = useState('');
   const [businessIdea, setBusinessIdea] = useState('');
@@ -1128,6 +1133,59 @@ export default function App() {
             <div className="mt-4 bg-[#F0F9FF] p-4 rounded-xl">
               <label className="flex items-center gap-2 text-[13px] font-bold"><input type="checkbox" checked={sellMyself} onChange={(e) => setSellMyself(e.target.checked)} /> I want to SELL MYSELF - Discoverable by Recruiters / HR</label>
               <label className="flex items-center gap-2 text-[12px] mt-2"><input type="checkbox" checked={allowRecruiter} onChange={(e) => setAllowRecruiter(e.target.checked)} /> Allow Recruiters to see my Soul</label>
+            </div>
+            {/* TALENT MATCHING ENGINE - Similar Skills + Recruiter Best Candidate */}
+            <div className="mt-4 bg-[#F0FDF4] rounded-[20px] border border-[#BBF7D0] p-4">
+              <h3 className="font-black text-[16px]">People Like You - Potential Connections</h3>
+              <p className="text-[12px] text-[#555] mt-1">People with a similar skillset to you are recommended as friends / connections. Connect, learn, collaborate, refer each other.</p>
+              {(() => {
+                const mySkill = (soul?.topSkill || profile?.top_skill || brainTopSkill || '').toLowerCase();
+                const mySecond = (soul?.secondSkill || '').toLowerCase();
+                const myEdu = (soul?.education || brainEducation || '').toLowerCase();
+                const similar = talentList.filter((x: any) => !x.isYou).map((x: any) => {
+                  let score = 0; let why: string[] = [];
+                  const xs = ((x.topSkill || '') + ' ' + (x.secondSkill || '')).toLowerCase();
+                  const words = mySkill.split(/[,\s]+/).filter((w: string) => w.length > 2);
+                  words.forEach((w: string) => { if (xs.includes(w)) { score += 40; why.push('Same skill: ' + w); } });
+                  if (mySecond && xs.includes(mySecond.split(' ')[0])) { score += 15; why.push('Same 2nd skill'); }
+                  if (myEdu && (x.education || '').toLowerCase().includes(myEdu.split(' ')[0])) { score += 10; why.push('Same qualification level'); }
+                  if ((x.location || '').toLowerCase() === (profile?.location || '').toLowerCase()) { score += 10; why.push('Same area'); }
+                  score += Math.min(15, Math.round((x.trust || 50) / 10));
+                  return { ...x, matchScore: Math.min(100, score), why };
+                }).filter((x: any) => x.matchScore >= 30).sort((a: any, b: any) => b.matchScore - a.matchScore).slice(0, 4);
+                if (similar.length === 0) return (<div className="text-[12px] text-[#666] mt-3 bg-white p-3 rounded-xl border">No similar-skill matches yet. Add your Top Skill in Brain + turn ON Sell Myself - matches appear here instantly.</div>);
+                return (<div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">{similar.map((x: any) => (<div key={x.id} className="bg-white p-3 rounded-[16px] border"><div className="flex justify-between"><b className="text-[13px]">{x.name}</b><span className="text-[11px] px-2 py-1 rounded-full bg-[#16A34A] text-white font-bold">{x.matchScore}% Match</span></div><div className="text-[12px] text-[#555] mt-1">{x.topSkill} • {x.secondSkill} • {x.location}</div><div className="text-[11px] text-[#666] mt-1">{x.why.join(' • ')}</div><div className="flex gap-2 mt-2"><button onClick={() => { setActiveTab('chat' as any); setToast('Connect request sent to ' + x.name); }} className="h-9 px-4 rounded-full bg-black text-white font-bold text-[12px]">Connect</button><button onClick={() => { setActiveTab('chat' as any); }} className="h-9 px-4 rounded-full bg-white border font-bold text-[12px]">Message</button></div></div>))}</div>);
+              })()}
+            </div>
+            <div className="mt-4 bg-[#EFF6FF] rounded-[20px] border border-[#BAE6FD] p-4">
+              <h3 className="font-black text-[16px]">For Recruiters - Find Best Candidate To Call For Interview</h3>
+              <p className="text-[12px] text-[#555] mt-1">Post the job. Our algorithm scores every candidate on Required Skills (50%) + Qualifications (25%) + Trust & Rating (15%) + Location (10%) and tells you who to call first.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                <input value={recruiterJobTitle} onChange={(e) => setRecruiterJobTitle(e.target.value)} placeholder="Job title e.g. Cashier, Plumber, Social Media Manager" className="h-11 px-4 rounded-full border bg-white text-[13px] outline-none" />
+                <input value={recruiterSkills} onChange={(e) => setRecruiterSkills(e.target.value)} placeholder="Required skills e.g. Sales, Cash Handling, Excel" className="h-11 px-4 rounded-full border bg-white text-[13px] outline-none" />
+                <input value={recruiterQualification} onChange={(e) => setRecruiterQualification(e.target.value)} placeholder="Required qualification e.g. Matric, Diploma, Degree, Trade Certificate" className="h-11 px-4 rounded-full border bg-white text-[13px] outline-none" />
+                <input value={recruiterLocation} onChange={(e) => setRecruiterLocation(e.target.value)} placeholder="Location e.g. Krugersdorp, Johannesburg" className="h-11 px-4 rounded-full border bg-white text-[13px] outline-none" />
+              </div>
+              <button onClick={() => setRecruiterShowMatches(true)} className="mt-3 h-11 px-6 rounded-full bg-[#0A66FF] text-white font-black text-[13px]">Find Best Candidate →</button>
+              {recruiterShowMatches && (() => {
+                const reqSkills = recruiterSkills.toLowerCase().split(/[,\s]+/).filter((w: string) => w.length > 2);
+                const reqQual = recruiterQualification.toLowerCase();
+                const reqLoc = recruiterLocation.toLowerCase();
+                const scored = talentList.map((x: any) => {
+                  let skillScore = 0; let matched: string[] = []; let missing: string[] = [];
+                  const xs = ((x.topSkill || '') + ' ' + (x.secondSkill || '') + ' ' + (x.careerGoal || '')).toLowerCase();
+                  reqSkills.forEach((s: string) => { if (xs.includes(s)) { matched.push(s); } else { missing.push(s); } });
+                  skillScore = reqSkills.length ? Math.round((matched.length / reqSkills.length) * 50) : 25;
+                  const qualScore = !reqQual ? 15 : ((x.education || '').toLowerCase().includes(reqQual.split(' ')[0]) ? 25 : ((x.education || '').toLowerCase().includes('matric') && reqQual.includes('matric') ? 25 : 8));
+                  const trustScore = Math.round(((x.trust || 50) / 100) * 10 + ((x.rating || 5) / 10) * 5);
+                  const locScore = !reqLoc ? 5 : ((x.location || '').toLowerCase().includes(reqLoc.split(' ')[0]) ? 10 : 2);
+                  const total = Math.min(100, skillScore + qualScore + trustScore + locScore);
+                  return { ...x, total, skillScore, qualScore, trustScore, locScore, matched, missing };
+                }).sort((a: any, b: any) => b.total - a.total);
+                if (scored.length === 0) return (<div className="text-[12px] mt-3 bg-white p-3 rounded-xl border">No candidates yet. Ask talent to Sell Themselves in Brain.</div>);
+                const best = scored[0];
+                return (<div className="mt-4"><div className="bg-[#16A34A] text-white p-4 rounded-[16px]"><div className="text-[11px] font-black tracking-widest">BEST CANDIDATE TO CALL FOR INTERVIEW - {recruiterJobTitle || 'Your Job'}</div><div className="flex justify-between items-center mt-2 flex-wrap gap-2"><b className="text-[18px]">{best.name} - {best.total}% Match</b><span className="bg-white text-[#16A34A] px-3 py-1 rounded-full font-black text-[12px]">CALL FIRST</span></div><div className="text-[12px] mt-1">Skills: {best.skillScore}/50 • Qualification: {best.qualScore}/25 • Trust & Rating: {best.trustScore}/15 • Location: {best.locScore}/10</div><div className="text-[12px] mt-1">Matched: {best.matched.join(', ') || 'None yet'} {best.missing.length ? '• Missing: ' + best.missing.join(', ') : ''}</div><div className="text-[12px] mt-1">{best.topSkill} • {best.education} • {best.location} • Trust {best.trust}% • Rating {best.rating}/10</div><div className="flex gap-2 mt-3 flex-wrap"><button onClick={() => { setActiveTab('chat' as any); setToast('Call ' + best.name + ' for interview - ' + (recruiterJobTitle || 'Job')); }} className="h-10 px-5 rounded-full bg-white text-[#16A34A] font-black text-[12px]">Call For Interview</button><button onClick={() => setActiveTab('chat' as any)} className="h-10 px-5 rounded-full bg-black text-white font-black text-[12px]">Message Candidate</button></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">{scored.slice(1, 4).map((x: any, idx: number) => (<div key={x.id} className="bg-white p-3 rounded-[16px] border"><div className="flex justify-between"><b className="text-[13px]">#{idx + 2} {x.name}</b><span className="text-[11px] px-2 py-1 rounded-full bg-[#EFF6FF] font-bold">{x.total}%</span></div><div className="text-[12px] text-[#555] mt-1">{x.topSkill} • {x.education} • {x.location}</div><div className="text-[11px] text-[#666]">Matched: {x.matched.join(', ') || 'None'} • Missing: {x.missing.join(', ') || 'None'}</div><button onClick={() => setActiveTab('chat' as any)} className="mt-2 h-9 px-4 rounded-full bg-white border font-bold text-[12px]">View / Contact</button></div>))}</div></div>);
+              })()}
             </div>
             <div className="flex gap-2 mt-4 flex-wrap"><input value={talentSearch} onChange={(e) => setTalentSearch(e.target.value)} placeholder="Search skill e.g. Machine Learning, SEO, Sales..." className="flex-1 min-w-[200px] h-11 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" /><input value={talentMinScore} onChange={(e) => setTalentMinScore(e.target.value)} placeholder="Min Score % e.g. 85" type="number" className="w-[130px] h-11 px-3 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[13px]" /></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-4">
