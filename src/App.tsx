@@ -1014,6 +1014,7 @@ export default function App() {
       <div style={{ position: 'relative', zIndex: 10 }}>
        
 
+      {activeTab === 'market' && (<>
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
         <div className="flex justify-between items-center">
           <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
@@ -1040,6 +1041,7 @@ export default function App() {
           {aiAnswer && (<p className="whitespace-pre-wrap bg-[#FFF8F0] p-4 rounded-xl mt-3 text-[13px] leading-6 border border-[#FFE4C2]">{aiAnswer}</p>)}
           {aiHistory.length > 0 && (<div className="mt-3"><div className="text-[12px] font-bold">Recent Research ({aiHistory.length})</div>{aiHistory.slice(-3).map((h: any, i: number) => (<div key={i} className="text-[12px] text-[#8A7A6E] mt-1">• {h.q} - {h.time}</div>))}</div>)}
         </div>
+      </>)}
 
         {(activeTab === 'brain') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
