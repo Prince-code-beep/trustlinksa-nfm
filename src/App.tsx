@@ -941,7 +941,7 @@ export default function App() {
       {/* ONE HEADER - Professional - WhatsApp Front + Centre */}
       <div className="sticky top-0 z-50 bg-black text-white px-3 py-2 flex gap-1 overflow-x-auto whitespace-nowrap items-center shadow-lg">
         <b className="text-[16px] font-black px-2">TrustLink SA</b>
-        <button onClick={() => setActiveTab('market')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Market</button>
+        <button onClick={() => setActiveTab('market')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Marketplace</button>
         <button onClick={() => setActiveTab('reels')} className="h-10 px-4 rounded-full bg-[#FF0050] font-bold text-[12px]">Reels</button>
         <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-[#25D366] text-black font-black text-[12px]">WhatsApp</button>
         <button onClick={() => setActiveTab('chat')} className="h-10 px-4 rounded-full bg-white text-black font-bold text-[12px]">Chat</button>
@@ -1075,33 +1075,6 @@ export default function App() {
        
 
       <div className="max-w-[1100px] mx-auto px-4 pt-6">
-        <div style={{ display: activeTab === 'market' ? 'block' : 'none' }}>
-        <div className="flex justify-between items-center">
-          <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
-          <div className="flex gap-2 items-center">
-            <span className="text-[12px] font-bold">{profile?.name || 'You'} • Trust {profile?.trust_score || 50}%</span>
-            <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]">Log Out</button>
-          </div>
-        </div>
-        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
-        <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
-
-        <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
-          <div className="flex justify-between items-center"><h3 className="font-black text-[16px]">TrustLink AI Agent - ANN Powered</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">LIVE - WHAT / HOW / WHERE / WHEN / WHO / WHY</span></div>
-          <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
-          <div className="flex gap-2 mt-2 flex-wrap">
-            <button onClick={() => setAiQuestion('What is inflation?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">What is inflation?</button>
-            <button onClick={() => setAiQuestion('How do I sell faster?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">How do I sell faster?</button>
-            <button onClick={() => setAiQuestion('Where is Maponya Mall?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Where is Maponya Mall?</button>
-            <button onClick={() => setAiQuestion('When is best time to sell?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">When is best time to sell?</button>
-            <button onClick={() => setAiQuestion('Who is Mac G?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Who is Mac G?</button>
-            <button onClick={() => setAiQuestion('Why is my Trust low?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Why is my Trust low?</button>
-          </div>
-          <div className="flex gap-2 mt-3"><input value={aiQuestion} onChange={(e) => setAiQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAskAI(); }} placeholder="Ask WHAT / HOW / WHERE / WHEN / WHO / WHY" className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" /><button onClick={handleAskAI} disabled={aiLoading} className="h-12 px-6 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px] disabled:opacity-50">{aiLoading ? 'Researching...' : 'Ask AI'}</button></div>
-          {aiAnswer && (<p className="whitespace-pre-wrap bg-[#FFF8F0] p-4 rounded-xl mt-3 text-[13px] leading-6 border border-[#FFE4C2]">{aiAnswer}</p>)}
-          {aiHistory.length > 0 && (<div className="mt-3"><div className="text-[12px] font-bold">Recent Research ({aiHistory.length})</div>{aiHistory.slice(-3).map((h: any, i: number) => (<div key={i} className="text-[12px] text-[#8A7A6E] mt-1">• {h.q} - {h.time}</div>))}</div>)}
-        </div>
-        </div>
 
         {(activeTab === 'brain') && (
           <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
@@ -1363,6 +1336,52 @@ export default function App() {
           {whatsappContacts.length > 0 && (<div className="mt-3 bg-white text-black rounded-xl p-3"><b className="text-[13px]">Contacts ({whatsappContacts.length})</b><div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">{whatsappContacts.slice(0, 9).map((c: any, i: number) => (<div key={i} className="border p-2 rounded-lg flex justify-between items-center"><div><b className="text-[13px]">{c.name}</b><div className="text-[11px] text-[#6B7280]">{c.phone}</div></div><button onClick={() => { setChatTo(c.name); }} className="h-9 px-3 rounded-full bg-[#25D366] font-bold text-[12px]">Chat</button></div>))}</div></div>)}
         </div>)}
         {/* SOUTH AFRICA-WIDE - Your Location - Find Nearest Buyers/Sellers */}
+        {(activeTab === 'market') && (
+          <div>
+            <div className="flex justify-between items-center mt-2"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
+            <div className="mt-4 flex gap-2"><div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2"><span>Search</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search real products..." className="flex-1 outline-none text-[14px] bg-transparent" /></div></div>
+            <div className="mt-4 flex gap-2 flex-wrap">{CATEGORIES.map((c) => (<button key={c} onClick={() => setFilter(c)} className={filter === c ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]'}>{c}</button>))}</div>
+            <div className="mt-6 grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProducts.length === 0 && (<div className="col-span-full text-center py-12 bg-white rounded-[20px] border border-[#FFE4C2]"><div className="text-4xl">Shop</div><div className="font-bold mt-2">No products yet - Be first to list!</div><p className="text-[13px] text-[#8A7A6E] mt-1">Click + List Product above. Your product appears here instantly.</p></div>)}
+              {filteredProducts.map((p: any) => (
+                <div key={p.id} className="bg-white rounded-[20px] border border-[#FFE4C2] overflow-hidden cursor-pointer" onClick={() => setSelected(p)}>
+                  {p.image_url ? (<img src={p.image_url} alt={p.title} className="w-full h-[160px] object-cover" />) : (<div className="w-full h-[160px] bg-[#FFF8F0] flex items-center justify-center text-4xl">Product</div>)}
+                  <div className="p-3"><div className="font-bold text-[14px]">{p.title}</div><div className="text-[12px] text-[#8A7A6E]">{p.category}</div><div className="flex justify-between items-center mt-2"><b className="text-[16px]">R{p.price}</b><span className="text-[11px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">Trust {p.profiles?.trust_score || 50}%</span></div><div className="text-[11px] text-[#8A7A6E] mt-1">Seller: {p.profiles?.name || 'TrustLink Seller'} • ANN Fair: {ANN.predictTrust(p.profiles?.trust_score || 50, 70, 0, 0, p.profiles?.rating || 8.5, 1)}%</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* FOOTER - BELOW WEBPAGE - Only on Marketplace - Reels / Peach / AI / Near You / Buy & Sell / Escrow / Best Experience */}
+        {activeTab === 'market' && (<div className="mt-8 border-t-2 border-black pt-4">
+          <div className="text-center font-black text-[14px] mb-4">More Below - Reels • Payments • AI • Escrow • Best Experience</div>
+        <div style={{ display: 'block' }}>
+        <div className="flex justify-between items-center">
+          <h1 className="font-black text-[24px] px-4 py-2 rounded-full" style={{ background: skinStyle.headerBg, color: skinStyle.headerText }}>TrustLink SA - {skinStyle.name}</h1>
+          <div className="flex gap-2 items-center">
+            <span className="text-[12px] font-bold">{profile?.name || 'You'} • Trust {profile?.trust_score || 50}%</span>
+            <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[12px]">Log Out</button>
+          </div>
+        </div>
+        <div className="mt-3 bg-[#E11D48] p-4 rounded-[20px] flex justify-between items-center flex-wrap gap-2 shadow-lg"><div><b className="text-white text-[16px]">Reels</b><div className="text-white text-[12px] opacity-90"></div></div><button onClick={() => setActiveTab('reels')} className="h-12 px-6 rounded-full bg-white text-[#E11D48] font-black text-[14px] shadow-lg">OPEN REELS →</button></div>
+        <div className="mt-3 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] flex justify-between items-center flex-wrap gap-2"><div><b className="text-[13px]">REAL Peach Payments - LIVE Mode</b><div className="text-[11px] text-[#8A7A6E]">Entity ID: {(import.meta as any).env?.VITE_PEACH_ENTITY_ID ? 'Configured - ' + String((import.meta as any).env.VITE_PEACH_ENTITY_ID).slice(0, 8) + '...' : 'NOT configured yet - Add VITE_PEACH_ENTITY_ID in Render (see steps below)'} • Escrow: Buyer pays -&gt; Peach HOLDS -&gt; Seller delivers -&gt; Buyer confirms -&gt; Peach RELEASES</div></div><span className="text-[10px] px-2 py-1 rounded-full bg-[#F59E0B] text-white font-bold">LIVE - NOT TEST</span></div>
+
+        <div className="mt-4 bg-white rounded-[20px] border border-[#FFE4C2] p-4">
+          <div className="flex justify-between items-center"><h3 className="font-black text-[16px]">TrustLink AI Agent - ANN Powered</h3><span className="text-[10px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">LIVE - WHAT / HOW / WHERE / WHEN / WHO / WHY</span></div>
+          <p className="text-[12px] text-[#8A7A6E] mt-1"></p>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <button onClick={() => setAiQuestion('What is inflation?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">What is inflation?</button>
+            <button onClick={() => setAiQuestion('How do I sell faster?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">How do I sell faster?</button>
+            <button onClick={() => setAiQuestion('Where is Maponya Mall?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Where is Maponya Mall?</button>
+            <button onClick={() => setAiQuestion('When is best time to sell?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">When is best time to sell?</button>
+            <button onClick={() => setAiQuestion('Who is Mac G?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Who is Mac G?</button>
+            <button onClick={() => setAiQuestion('Why is my Trust low?')} className="h-8 px-3 rounded-full bg-[#FFF8F0] border border-[#FFE4C2] text-[11px] font-bold">Why is my Trust low?</button>
+          </div>
+          <div className="flex gap-2 mt-3"><input value={aiQuestion} onChange={(e) => setAiQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAskAI(); }} placeholder="Ask WHAT / HOW / WHERE / WHEN / WHO / WHY" className="flex-1 h-12 px-4 rounded-full border border-[#FFE4C2] bg-[#FFF8F0] outline-none text-[14px]" /><button onClick={handleAskAI} disabled={aiLoading} className="h-12 px-6 rounded-full bg-[#FF8A4C] text-white font-bold text-[13px] disabled:opacity-50">{aiLoading ? 'Researching...' : 'Ask AI'}</button></div>
+          {aiAnswer && (<p className="whitespace-pre-wrap bg-[#FFF8F0] p-4 rounded-xl mt-3 text-[13px] leading-6 border border-[#FFE4C2]">{aiAnswer}</p>)}
+          {aiHistory.length > 0 && (<div className="mt-3"><div className="text-[12px] font-bold">Recent Research ({aiHistory.length})</div>{aiHistory.slice(-3).map((h: any, i: number) => (<div key={i} className="text-[12px] text-[#8A7A6E] mt-1">• {h.q} - {h.time}</div>))}</div>)}
+        </div>
+        </div>
         <div className="mt-4 bg-white rounded-[20px] border border-[#E5E7EB] p-4">
           <div className="flex justify-between items-center flex-wrap gap-2"><div><b className="text-[16px]">📍 Near You - South Africa</b><div className="text-[12px] text-[#6B7280]"></div></div><span className="bg-[#16A34A] text-white px-3 py-1 rounded-full font-bold text-[11px]">📍 {userArea}, {userCity}, {userProvince}</span></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3">
@@ -1488,22 +1507,7 @@ export default function App() {
             </div>
           </div>
         </div>
-        {(activeTab === 'market') && (
-          <div>
-            <div className="flex justify-between items-center mt-6"><h2 className="font-black text-[18px]">Marketplace ({filteredProducts.length})</h2><button onClick={() => setShowSell(true)} className="h-11 px-5 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]">+ List Product</button></div>
-            <div className="mt-4 flex gap-2"><div className="flex-1 h-12 bg-white border border-[#FFE4C2] rounded-full flex items-center px-4 gap-2"><span>Search</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search real products..." className="flex-1 outline-none text-[14px] bg-transparent" /></div></div>
-            <div className="mt-4 flex gap-2 flex-wrap">{CATEGORIES.map((c) => (<button key={c} onClick={() => setFilter(c)} className={filter === c ? 'h-9 px-4 rounded-full bg-[#1E1E1E] text-white font-bold text-[13px]' : 'h-9 px-4 rounded-full bg-white border border-[#FFE4C2] font-bold text-[13px]'}>{c}</button>))}</div>
-            <div className="mt-6 grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProducts.length === 0 && (<div className="col-span-full text-center py-12 bg-white rounded-[20px] border border-[#FFE4C2]"><div className="text-4xl">Shop</div><div className="font-bold mt-2">No products yet - Be first to list!</div><p className="text-[13px] text-[#8A7A6E] mt-1">Click + List Product above. Your product appears here instantly.</p></div>)}
-              {filteredProducts.map((p: any) => (
-                <div key={p.id} className="bg-white rounded-[20px] border border-[#FFE4C2] overflow-hidden cursor-pointer" onClick={() => setSelected(p)}>
-                  {p.image_url ? (<img src={p.image_url} alt={p.title} className="w-full h-[160px] object-cover" />) : (<div className="w-full h-[160px] bg-[#FFF8F0] flex items-center justify-center text-4xl">Product</div>)}
-                  <div className="p-3"><div className="font-bold text-[14px]">{p.title}</div><div className="text-[12px] text-[#8A7A6E]">{p.category}</div><div className="flex justify-between items-center mt-2"><b className="text-[16px]">R{p.price}</b><span className="text-[11px] px-2 py-1 rounded-full bg-[#E9FBF0] text-[#16A34A] font-bold">Trust {p.profiles?.trust_score || 50}%</span></div><div className="text-[11px] text-[#8A7A6E] mt-1">Seller: {p.profiles?.name || 'TrustLink Seller'} • ANN Fair: {ANN.predictTrust(p.profiles?.trust_score || 50, 70, 0, 0, p.profiles?.rating || 8.5, 1)}%</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>)}
 
         <div className="mt-6 bg-white rounded-[20px] border border-[#FFE4C2] p-5">
           <h3 className="font-bold">Your Profile</h3>
