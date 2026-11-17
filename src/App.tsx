@@ -72,6 +72,8 @@ export default function App() {
   const [escrowBalance, setEscrowBalance] = useState(0);
   const [disputeReason, setDisputeReason] = useState('');
   const [escrowFilter, setEscrowFilter] = useState('All');
+  const [, setEscrowTick] = useState(0);
+  useEffect(() => { const iv = setInterval(() => setEscrowTick((x: number) => x + 1), 1000); return () => clearInterval(iv); }, []);
   const [videoCallWith, setVideoCallWith] = useState('');
   const [trustPassportOpen, setTrustPassportOpen] = useState(false);
   const [priceCheckTitle, setPriceCheckTitle] = useState('');
@@ -259,6 +261,59 @@ export default function App() {
     if (!confirm('Refund buyer? Money goes back to buyer, seller gets R0.')) return;
     try { const { error } = await supabase.from('orders').update({ status: 'Refunded - Money Back To Buyer' }).eq('id', id); if (error) throw error; setToast('REFUNDED - Money back to buyer.'); loadRealData(); } catch(e) { const next = orders.map((o: any) => o.id === id ? { ...o, status: 'Refunded - Money Back To Buyer' } : o); setOrders(next); }
   }
+  // ===== ESCROW AUTO-RELEASE 48H - Seller protection: buyer cannot keep both money + product =====
+  // Rule: Seller marks Delivered + proof -> Buyer has 48h to Confirm or Dispute with proof -> If buyer does nothing, money AUTO-RELEASES to seller.
+  function getEscrowDeadline(o: any) {
+    if (!o.delivered_at) return null;
+    return Number(o.delivered_at) + 48 * 60 * 60 * 1000;
+  }
+  function formatCountdown(o: any) {
+    const dl = getEscrowDeadline(o);
+    if (!dl) return '';
+    const left = dl - Date.now();
+    if (left <= 0) return '00:00:00 - AUTO-RELEASING';
+    const h = Math.floor(left / 3600000); const m = Math.floor((left % 3600000) / 60000); const s = Math.floor((left % 60000) / 1000);
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' left';
+  }
+  function isAwaitingBuyer(o: any) { return String(o.status || '').includes('Delivered - Waiting'); }
+  async function markDelivered(o: any) {
+    const proof = prompt('DELIVERY PROOF (required to protect you): Type proof - e.g. Courier tracking + Delivered, Photo taken at handover, Chat where buyer said Thanks, Job before/after photo:');
+    if (!proof || !proof.trim()) return alert('Proof is required. Without proof, a dispute will favour the buyer. Add tracking / photo description.');
+    const now = Date.now();
+    const newStatus = 'Delivered - Waiting for Buyer - Auto-Releases in 48h if buyer does nothing';
+    try { const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', o.id); if (error) throw error; } catch(e) {}
+    const next = orders.map((x: any) => x.id === o.id ? { ...x, status: newStatus, delivered_at: now, delivery_proof: proof.trim(), auto_release_at: now + 48*60*60*1000, tracking: [...(x.tracking || []), 'Delivered - Proof: ' + proof.trim() + ' - Buyer has 48h'] } : x);
+    setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(e) {}
+    setToast('MARKED DELIVERED - Buyer has 48h to Confirm or Dispute. If they do nothing, money AUTO-RELEASES to you.');
+  }
+  async function autoReleaseEscrow(o: any) {
+    try { const { error } = await supabase.from('orders').update({ status: 'Released - Auto-Released After 48h - Buyer Did Not Confirm' }).eq('id', o.id); if (error) throw error; } catch(e) {}
+    const next = orders.map((x: any) => x.id === o.id ? { ...x, status: 'Released - Auto-Released After 48h - Buyer Did Not Confirm' } : x);
+    setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(e) {}
+    setToast('AUTO-RELEASED - Buyer did not confirm in 48h. Seller paid. Buyer cannot keep both.');
+  }
+  // Auto-check every 30 seconds + on load: release any overdue Delivered orders
+  useEffect(() => {
+    const check = () => {
+      const overdue = orders.filter((o: any) => isAwaitingBuyer(o) && getEscrowDeadline(o) && Date.now() >= getEscrowDeadline(o));
+      if (overdue.length === 0) return;
+      overdue.forEach((o: any) => { autoReleaseEscrow(o); });
+    };
+    check();
+    const iv = setInterval(check, 30000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders.length]);
+  // Dispute now requires proof - buyer must return product if asked
+  async function disputeEscrowWithProof(id: number) {
+    const reason = prompt('DISPUTE - Why? e.g. Fake / Broken / Never arrived / Wrong item:');
+    if (!reason || !reason.trim()) return alert('Tell us why - dispute needs a reason.');
+    const proof = prompt('DISPUTE PROOF (required): Describe your proof - Photo/video of wrong/damaged item, or tracking showing NOT delivered. If you got the product and keep it, dispute will be REJECTED and seller will be paid:');
+    if (!proof || !proof.trim()) return alert('Proof is required. Upload / describe photo or video. A dispute without proof will be rejected.');
+    const full = reason.trim() + ' | PROOF: ' + proof.trim() + ' | Buyer agrees to return product if TrustLink asks.';
+    await disputeEscrow(id, full);
+  }
+
   // RESTORED HELPERS - were lost in edits, caused ReferenceError
   function saveAlert() { if (!alertQuery.trim()) return alert('Type what you want - e.g. Nike size 8'); const a = { id: Date.now(), query: alertQuery, maxPrice: alertMaxPrice ? Number(alertMaxPrice) : 999999 }; const next = [a, ...savedSearches]; setSavedSearches(next); try { localStorage.setItem('trustlink_alerts', JSON.stringify(next)); } catch(e) {} setAlertQuery(''); setAlertMaxPrice(''); setToast('Alert saved! We will tell you when it lists.'); }
   async function updateOrderStatus(id: number, status: string) { try { const { error } = await supabase.from('orders').update({ status }).eq('id', id); if (error) throw error; setToast('REAL Order updated: ' + status + ' - Buyer sees it live.'); loadRealData(); } catch(e) { const next = orders.map((o: any) => o.id === id ? { ...o, status, tracking: [...(o.tracking || []), status] } : o); setOrders(next); try { localStorage.setItem('trustlink_orders', JSON.stringify(next)); } catch(err) {} setToast('Order updated: ' + status); } }
@@ -1637,8 +1692,10 @@ export default function App() {
             <b>1. Buyer Pays →</b> Money goes to TrustLink Escrow, NOT to seller. Seller sees: Locked.<br/>
             <b>2. Seller Ships →</b> Seller taps Packed → On The Way. Buyer tracks live.<br/>
             <b>3. Buyer Receives →</b> Buyer checks: Is it real? Does it work? Is it as described?<br/>
-            <b>4. Buyer Confirms →</b> Buyer taps <b>Confirm - Release Money</b> → Money goes to seller instantly.<br/>
-            <b>5. If Problem →</b> Buyer taps <b>Dispute - Freeze Money</b> → Money FROZEN. Seller gets R0. TrustLink reviews + refunds if fake/broken.<br/>
+            <b>4. Seller Marks Delivered →</b> Seller taps <b>Mark Delivered</b> + uploads proof (tracking / photo / chat). Buyer gets 48h.<br/>
+            <b>5. Buyer Confirms →</b> Buyer taps <b>Confirm - Release Money</b> → Money goes to seller instantly.<br/>
+            <b>6. If Buyer Does NOTHING → AUTO-RELEASE in 48h →</b> Money goes to seller automatically. Buyer CANNOT keep both money + product.<br/>
+            <b>7. If Problem →</b> Buyer taps <b>Dispute - Freeze Money</b> + must give PROOF + must RETURN product if asked. No proof / keeps product = Dispute REJECTED, seller paid. Fake dispute = Trust Score drops.<br/>
             <span className="text-[#16A34A] font-bold"></span>
           </div>
           <div className="mt-3">
@@ -1647,9 +1704,14 @@ export default function App() {
             {orders.filter((o: any) => escrowFilter === 'All' ? true : escrowFilter === 'Locked' ? !String(o.status).includes('Released') && !String(o.status).includes('Refunded') : String(o.status).includes('Dispute')).map((o: any) => (<div key={o.id} className="bg-white text-black p-3 rounded-xl mt-2">
               <div className="font-bold text-[13px]">{o.title} - R{o.price} - {o.status}</div>
               <div className="text-[11px] text-[#8A7A6E]">Seller: {o.seller} - {o.time}</div>
+              {o.delivery_proof && (<div className="text-[11px] bg-[#EFF6FF] p-2 rounded-lg mt-1"><b>Delivery Proof:</b> {o.delivery_proof}</div>)}
+              {isAwaitingBuyer(o) && (<div className="mt-2 bg-[#FEF3C7] border border-[#F59E0B] p-3 rounded-xl"><div className="font-black text-[13px]">⏰ {formatCountdown(o)}</div><div className="text-[11px]">Buyer: Confirm or Dispute with PROOF now. If you do nothing, money AUTO-RELEASES to seller in 48h. You cannot keep both money + product.</div><div className="text-[11px] font-bold mt-1">Auto-releases: {new Date(getEscrowDeadline(o) || Date.now()).toLocaleString()}</div></div>)}
+              {!isAwaitingBuyer(o) && !String(o.status).includes('Released') && !String(o.status).includes('Refunded') && !String(o.status).includes('Dispute') && (<div className="text-[11px] bg-[#FFF7ED] p-2 rounded-lg mt-1">Seller: When you deliver, tap <b>Mark Delivered</b> + add proof. That starts the buyer 48h clock.</div>)}
               <div className="flex gap-2 mt-2 flex-wrap">
-                <button onClick={() => releaseEscrow(o.id)} className="h-10 px-4 rounded-full bg-[#16A34A] text-white font-bold text-[12px]">✅ Confirm - Release Money To Seller</button>
-                <button onClick={() => { const r = prompt('Why dispute? e.g. Fake / Broken / Never arrived'); if (r) disputeEscrow(o.id, r); }} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">🚨 Dispute - Freeze Money</button>
+                {!isAwaitingBuyer(o) && !String(o.status).includes('Released') && !String(o.status).includes('Refunded') && !String(o.status).includes('Dispute') && (<button onClick={() => markDelivered(o)} className="h-10 px-4 rounded-full bg-[#0A66FF] text-white font-black text-[12px]">📦 Seller: Mark Delivered + Proof - Start 48h Clock</button>)}
+                <button onClick={() => releaseEscrow(o.id)} className="h-10 px-4 rounded-full bg-[#16A34A] text-white font-bold text-[12px]">✅ Buyer: Confirm - Release Money To Seller</button>
+                <button onClick={() => disputeEscrowWithProof(o.id)} className="h-10 px-4 rounded-full bg-[#E11D48] text-white font-bold text-[12px]">🚨 Buyer: Dispute - Freeze Money + Proof Required</button>
+                {isAwaitingBuyer(o) && (<button onClick={() => autoReleaseEscrow(o)} className="h-10 px-4 rounded-full bg-black text-white font-bold text-[12px]">⏰ Force Auto-Release Now (48h Passed / Test)</button>)}
                 <button onClick={() => refundEscrow(o.id)} className="h-10 px-4 rounded-full bg-white border font-bold text-[12px]">↩️ Refund Buyer</button>
               </div>
               <div className="flex gap-2 mt-2"><input value={disputeReason} onChange={(e) => setDisputeReason(e.target.value)} placeholder="Or type dispute reason here, then tap Dispute" className="flex-1 h-9 px-3 rounded-full border text-[12px]" /><button onClick={() => disputeEscrow(o.id, disputeReason)} className="h-9 px-4 rounded-full bg-black text-white font-bold text-[12px]">Send Dispute</button></div>
